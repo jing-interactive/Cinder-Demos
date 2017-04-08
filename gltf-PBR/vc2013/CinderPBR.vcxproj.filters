@@ -1,3 +1,4 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Source Files">
@@ -42,6 +43,12 @@
     <Filter Include="Blocks\vnm\include">
       <UniqueIdentifier>{8166DA5C-68C3-42BF-B097-16209B4F5B72}</UniqueIdentifier>
     </Filter>
+    <Filter Include="tiny_gltf_loader">
+      <UniqueIdentifier>{fcf09e8e-22a3-4f56-854c-4221ddfed98b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="nodes">
+      <UniqueIdentifier>{a88ce3f6-3551-46d4-afd8-cf0dfe934409}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\CinderPBRApp.cpp">
@@ -56,73 +63,91 @@
     <ClCompile Include="..\src\CinderPBRApp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClInclude Include="..\..\Cinder\blocks\Cinder-ImGui\include\CinderImGui.h">
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-ImGui\include\CinderImGui.h">
       <Filter>Blocks\ImGui\include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Cinder\blocks\Cinder-ImGui\lib\imgui\imconfig.h">
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-ImGui\lib\imgui\imconfig.h">
       <Filter>Blocks\ImGui\lib\imgui</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Cinder\blocks\Cinder-ImGui\lib\imgui\imgui.h">
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-ImGui\lib\imgui\imgui.h">
       <Filter>Blocks\ImGui\lib\imgui</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Cinder\blocks\Cinder-ImGui\lib\imgui\imgui_internal.h">
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-ImGui\lib\imgui\imgui_internal.h">
       <Filter>Blocks\ImGui\lib\imgui</Filter>
     </ClInclude>
-    <ClCompile Include="..\..\Cinder\blocks\Cinder-ImGui\src\CinderImGui.cpp">
+    <ClCompile Include="..\..\..\Cinder\blocks\Cinder-ImGui\src\CinderImGui.cpp">
       <Filter>Blocks\ImGui\src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Cinder\blocks\Cinder-ImGui\lib\imgui\imgui.cpp">
+    <ClCompile Include="..\..\..\Cinder\blocks\Cinder-ImGui\lib\imgui\imgui.cpp">
       <Filter>Blocks\ImGui\lib\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Cinder\blocks\Cinder-ImGui\lib\imgui\imgui_draw.cpp">
+    <ClCompile Include="..\..\..\Cinder\blocks\Cinder-ImGui\lib\imgui\imgui_draw.cpp">
       <Filter>Blocks\ImGui\lib\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Cinder\blocks\Cinder-ImGui\lib\imgui\imgui_demo.cpp">
+    <ClCompile Include="..\..\..\Cinder\blocks\Cinder-ImGui\lib\imgui\imgui_demo.cpp">
       <Filter>Blocks\ImGui\lib\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Cinder\blocks\Cinder-ImGui\lib\ImGuizmo\ImGuizmo.cpp">
+    <ClCompile Include="..\..\..\Cinder\blocks\Cinder-ImGui\lib\ImGuizmo\ImGuizmo.cpp">
       <Filter>Blocks\ImGui\lib\ImGuizmo</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Cinder\blocks\Cinder-VNM\src\AssetManager.cpp">
+    <ClCompile Include="..\..\..\Cinder\blocks\Cinder-VNM\src\AssetManager.cpp">
       <Filter>Blocks\vnm\src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Cinder\blocks\Cinder-VNM\src\MiniConfig.cpp">
+    <ClCompile Include="..\..\..\Cinder\blocks\Cinder-VNM\src\MiniConfig.cpp">
       <Filter>Blocks\vnm\src</Filter>
     </ClCompile>
-    <ClInclude Include="..\..\Cinder\blocks\Cinder-VNM\include\AssetManager.h">
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\AssetManager.h">
       <Filter>Blocks\vnm\include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Cinder\blocks\Cinder-VNM\include\CaptureHelper.h">
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\CaptureHelper.h">
       <Filter>Blocks\vnm\include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Cinder\blocks\Cinder-VNM\include\FontHelper.h">
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\FontHelper.h">
       <Filter>Blocks\vnm\include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Cinder\blocks\Cinder-VNM\include\GlslParamsBuilder.h">
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\GlslParamsBuilder.h">
       <Filter>Blocks\vnm\include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Cinder\blocks\Cinder-VNM\include\GlslParamsBuilderImgui.h">
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\GlslParamsBuilderImgui.h">
       <Filter>Blocks\vnm\include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Cinder\blocks\Cinder-VNM\include\MiniConfig.h">
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\MiniConfig.h">
       <Filter>Blocks\vnm\include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Cinder\blocks\Cinder-VNM\include\MiniConfigImgui.h">
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\MiniConfigImgui.h">
       <Filter>Blocks\vnm\include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Cinder\blocks\Cinder-VNM\include\MotionHelper.h">
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\MotionHelper.h">
       <Filter>Blocks\vnm\include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Cinder\blocks\Cinder-VNM\include\StateMachine.h">
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\StateMachine.h">
       <Filter>Blocks\vnm\include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Cinder\blocks\Cinder-VNM\include\TextureHelper.h">
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\TextureHelper.h">
       <Filter>Blocks\vnm\include</Filter>
     </ClInclude>
+    <ClCompile Include="..\include\tiny_gltf_loader\tiny_gltf_loader.cpp">
+      <Filter>tiny_gltf_loader</Filter>
+    </ClCompile>
+    <ClCompile Include="..\include\nodes\Node.cpp">
+      <Filter>nodes</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\Resources.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\tiny_gltf_loader\picojson.h">
+      <Filter>tiny_gltf_loader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\tiny_gltf_loader\stb_image.h">
+      <Filter>tiny_gltf_loader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\tiny_gltf_loader\tiny_gltf_loader.h">
+      <Filter>tiny_gltf_loader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\nodes\Node.h">
+      <Filter>nodes</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

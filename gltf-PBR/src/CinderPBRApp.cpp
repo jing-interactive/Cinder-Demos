@@ -7,6 +7,8 @@
 #include "AssetManager.h"
 #include "MiniConfig.h"
 
+#include "tiny_gltf_loader/tiny_gltf_loader.h"
+
 using namespace ci;
 using namespace ci::app;
 using namespace std;
