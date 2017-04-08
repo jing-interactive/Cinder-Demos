@@ -19,14 +19,14 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <WholeProgramOptimization>false</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
@@ -126,13 +126,13 @@
     <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\MotionHelper.h" />
     <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\StateMachine.h" />
     <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\TextureHelper.h" />
-    <ClInclude Include="..\include\tiny_gltf_loader\picojson.h" />
-    <ClInclude Include="..\include\tiny_gltf_loader\stb_image.h" />
-    <ClInclude Include="..\include\tiny_gltf_loader\tiny_gltf_loader.h" />
+    <ClInclude Include="..\include\yocto\yocto_gltf.h" />
+    <ClInclude Include="..\include\yocto\yocto_img.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\include\nodes\Node.cpp" />
-    <ClCompile Include="..\include\tiny_gltf_loader\tiny_gltf_loader.cpp" />
+    <ClCompile Include="..\include\yocto\yocto_gltf.cpp" />
+    <ClCompile Include="..\include\yocto\yocto_img.cpp" />
     <ClCompile Include="..\src\CinderPBRApp.cpp" />
     <ClCompile Include="..\..\..\Cinder\blocks\Cinder-ImGui\src\CinderImGui.cpp" />
     <ClCompile Include="..\..\..\Cinder\blocks\Cinder-ImGui\lib\imgui\imgui.cpp" />

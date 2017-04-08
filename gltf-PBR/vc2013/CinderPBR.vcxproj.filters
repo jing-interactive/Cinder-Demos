@@ -43,11 +43,11 @@
     <Filter Include="Blocks\vnm\include">
       <UniqueIdentifier>{8166DA5C-68C3-42BF-B097-16209B4F5B72}</UniqueIdentifier>
     </Filter>
-    <Filter Include="tiny_gltf_loader">
-      <UniqueIdentifier>{fcf09e8e-22a3-4f56-854c-4221ddfed98b}</UniqueIdentifier>
-    </Filter>
     <Filter Include="nodes">
       <UniqueIdentifier>{a88ce3f6-3551-46d4-afd8-cf0dfe934409}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="yocto">
+      <UniqueIdentifier>{0144b47a-cdcb-47dd-a826-2c085602a708}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -126,28 +126,28 @@
     <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\TextureHelper.h">
       <Filter>Blocks\vnm\include</Filter>
     </ClInclude>
-    <ClCompile Include="..\include\tiny_gltf_loader\tiny_gltf_loader.cpp">
-      <Filter>tiny_gltf_loader</Filter>
-    </ClCompile>
     <ClCompile Include="..\include\nodes\Node.cpp">
       <Filter>nodes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\include\yocto\yocto_gltf.cpp">
+      <Filter>yocto</Filter>
+    </ClCompile>
+    <ClCompile Include="..\include\yocto\yocto_img.cpp">
+      <Filter>yocto</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\Resources.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\tiny_gltf_loader\picojson.h">
-      <Filter>tiny_gltf_loader</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\tiny_gltf_loader\stb_image.h">
-      <Filter>tiny_gltf_loader</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\tiny_gltf_loader\tiny_gltf_loader.h">
-      <Filter>tiny_gltf_loader</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\nodes\Node.h">
       <Filter>nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\yocto\yocto_gltf.h">
+      <Filter>yocto</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\yocto\yocto_img.h">
+      <Filter>yocto</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
