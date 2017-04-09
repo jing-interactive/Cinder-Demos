@@ -129,6 +129,8 @@ struct MaterialGLTF
     typedef shared_ptr<MaterialGLTF> Ref;
     ygltf::material_t property;
 
+    gl::GlslProgRef shader;
+
     TextureGLTF::Ref emissiveTexture;
     TextureGLTF::Ref normalTexture;
     TextureGLTF::Ref occlusionTexture;
@@ -260,7 +262,6 @@ struct RootGLTF
         catch (exception& ex)
         {
             CI_LOG_EXCEPTION("load_gltf", ex);
-            STATUS = ex.what();
         }
 
         Ref ref = make_shared<RootGLTF>();
@@ -373,12 +374,17 @@ MaterialGLTF::Ref MaterialGLTF::create(const RootGLTF& rootGLTF, const ygltf::ma
     MaterialGLTF::Ref ref = make_shared<MaterialGLTF>();
     ref->property = property;
 
-    ref->emissiveTexture = rootGLTF.textures[property.emissiveTexture.index];
-    ref->normalTexture = rootGLTF.textures[property.normalTexture.index];
-    ref->occlusionTexture = rootGLTF.textures[property.occlusionTexture.index];
+    auto fn = [&](TextureGLTF::Ref& tex, int idx) {
+        if (idx != -1) tex = rootGLTF.textures[idx];
+    };
+    fn(ref->emissiveTexture, property.emissiveTexture.index);
+    fn(ref->normalTexture, property.normalTexture.index);
+    fn(ref->occlusionTexture, property.occlusionTexture.index);
 
-    ref->baseColorTexture = rootGLTF.textures[property.pbrMetallicRoughness.baseColorTexture.index];
-    ref->metallicRoughnessTexture = rootGLTF.textures[property.pbrMetallicRoughness.metallicRoughnessTexture.index];
+    fn(ref->baseColorTexture, property.pbrMetallicRoughness.baseColorTexture.index);
+    fn(ref->metallicRoughnessTexture, property.pbrMetallicRoughness.metallicRoughnessTexture.index);
+
+    //ref->shader = 
 
     return ref;
 }

@@ -132,9 +132,6 @@
     <ClCompile Include="..\include\yocto\yocto_gltf.cpp">
       <Filter>yocto</Filter>
     </ClCompile>
-    <ClCompile Include="..\include\yocto\yocto_img.cpp">
-      <Filter>yocto</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\Resources.h">
@@ -144,9 +141,6 @@
       <Filter>nodes</Filter>
     </ClInclude>
     <ClInclude Include="..\include\yocto\yocto_gltf.h">
-      <Filter>yocto</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\yocto\yocto_img.h">
       <Filter>yocto</Filter>
     </ClInclude>
   </ItemGroup>

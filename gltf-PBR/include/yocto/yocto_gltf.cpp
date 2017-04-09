@@ -69,7 +69,7 @@
 #include <sstream>
 #include <vector>
 
-#ifndef YGLTF_NO_IMAGE
+#ifndef YGL_NO_STBIMAGE
 #include "yocto_img.h"
 #endif
 
