@@ -35,17 +35,18 @@ struct BufferGLTF
     typedef shared_ptr<BufferGLTF> Ref;
     ygltf::buffer_t property;
 
-    BufferRef ciBuffer;
-    gl::VboRef oglBuffer;
+    BufferRef cpuBuffer;
 
     static Ref create(const RootGLTF& rootGLTF, const ygltf::buffer_t& property);
 };
 
-// BufferViewGLTF and AccessorGLTF are just passthrough structs
 struct BufferViewGLTF
 {
     typedef shared_ptr<BufferViewGLTF> Ref;
     ygltf::bufferView_t property;
+
+    BufferRef cpuBuffer;
+    gl::VboRef gpuBuffer;
 
     static Ref create(const RootGLTF& rootGLTF, const ygltf::bufferView_t& property);
 };
@@ -54,6 +55,7 @@ struct AccessorGLTF
 {
     typedef shared_ptr<AccessorGLTF> Ref;
     ygltf::accessor_t property;
+    int byteStride; // from ygltf::bufferView_t
 
     static Ref create(const RootGLTF& rootGLTF, const ygltf::accessor_t& property);
 };
@@ -145,7 +147,7 @@ struct MeshPrimitiveGLTF
 
     MaterialGLTF::Ref material;
 
-    gl::VboMesh oglVboMesh;
+    gl::VboMeshRef oglVboMesh;
 
     static Ref create(const RootGLTF& rootGLTF, const ygltf::mesh_primitive_t& property);
 };
@@ -340,7 +342,9 @@ AccessorGLTF::Ref AccessorGLTF::create(const RootGLTF& rootGLTF, const ygltf::ac
     CI_ASSERT_MSG(property.sparse.count == -1, "Unsupported");
 
     AccessorGLTF::Ref ref = make_shared<AccessorGLTF>();
+    auto bufferView = rootGLTF.bufferViews[property.bufferView];
     ref->property = property;
+    ref->byteStride = bufferView->property.byteStride;
 
     return ref;
 }
@@ -362,8 +366,7 @@ BufferGLTF::Ref BufferGLTF::create(const RootGLTF& rootGLTF, const ygltf::buffer
     BufferGLTF::Ref ref = make_shared<BufferGLTF>();
     ref->property = property;
 
-    ref->ciBuffer = am::buffer((rootGLTF.gltfPath.parent_path() / property.uri).string());
-    ref->oglBuffer = gl::Vbo::create(GL_ARRAY_BUFFER, ref->ciBuffer->getSize(), ref->ciBuffer->getData());
+    ref->cpuBuffer = am::buffer((rootGLTF.gltfPath.parent_path() / property.uri).string());
 
     return ref;
 }
@@ -442,7 +445,7 @@ MeshPrimitiveGLTF::Ref MeshPrimitiveGLTF::create(const RootGLTF& rootGLTF, const
 
     ref->oglVboMesh = gl::VboMesh::create();
 
-    auto oglIndexVbo = ref->indices->oglBuffer;
+    auto oglIndexVbo = ref->indices->gpuBuffer;
     ref->oglVboMesh = gl::VboMesh::create(mParticles.size(), glPrimitiveMode, { { particleLayout, mParticleVbo } }, oglIndexVbo);
 
     static VboMeshRef	create(const geom::Source &source, const , oglIndexVbo);
@@ -478,11 +481,15 @@ BufferViewGLTF::Ref BufferViewGLTF::create(const RootGLTF& rootGLTF, const ygltf
     CI_ASSERT_MSG(property.byteStride == 0, "TODO");
 
     BufferViewGLTF::Ref ref = make_shared<BufferViewGLTF>();
-    auto buffer = rootGLTF.buffers[property.buffer];
-    auto ciBuffer = buffer->ciBuffer;
-    CI_ASSERT(property.byteOffset + property.byteLength <= ciBuffer->getSize());
-
     ref->property = property;
+
+    auto buffer = rootGLTF.buffers[property.buffer];
+    auto cpuBuffer = buffer->cpuBuffer;
+    auto offsetedData = (uint8_t*)cpuBuffer->getData() + cpuBuffer->getSize();
+    CI_ASSERT(property.byteOffset + property.byteLength <= cpuBuffer->getSize());
+    
+    ref->cpuBuffer = Buffer::create(offsetedData, property.byteLength);
+    ref->gpuBuffer = gl::Vbo::create((GLenum)property.target, ref->cpuBuffer->getSize(), ref->cpuBuffer->getData());
 
     return ref;
 }

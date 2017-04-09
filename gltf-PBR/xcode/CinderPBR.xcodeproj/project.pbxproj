@@ -23,7 +23,6 @@
 		74B519CF1E9A614000234E88 /* license.txt in Resources */ = {isa = PBXBuildFile; fileRef = 74B519CC1E9A614000234E88 /* license.txt */; };
 		74B519D01E9A614000234E88 /* Node.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 74B519CD1E9A614000234E88 /* Node.cpp */; };
 		74B519F11E9A614B00234E88 /* yocto_gltf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 74B519DE1E9A614B00234E88 /* yocto_gltf.cpp */; };
-		74B519F41E9A614B00234E88 /* yocto_img.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 74B519E41E9A614B00234E88 /* yocto_img.cpp */; };
 		7DB2ED1090D24A2B8CC3EA3A /* imgui_demo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D6C375DF87584525A066D98F /* imgui_demo.cpp */; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
 		96C9A0A70A624930A083EAA0 /* ImGuizmo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A7102ECC4AF24B91BD052CD5 /* ImGuizmo.cpp */; };
@@ -71,8 +70,6 @@
 		74B519D91E9A614B00234E88 /* stb_image_write.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stb_image_write.h; sourceTree = "<group>"; };
 		74B519DE1E9A614B00234E88 /* yocto_gltf.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = yocto_gltf.cpp; sourceTree = "<group>"; };
 		74B519DF1E9A614B00234E88 /* yocto_gltf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yocto_gltf.h; sourceTree = "<group>"; };
-		74B519E41E9A614B00234E88 /* yocto_img.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = yocto_img.cpp; sourceTree = "<group>"; };
-		74B519E51E9A614B00234E88 /* yocto_img.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yocto_img.h; sourceTree = "<group>"; };
 		7EF1D3C745DA41ED9E27590D /* TextureHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = TextureHelper.h; path = "../../../Cinder/blocks/Cinder-VNM/include/TextureHelper.h"; sourceTree = "<group>"; };
 		82497A577EB04C3E861F6571 /* CinderPBR_Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = "\"\""; path = CinderPBR_Prefix.pch; sourceTree = "<group>"; };
 		858C7BA657FC46CB8C9F3418 /* imconfig.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = imconfig.h; path = "../../../Cinder/blocks/Cinder-ImGui/lib/imgui/imconfig.h"; sourceTree = "<group>"; };
@@ -256,8 +253,6 @@
 				74B519D21E9A614B00234E88 /* ext */,
 				74B519DE1E9A614B00234E88 /* yocto_gltf.cpp */,
 				74B519DF1E9A614B00234E88 /* yocto_gltf.h */,
-				74B519E41E9A614B00234E88 /* yocto_img.cpp */,
-				74B519E51E9A614B00234E88 /* yocto_img.h */,
 			);
 			name = yocto;
 			path = ../include/yocto;
@@ -408,7 +403,6 @@
 				16398272D307436D8CBD3A48 /* imgui_draw.cpp in Sources */,
 				7DB2ED1090D24A2B8CC3EA3A /* imgui_demo.cpp in Sources */,
 				96C9A0A70A624930A083EAA0 /* ImGuizmo.cpp in Sources */,
-				74B519F41E9A614B00234E88 /* yocto_img.cpp in Sources */,
 				74B519F11E9A614B00234E88 /* yocto_gltf.cpp in Sources */,
 				97448974C40D4EAC94A820DB /* AssetManager.cpp in Sources */,
 				FA448AFFB68D470C9647F596 /* MiniConfig.cpp in Sources */,
@@ -433,6 +427,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",
+					YGL_NO_STBIMAGE,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				INFOPLIST_FILE = Info.plist;
@@ -461,6 +456,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"NDEBUG=1",
 					"$(inherited)",
+					YGL_NO_STBIMAGE,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				INFOPLIST_FILE = Info.plist;
