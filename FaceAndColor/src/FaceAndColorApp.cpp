@@ -655,7 +655,7 @@ void RealSenseDevice::update()
         else
         {
             auto face = mFaceDetector.mFaces[0];
-            faceRect = { face.x1, face.y1, face.getWidth(), face.getHeight() };
+            faceRect = { (pxcI32)face.x1, (pxcI32)face.y1, (pxcI32)face.getWidth(), (pxcI32)face.getHeight() };
             _FACE_STATUS = "Detected";
             theApp->sendMessage("user-enter");
         }
