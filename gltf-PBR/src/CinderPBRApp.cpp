@@ -35,17 +35,17 @@ struct BufferGLTF
     typedef shared_ptr<BufferGLTF> Ref;
     ygltf::buffer_t property;
 
-    BufferRef buffer;
+    BufferRef ciBuffer;
+    gl::VboRef oglBuffer;
 
     static Ref create(const RootGLTF& rootGLTF, const ygltf::buffer_t& property);
 };
 
+// BufferViewGLTF and AccessorGLTF are just passthrough structs
 struct BufferViewGLTF
 {
     typedef shared_ptr<BufferViewGLTF> Ref;
     ygltf::bufferView_t property;
-
-    BufferGLTF::Ref buffer;
 
     static Ref create(const RootGLTF& rootGLTF, const ygltf::bufferView_t& property);
 };
@@ -55,11 +55,8 @@ struct AccessorGLTF
     typedef shared_ptr<AccessorGLTF> Ref;
     ygltf::accessor_t property;
 
-    BufferViewGLTF::Ref bufferView;
-
     static Ref create(const RootGLTF& rootGLTF, const ygltf::accessor_t& property);
 };
-
 
 struct CameraGLTF
 {
@@ -85,7 +82,7 @@ struct ImageGLTF
     typedef shared_ptr<ImageGLTF> Ref;
     ygltf::image_t property;
 
-    BufferViewGLTF::Ref bufferView;
+    //BufferViewGLTF::Ref bufferView;
     SurfaceRef surface;
 
     static Ref create(const RootGLTF& rootGLTF, const ygltf::image_t& property);
@@ -97,17 +94,17 @@ struct SamplerGLTF
     ygltf::sampler_t property;
 
     // TODO: support texture1d / 3d
-    gl::Texture2d::Format format;
+    gl::Texture2d::Format oglTexFormat;
 
     static Ref create(const RootGLTF& rootGLTF, const ygltf::sampler_t& property)
     {
         Ref ref = make_shared<SamplerGLTF>();
         ref->property = property;
 
-        ref->format.minFilter((GLenum)property.minFilter);
-        ref->format.magFilter((GLenum)property.magFilter);
-        ref->format.wrapS((GLenum)property.wrapS);
-        ref->format.wrapT((GLenum)property.wrapT);
+        ref->oglTexFormat.minFilter((GLenum)property.minFilter);
+        ref->oglTexFormat.magFilter((GLenum)property.magFilter);
+        ref->oglTexFormat.wrapS((GLenum)property.wrapS);
+        ref->oglTexFormat.wrapT((GLenum)property.wrapT);
 
         return ref;
     }
@@ -118,8 +115,7 @@ struct TextureGLTF
     typedef shared_ptr<TextureGLTF> Ref;
     ygltf::texture_t property;
 
-    SamplerGLTF::Ref sampler;
-    ImageGLTF::Ref source;
+    gl::Texture2dRef oglTexture;
 
     static Ref create(const RootGLTF& rootGLTF, const ygltf::texture_t& property);
 };
@@ -129,7 +125,7 @@ struct MaterialGLTF
     typedef shared_ptr<MaterialGLTF> Ref;
     ygltf::material_t property;
 
-    gl::GlslProgRef shader;
+    gl::GlslProgRef oglShader;
 
     TextureGLTF::Ref emissiveTexture;
     TextureGLTF::Ref normalTexture;
@@ -147,9 +143,9 @@ struct MeshPrimitiveGLTF
     typedef shared_ptr<MeshPrimitiveGLTF> Ref;
     ygltf::mesh_primitive_t property;
 
-    map<string, AccessorGLTF::Ref> attributes;
-    AccessorGLTF::Ref indices;
     MaterialGLTF::Ref material;
+
+    gl::VboMesh oglVboMesh;
 
     static Ref create(const RootGLTF& rootGLTF, const ygltf::mesh_primitive_t& property);
 };
@@ -341,18 +337,20 @@ NodeGLTF::Ref NodeGLTF::create(const RootGLTF& rootGLTF, const ygltf::node_t& pr
 
 AccessorGLTF::Ref AccessorGLTF::create(const RootGLTF& rootGLTF, const ygltf::accessor_t& property)
 {
+    CI_ASSERT_MSG(property.sparse.count == -1, "Unsupported");
+
     AccessorGLTF::Ref ref = make_shared<AccessorGLTF>();
     ref->property = property;
-    ref->bufferView = rootGLTF.bufferViews[property.bufferView];
 
     return ref;
 }
 
 ImageGLTF::Ref ImageGLTF::create(const RootGLTF& rootGLTF, const ygltf::image_t& property)
 {
+    CI_ASSERT_MSG(property.bufferView == -1, "Unsupported");
+
     ImageGLTF::Ref ref = make_shared<ImageGLTF>();
     ref->property = property;
-    CI_ASSERT(property.bufferView == -1);
 
     ref->surface = am::surface((rootGLTF.gltfPath.parent_path() / property.uri).string());
 
@@ -364,7 +362,8 @@ BufferGLTF::Ref BufferGLTF::create(const RootGLTF& rootGLTF, const ygltf::buffer
     BufferGLTF::Ref ref = make_shared<BufferGLTF>();
     ref->property = property;
 
-    ref->buffer = am::buffer((rootGLTF.gltfPath.parent_path() / property.uri).string());
+    ref->ciBuffer = am::buffer((rootGLTF.gltfPath.parent_path() / property.uri).string());
+    ref->oglBuffer = gl::Vbo::create(GL_ARRAY_BUFFER, ref->ciBuffer->getSize(), ref->ciBuffer->getData());
 
     return ref;
 }
@@ -389,15 +388,65 @@ MaterialGLTF::Ref MaterialGLTF::create(const RootGLTF& rootGLTF, const ygltf::ma
     return ref;
 }
 
+geom::Attrib getAttribFromString(const string& str)
+{
+    if (str == "POSITION") return geom::POSITION;
+    if (str == "NORMAL") return geom::NORMAL;
+    //if (str == "TANGENT") return geom::TANGENT;
+    //if (str == "BITANGENT") return geom::BITANGENT;
+    if (str == "JOINT") return geom::BONE_INDEX;
+    if (str == "WEIGHT") return geom::BONE_WEIGHT;
+
+    if (str == "TEXCOORD_0") return geom::TEX_COORD_0;
+    if (str == "TEXCOORD_1") return geom::TEX_COORD_1;
+    if (str == "TEXCOORD_2") return geom::TEX_COORD_2;
+    if (str == "TEXCOORD_3") return geom::TEX_COORD_3;
+
+    if (str == "COLOR_0") return geom::COLOR;
+
+    CI_ASSERT_MSG(0, str.c_str());
+}
+
 MeshPrimitiveGLTF::Ref MeshPrimitiveGLTF::create(const RootGLTF& rootGLTF, const ygltf::mesh_primitive_t& property)
 {
     MeshPrimitiveGLTF::Ref ref = make_shared<MeshPrimitiveGLTF>();
     ref->property = property;
 
-    for (auto& kv : property.attributes)
-        ref->attributes[kv.first] = rootGLTF.accessors[kv.second];
-    ref->indices = rootGLTF.accessors[property.indices];
+    AccessorGLTF::Ref indices = rootGLTF.accessors[property.indices];
     ref->material = rootGLTF.materials[property.material];
+
+#if 0
+    vector<pair<geom::BufferLayout, gl::VboRef>> vertexArrayLayouts;
+    for (auto& kv : property.attributes)
+    {
+        geom::Attrib attrib = getAttribFromString(kv.first);
+        AccessorGLTF::Ref attrAccessor = rootGLTF.accessors[kv.second];
+        geom::BufferLayout layout;
+        layout.append(attrib, 3,  sizeof(Vert), offsetof(Vert, pos));
+    }
+
+    GLenum glPrimitiveMode = (GLenum)property.mode;
+
+
+    layout.append(geom::Attrib::COLOR, 4, sizeof(Vert), offsetof(Vert, color));
+
+    // TODO: too ugly
+    create(uint32_t numVertices, GLenum glPrimitive, const std::vector<std::pair<geom::BufferLayout, VboRef>> &vertexArrayBuffers, uint32_t numIndices = 0, GLenum indexType = GL_UNSIGNED_SHORT, const VboRef &indexVbo = VboRef());
+
+    static VboMeshRef	create(uint32_t numVertices, GLenum glPrimitive, const std::vector<std::pair<geom::BufferLayout, VboRef>> &vertexArrayBuffers, uint32_t numIndices = 0, GLenum indexType = GL_UNSIGNED_SHORT, const VboRef &indexVbo = VboRef());
+
+
+    ref->oglVboMesh = gl::VboMesh::create(mVerts.size(), glPrimitiveMode, { { layout, mVbo } }, indices.size());
+    ref->oglVboMesh->bufferIndices(indices.size(), indices.data());
+
+
+    ref->oglVboMesh = gl::VboMesh::create();
+
+    auto oglIndexVbo = ref->indices->oglBuffer;
+    ref->oglVboMesh = gl::VboMesh::create(mParticles.size(), glPrimitiveMode, { { particleLayout, mParticleVbo } }, oglIndexVbo);
+
+    static VboMeshRef	create(const geom::Source &source, const , oglIndexVbo);
+#endif
 
     return ref;
 }
@@ -406,16 +455,33 @@ TextureGLTF::Ref TextureGLTF::create(const RootGLTF& rootGLTF, const ygltf::text
 {
     TextureGLTF::Ref ref = make_shared<TextureGLTF>();
     ref->property = property;
-    ref->sampler = rootGLTF.samplers[property.sampler];
-    ref->source = rootGLTF.images[property.source];
+
+    SamplerGLTF::Ref sampler = rootGLTF.samplers[property.sampler];
+    ImageGLTF::Ref source = rootGLTF.images[property.source];
+
+    // FIXME: ugly
+    auto oglTexFormat = sampler->oglTexFormat;
+    oglTexFormat.target((GLenum)property.target);
+    oglTexFormat.internalFormat((GLenum)property.internalFormat);
+    oglTexFormat.dataType((GLenum)property.type);
+
+    ref->oglTexture = gl::Texture2d::create(*source->surface, oglTexFormat);
 
     return ref;
 }
 
 BufferViewGLTF::Ref BufferViewGLTF::create(const RootGLTF& rootGLTF, const ygltf::bufferView_t& property)
 {
+    CI_ASSERT(property.buffer != -1);
+    CI_ASSERT(property.byteLength != -1);
+    CI_ASSERT(property.byteOffset != -1);
+    CI_ASSERT_MSG(property.byteStride == 0, "TODO");
+
     BufferViewGLTF::Ref ref = make_shared<BufferViewGLTF>();
-    ref->buffer = rootGLTF.buffers[property.buffer];
+    auto buffer = rootGLTF.buffers[property.buffer];
+    auto ciBuffer = buffer->ciBuffer;
+    CI_ASSERT(property.byteOffset + property.byteLength <= ciBuffer->getSize());
+
     ref->property = property;
 
     return ref;
