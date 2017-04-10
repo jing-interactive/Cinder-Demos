@@ -15,14 +15,14 @@ using namespace ci::app;
 using namespace std;
 using namespace ph::nodes;
 
-struct RootGLTF;
+typedef shared_ptr<struct RootGLTF> RootGLTFRef;
 
 struct AnimationGLTF
 {
     typedef shared_ptr<AnimationGLTF> Ref;
     ygltf::animation_t property;
 
-    static Ref create(const RootGLTF& rootGLTF, const ygltf::animation_t& property)
+    static Ref create(RootGLTFRef rootGLTF, const ygltf::animation_t& property)
     {
         Ref ref = make_shared<AnimationGLTF>();
         ref->property = property;
@@ -37,7 +37,7 @@ struct BufferGLTF
 
     BufferRef cpuBuffer;
 
-    static Ref create(const RootGLTF& rootGLTF, const ygltf::buffer_t& property);
+    static Ref create(RootGLTFRef rootGLTF, const ygltf::buffer_t& property);
 };
 
 struct BufferViewGLTF
@@ -48,7 +48,7 @@ struct BufferViewGLTF
     BufferRef cpuBuffer;
     gl::VboRef gpuBuffer;
 
-    static Ref create(const RootGLTF& rootGLTF, const ygltf::bufferView_t& property);
+    static Ref create(RootGLTFRef rootGLTF, const ygltf::bufferView_t& property);
 };
 
 struct AccessorGLTF
@@ -56,8 +56,9 @@ struct AccessorGLTF
     typedef shared_ptr<AccessorGLTF> Ref;
     ygltf::accessor_t property;
     int byteStride; // from ygltf::bufferView_t
+    gl::VboRef gpuBuffer; // points to BufferViewGLTF::gpuBuffer
 
-    static Ref create(const RootGLTF& rootGLTF, const ygltf::accessor_t& property);
+    static Ref create(RootGLTFRef rootGLTF, const ygltf::accessor_t& property);
 };
 
 struct CameraGLTF
@@ -67,7 +68,7 @@ struct CameraGLTF
 
     unique_ptr<Camera> camera;
 
-    static Ref create(const RootGLTF& rootGLTF, const ygltf::camera_t& property)
+    static Ref create(RootGLTFRef rootGLTF, const ygltf::camera_t& property)
     {
         Ref ref = make_shared<CameraGLTF>();
         ref->property = property;
@@ -87,7 +88,7 @@ struct ImageGLTF
     //BufferViewGLTF::Ref bufferView;
     SurfaceRef surface;
 
-    static Ref create(const RootGLTF& rootGLTF, const ygltf::image_t& property);
+    static Ref create(RootGLTFRef rootGLTF, const ygltf::image_t& property);
 };
 
 struct SamplerGLTF
@@ -98,7 +99,7 @@ struct SamplerGLTF
     // TODO: support texture1d / 3d
     gl::Texture2d::Format oglTexFormat;
 
-    static Ref create(const RootGLTF& rootGLTF, const ygltf::sampler_t& property)
+    static Ref create(RootGLTFRef rootGLTF, const ygltf::sampler_t& property)
     {
         Ref ref = make_shared<SamplerGLTF>();
         ref->property = property;
@@ -119,7 +120,7 @@ struct TextureGLTF
 
     gl::Texture2dRef oglTexture;
 
-    static Ref create(const RootGLTF& rootGLTF, const ygltf::texture_t& property);
+    static Ref create(RootGLTFRef rootGLTF, const ygltf::texture_t& property);
 };
 
 struct MaterialGLTF
@@ -137,7 +138,16 @@ struct MaterialGLTF
     TextureGLTF::Ref baseColorTexture;
     TextureGLTF::Ref metallicRoughnessTexture;
 
-    static Ref create(const RootGLTF& rootGLTF, const ygltf::material_t& property);
+    static Ref create(RootGLTFRef rootGLTF, const ygltf::material_t& property);
+
+    void preDraw()
+    {
+        oglShader->bind();
+    }
+
+    void postDraw()
+    {
+    }
 };
 
 struct MeshPrimitiveGLTF
@@ -149,7 +159,27 @@ struct MeshPrimitiveGLTF
 
     gl::VboMeshRef oglVboMesh;
 
-    static Ref create(const RootGLTF& rootGLTF, const ygltf::mesh_primitive_t& property);
+    static Ref create(RootGLTFRef rootGLTF, const ygltf::mesh_primitive_t& property);
+
+    void update()
+    {
+
+    }
+
+    void draw()
+    {
+        if (material)
+        {
+            material->preDraw();
+        }
+
+        gl::draw(oglVboMesh);
+
+        if (material)
+        {
+            material->postDraw();
+        }
+    }
 };
 
 struct MeshGLTF
@@ -159,13 +189,23 @@ struct MeshGLTF
 
     vector<MeshPrimitiveGLTF::Ref> primitives;
 
-    static Ref create(const RootGLTF& rootGLTF, const ygltf::mesh_t& property)
+    static Ref create(RootGLTFRef rootGLTF, const ygltf::mesh_t& property)
     {
         Ref ref = make_shared<MeshGLTF>();
         ref->property = property;
         for (auto& item : property.primitives) ref->primitives.emplace_back(MeshPrimitiveGLTF::create(rootGLTF, item));
 
         return ref;
+    }
+
+    void update()
+    {
+        for (auto& item : primitives) item->update();
+    }
+
+    void draw()
+    {
+        for (auto& item : primitives) item->draw();
     }
 };
 
@@ -174,7 +214,7 @@ struct SkinGLTF
     typedef shared_ptr<SkinGLTF> Ref;
     ygltf::skin_t property;
 
-    static Ref create(const RootGLTF& rootGLTF, const ygltf::skin_t& property)
+    static Ref create(RootGLTFRef rootGLTF, const ygltf::skin_t& property)
     {
         Ref ref = make_shared<SkinGLTF>();
         ref->property = property;
@@ -191,23 +231,26 @@ struct NodeGLTF : public Node3D
     MeshGLTF::Ref mesh;
     SkinGLTF::Ref skin;
 
-    static Ref create(const RootGLTF& rootGLTF, const ygltf::node_t& property);
+    static Ref create(RootGLTFRef rootGLTF, const ygltf::node_t& property);
 
-    void addChildren(const RootGLTF& rootGLTF);
+    RootGLTFRef rootGLTF;
+
+    void setup();
 
     void update()
     {
+        if (mesh)
+        {
+            mesh->update();
+        }
     }
 
     void draw()
     {
-        //if (tex && mShader)
-        //{
-        //    gl::ScopedTextureBind tex0(tex);
-        //    mShader->uniform("tex0", 0);
-        //    gl::ScopedGlslProg glsl(mShader);
-        //    //gl::draw(mesh);
-        //}
+        if (mesh)
+        {
+            mesh->draw();
+        }
     }
 };
 
@@ -218,13 +261,7 @@ struct SceneGLTF
 
     vector<NodeGLTF::Ref> nodes; // The root nodes of a scene
 
-    static Ref create(const RootGLTF& rootGLTF, const ygltf::scene_t& property)
-    {
-        Ref ref = make_shared<SceneGLTF>();
-        ref->property = property;
-
-        return ref;
-    }
+    static Ref create(RootGLTFRef rootGLTF, const ygltf::scene_t& property);
 
     void update()
     {
@@ -241,10 +278,9 @@ struct SceneGLTF
 
 struct RootGLTF
 {
-    typedef shared_ptr<RootGLTF> Ref;
     ygltf::glTF_t property;
 
-    static Ref create(const fs::path& gltfPath)
+    static RootGLTFRef create(const fs::path& gltfPath)
     {
         unique_ptr<ygltf::glTF_t> glTF_t;
 
@@ -262,40 +298,41 @@ struct RootGLTF
             CI_LOG_EXCEPTION("load_gltf", ex);
         }
 
-        Ref ref = make_shared<RootGLTF>();
+        RootGLTFRef ref = make_shared<RootGLTF>();
         ref->property = *glTF_t;
         ref->gltfPath = gltfPath;
 
-        for (auto& item : glTF_t->buffers) ref->buffers.emplace_back(BufferGLTF::create(*ref, item));
-        for (auto& item : glTF_t->bufferViews) ref->bufferViews.emplace_back(BufferViewGLTF::create(*ref, item));
-        for (auto& item : glTF_t->animations) ref->animations.emplace_back(AnimationGLTF::create(*ref, item));
-        for (auto& item : glTF_t->accessors) ref->accessors.emplace_back(AccessorGLTF::create(*ref, item));
+        for (auto& item : glTF_t->buffers) ref->buffers.emplace_back(BufferGLTF::create(ref, item));
+        for (auto& item : glTF_t->bufferViews) ref->bufferViews.emplace_back(BufferViewGLTF::create(ref, item));
+        for (auto& item : glTF_t->animations) ref->animations.emplace_back(AnimationGLTF::create(ref, item));
+        for (auto& item : glTF_t->accessors) ref->accessors.emplace_back(AccessorGLTF::create(ref, item));
 
-        for (auto& item : glTF_t->images) ref->images.emplace_back(ImageGLTF::create(*ref, item));
-        for (auto& item : glTF_t->samplers) ref->samplers.emplace_back(SamplerGLTF::create(*ref, item));
-        for (auto& item : glTF_t->textures) ref->textures.emplace_back(TextureGLTF::create(*ref, item));
-        for (auto& item : glTF_t->materials) ref->materials.emplace_back(MaterialGLTF::create(*ref, item));
+        for (auto& item : glTF_t->images) ref->images.emplace_back(ImageGLTF::create(ref, item));
+        for (auto& item : glTF_t->samplers) ref->samplers.emplace_back(SamplerGLTF::create(ref, item));
+        for (auto& item : glTF_t->textures) ref->textures.emplace_back(TextureGLTF::create(ref, item));
+        for (auto& item : glTF_t->materials) ref->materials.emplace_back(MaterialGLTF::create(ref, item));
 
-        for (auto& item : glTF_t->meshes) ref->meshes.emplace_back(MeshGLTF::create(*ref, item));
-        for (auto& item : glTF_t->skins) ref->skins.emplace_back(SkinGLTF::create(*ref, item));
-        for (auto& item : glTF_t->cameras) ref->cameras.emplace_back(CameraGLTF::create(*ref, item));
+        for (auto& item : glTF_t->meshes) ref->meshes.emplace_back(MeshGLTF::create(ref, item));
+        for (auto& item : glTF_t->skins) ref->skins.emplace_back(SkinGLTF::create(ref, item));
+        for (auto& item : glTF_t->cameras) ref->cameras.emplace_back(CameraGLTF::create(ref, item));
 
-        for (auto& item : glTF_t->nodes) ref->nodes.emplace_back(NodeGLTF::create(*ref, item));
-        for (auto& item : glTF_t->scenes) ref->scenes.emplace_back(SceneGLTF::create(*ref, item));
+        for (auto& item : glTF_t->nodes) ref->nodes.emplace_back(NodeGLTF::create(ref, item));
+        for (auto& item : glTF_t->scenes) ref->scenes.emplace_back(SceneGLTF::create(ref, item));
 
-        for (auto& node : ref->nodes) node->addChildren(*ref);
+        if (glTF_t->scene == -1) glTF_t->scene = 0;
+        ref->scene = ref->scenes[glTF_t->scene];
 
         return ref;
     }
 
     void update()
     {
-        if (activeScene) activeScene->update();
+        scene->update();
     }
 
     void draw()
     {
-        if (activeScene) activeScene->draw();
+        scene->draw();
     }
 
     vector<AccessorGLTF::Ref> accessors;
@@ -314,70 +351,91 @@ struct RootGLTF
 
     fs::path gltfPath;
 
-    SceneGLTF::Ref activeScene;
+    SceneGLTF::Ref scene; // default scene
 };
 
-void NodeGLTF::addChildren(const RootGLTF& rootGLTF)
+void NodeGLTF::setup()
 {
     for (auto& child : property.children)
     {
-        addChild(rootGLTF.nodes[child]);
+        addChild(rootGLTF->nodes[child]);
     }
 }
 
-NodeGLTF::Ref NodeGLTF::create(const RootGLTF& rootGLTF, const ygltf::node_t& property)
+NodeGLTF::Ref NodeGLTF::create(RootGLTFRef rootGLTF, const ygltf::node_t& property)
 {
     NodeGLTF::Ref ref = make_shared<NodeGLTF>();
     ref->property = property;
-    if (property.camera != -1) ref->camera = rootGLTF.cameras[property.camera];
-    if (property.mesh != -1) ref->mesh = rootGLTF.meshes[property.mesh];
-    if (property.skin != -1) ref->skin = rootGLTF.skins[property.skin];
+    if (property.camera != -1) ref->camera = rootGLTF->cameras[property.camera];
+    if (property.mesh != -1) ref->mesh = rootGLTF->meshes[property.mesh];
+    if (property.skin != -1) ref->skin = rootGLTF->skins[property.skin];
+#if 0
+    //ref->setPosition({ property.translation[0], property.translation[1], property.translation[2] });
+    //ref->setScale({ property.scale[0], property.scale[1], property.scale[2] });
+    //ref->setRotation({ property.rotation[3], property.rotation[0], property.rotation[1], property.rotation[2] }); // (w, x, y, z)
+#else
     ref->setTransform(glm::make_mat4x4(property.matrix.data()));
+#endif
+    ref->rootGLTF = rootGLTF;
 
     return ref;
 }
 
-AccessorGLTF::Ref AccessorGLTF::create(const RootGLTF& rootGLTF, const ygltf::accessor_t& property)
+SceneGLTF::Ref SceneGLTF::create(RootGLTFRef rootGLTF, const ygltf::scene_t& property)
+{
+    SceneGLTF::Ref ref = make_shared<SceneGLTF>();
+    ref->property = property;
+
+    for (auto& item : property.nodes)
+    {
+        ref->nodes.push_back(rootGLTF->nodes[item]);
+    }
+
+    return ref;
+}
+
+AccessorGLTF::Ref AccessorGLTF::create(RootGLTFRef rootGLTF, const ygltf::accessor_t& property)
 {
     CI_ASSERT_MSG(property.sparse.count == -1, "Unsupported");
 
     AccessorGLTF::Ref ref = make_shared<AccessorGLTF>();
-    auto bufferView = rootGLTF.bufferViews[property.bufferView];
+    auto bufferView = rootGLTF->bufferViews[property.bufferView];
     ref->property = property;
     ref->byteStride = bufferView->property.byteStride;
+    ref->gpuBuffer = bufferView->gpuBuffer;
 
     return ref;
 }
 
-ImageGLTF::Ref ImageGLTF::create(const RootGLTF& rootGLTF, const ygltf::image_t& property)
+ImageGLTF::Ref ImageGLTF::create(RootGLTFRef rootGLTF, const ygltf::image_t& property)
 {
     CI_ASSERT_MSG(property.bufferView == -1, "Unsupported");
 
     ImageGLTF::Ref ref = make_shared<ImageGLTF>();
     ref->property = property;
 
-    ref->surface = am::surface((rootGLTF.gltfPath.parent_path() / property.uri).string());
+    ref->surface = am::surface((rootGLTF->gltfPath.parent_path() / property.uri).string());
 
     return ref;
 }
 
-BufferGLTF::Ref BufferGLTF::create(const RootGLTF& rootGLTF, const ygltf::buffer_t& property)
+BufferGLTF::Ref BufferGLTF::create(RootGLTFRef rootGLTF, const ygltf::buffer_t& property)
 {
     BufferGLTF::Ref ref = make_shared<BufferGLTF>();
     ref->property = property;
 
-    ref->cpuBuffer = am::buffer((rootGLTF.gltfPath.parent_path() / property.uri).string());
+    ref->cpuBuffer = am::buffer((rootGLTF->gltfPath.parent_path() / property.uri).string());
 
     return ref;
 }
 
-MaterialGLTF::Ref MaterialGLTF::create(const RootGLTF& rootGLTF, const ygltf::material_t& property)
+MaterialGLTF::Ref MaterialGLTF::create(RootGLTFRef rootGLTF, const ygltf::material_t& property)
 {
     MaterialGLTF::Ref ref = make_shared<MaterialGLTF>();
     ref->property = property;
 
     auto fn = [&](TextureGLTF::Ref& tex, int idx) {
-        if (idx != -1) tex = rootGLTF.textures[idx];
+        if (idx != -1) tex = rootGLTF->textures[idx];
     };
     fn(ref->emissiveTexture, property.emissiveTexture.index);
     fn(ref->normalTexture, property.normalTexture.index);
@@ -386,7 +444,7 @@ MaterialGLTF::Ref MaterialGLTF::create(const RootGLTF& rootGLTF, const ygltf::ma
     fn(ref->baseColorTexture, property.pbrMetallicRoughness.baseColorTexture.index);
     fn(ref->metallicRoughnessTexture, property.pbrMetallicRoughness.metallicRoughnessTexture.index);
 
-    //ref->shader = 
+    ref->oglShader = am::glslProg("color");
 
     return ref;
 }
@@ -410,57 +468,87 @@ geom::Attrib getAttribFromString(const string& str)
     CI_ASSERT_MSG(0, str.c_str());
 }
 
-MeshPrimitiveGLTF::Ref MeshPrimitiveGLTF::create(const RootGLTF& rootGLTF, const ygltf::mesh_primitive_t& property)
+size_t getComponentSize(ygltf::accessor_t::componentType_t componentType)
+{
+    if (componentType == ygltf::accessor_t::componentType_t::byte_t) return sizeof(int8_t);
+    if (componentType == ygltf::accessor_t::componentType_t::unsigned_byte_t) return sizeof(uint8_t);
+    if (componentType == ygltf::accessor_t::componentType_t::unsigned_byte_t) return sizeof(uint8_t);
+    if (componentType == ygltf::accessor_t::componentType_t::short_t) return sizeof(int16_t);
+    if (componentType == ygltf::accessor_t::componentType_t::unsigned_short_t) return sizeof(uint16_t);
+    if (componentType == ygltf::accessor_t::componentType_t::unsigned_int_t) return sizeof(uint32_t);
+    if (componentType == ygltf::accessor_t::componentType_t::float_t) return sizeof(float);
+}
+
+geom::DataType getDataType(ygltf::accessor_t::componentType_t componentType)
+{
+    if (componentType == ygltf::accessor_t::componentType_t::byte_t) return geom::INTEGER;
+    if (componentType == ygltf::accessor_t::componentType_t::unsigned_byte_t) return geom::INTEGER;
+    if (componentType == ygltf::accessor_t::componentType_t::unsigned_byte_t) return geom::INTEGER;
+    if (componentType == ygltf::accessor_t::componentType_t::short_t) return geom::INTEGER;
+    if (componentType == ygltf::accessor_t::componentType_t::unsigned_short_t) return geom::INTEGER;
+    if (componentType == ygltf::accessor_t::componentType_t::unsigned_int_t) return geom::INTEGER;
+    if (componentType == ygltf::accessor_t::componentType_t::float_t) return geom::FLOAT;
+}
+
+uint8_t getDims(ygltf::accessor_t::type_t type)
+{
+    if (type == ygltf::accessor_t::type_t::scalar_t) return 1;
+    if (type == ygltf::accessor_t::type_t::vec2_t) return 2;
+    if (type == ygltf::accessor_t::type_t::vec3_t) return 3;
+    if (type == ygltf::accessor_t::type_t::vec4_t) return 4;
+    if (type == ygltf::accessor_t::type_t::mat2_t) return 4;
+    if (type == ygltf::accessor_t::type_t::mat3_t) return 9;
+    if (type == ygltf::accessor_t::type_t::mat4_t) return 16;
+}
+
+MeshPrimitiveGLTF::Ref MeshPrimitiveGLTF::create(RootGLTFRef rootGLTF, const ygltf::mesh_primitive_t& property)
 {
     MeshPrimitiveGLTF::Ref ref = make_shared<MeshPrimitiveGLTF>();
     ref->property = property;
 
-    AccessorGLTF::Ref indices = rootGLTF.accessors[property.indices];
-    ref->material = rootGLTF.materials[property.material];
+    AccessorGLTF::Ref indices = rootGLTF->accessors[property.indices];
+    ref->material = rootGLTF->materials[property.material];
 
-#if 0
-    vector<pair<geom::BufferLayout, gl::VboRef>> vertexArrayLayouts;
+    GLenum oglPrimitiveMode = (GLenum)property.mode;
+    auto oglIndexVbo = indices->gpuBuffer;
+
+    vector<pair<geom::BufferLayout, gl::VboRef>> oglVboLayouts;
+    size_t numVertices = 0;
     for (auto& kv : property.attributes)
     {
-        geom::Attrib attrib = getAttribFromString(kv.first);
-        AccessorGLTF::Ref attrAccessor = rootGLTF.accessors[kv.second];
+        AccessorGLTF::Ref acc = rootGLTF->accessors[kv.second];
         geom::BufferLayout layout;
-        layout.append(attrib, 3,  sizeof(Vert), offsetof(Vert, pos));
+        auto componentSize = getComponentSize(acc->property.componentType);
+        auto typeCount = getDims(acc->property.type);
+        layout.append(
+            getAttribFromString(kv.first),
+            getDataType(acc->property.componentType),
+            getDims(acc->property.type),
+            acc->byteStride,
+            acc->property.byteOffset);
+        oglVboLayouts.emplace_back(layout, acc->gpuBuffer);
+
+        numVertices = acc->property.count;
     }
 
-    GLenum glPrimitiveMode = (GLenum)property.mode;
-
-
-    layout.append(geom::Attrib::COLOR, 4, sizeof(Vert), offsetof(Vert, color));
-
-    // TODO: too ugly
-    create(uint32_t numVertices, GLenum glPrimitive, const std::vector<std::pair<geom::BufferLayout, VboRef>> &vertexArrayBuffers, uint32_t numIndices = 0, GLenum indexType = GL_UNSIGNED_SHORT, const VboRef &indexVbo = VboRef());
-
-    static VboMeshRef	create(uint32_t numVertices, GLenum glPrimitive, const std::vector<std::pair<geom::BufferLayout, VboRef>> &vertexArrayBuffers, uint32_t numIndices = 0, GLenum indexType = GL_UNSIGNED_SHORT, const VboRef &indexVbo = VboRef());
-
-
-    ref->oglVboMesh = gl::VboMesh::create(mVerts.size(), glPrimitiveMode, { { layout, mVbo } }, indices.size());
-    ref->oglVboMesh->bufferIndices(indices.size(), indices.data());
-
-
-    ref->oglVboMesh = gl::VboMesh::create();
-
-    auto oglIndexVbo = ref->indices->gpuBuffer;
-    ref->oglVboMesh = gl::VboMesh::create(mParticles.size(), glPrimitiveMode, { { particleLayout, mParticleVbo } }, oglIndexVbo);
-
-    static VboMeshRef	create(const geom::Source &source, const , oglIndexVbo);
-#endif
+    ref->oglVboMesh = gl::VboMesh::create(
+        numVertices,
+        oglPrimitiveMode,
+        oglVboLayouts,
+        indices->property.count,
+        (GLenum)indices->property.componentType,
+        oglIndexVbo);
 
     return ref;
 }
 
-TextureGLTF::Ref TextureGLTF::create(const RootGLTF& rootGLTF, const ygltf::texture_t& property)
+TextureGLTF::Ref TextureGLTF::create(RootGLTFRef rootGLTF, const ygltf::texture_t& property)
 {
     TextureGLTF::Ref ref = make_shared<TextureGLTF>();
     ref->property = property;
 
-    SamplerGLTF::Ref sampler = rootGLTF.samplers[property.sampler];
-    ImageGLTF::Ref source = rootGLTF.images[property.source];
+    SamplerGLTF::Ref sampler = rootGLTF->samplers[property.sampler];
+    ImageGLTF::Ref source = rootGLTF->images[property.source];
 
     // FIXME: ugly
     auto oglTexFormat = sampler->oglTexFormat;
@@ -473,7 +561,7 @@ TextureGLTF::Ref TextureGLTF::create(const RootGLTF& rootGLTF, const ygltf::text
     return ref;
 }
 
-BufferViewGLTF::Ref BufferViewGLTF::create(const RootGLTF& rootGLTF, const ygltf::bufferView_t& property)
+BufferViewGLTF::Ref BufferViewGLTF::create(RootGLTFRef rootGLTF, const ygltf::bufferView_t& property)
 {
     CI_ASSERT(property.buffer != -1);
     CI_ASSERT(property.byteLength != -1);
@@ -483,9 +571,9 @@ BufferViewGLTF::Ref BufferViewGLTF::create(const RootGLTF& rootGLTF, const ygltf
     BufferViewGLTF::Ref ref = make_shared<BufferViewGLTF>();
     ref->property = property;
 
-    auto buffer = rootGLTF.buffers[property.buffer];
+    auto buffer = rootGLTF->buffers[property.buffer];
     auto cpuBuffer = buffer->cpuBuffer;
-    auto offsetedData = (uint8_t*)cpuBuffer->getData() + cpuBuffer->getSize();
+    auto offsetedData = (uint8_t*)cpuBuffer->getData() + property.byteOffset;
     CI_ASSERT(property.byteOffset + property.byteLength <= cpuBuffer->getSize());
     
     ref->cpuBuffer = Buffer::create(offsetedData, property.byteLength);
@@ -502,11 +590,10 @@ public:
         log::makeLogger<log::LoggerFile>();
 
         auto filename = getAssetPath(MESH_FILENAME);
-        mRoot = RootGLTF::create(filename);
+        mRootGLTF = RootGLTF::create(filename);
 
-        const vec2 windowSize = toPixels(getWindowSize());
-        mCam = CameraPersp((int32_t)windowSize.x, (int32_t)windowSize.y, 60.0f, 0.01f, 1000.0f);
-        //mCam.lookAt( aabb.getMax(), aabb.getCenter() );
+        mCam.setEyePoint({ 2, 2, 2 });
+        mCam.lookAt({ 0, 0, 0 });
         mCamUi = CameraUi(&mCam, getWindow(), -1);
 
         auto mParams = createConfigUI({ 500, 200 });
@@ -521,7 +608,7 @@ public:
 
     void update() override
     {
-        mRoot->update();
+        mRootGLTF->update();
     }
 
     void draw() override
@@ -529,14 +616,19 @@ public:
         gl::setMatrices(mCam);
         gl::clear(Color(0, 0, 0));
 
-        mRoot->draw();
+        if (XYZ_VISIBLE)
+        {
+            gl::drawCoordinateFrame(1, 0.1, 0.01);
+        }
+
+        mRootGLTF->draw();
     }
 
 private:
     CameraPersp     mCam;
     CameraUi        mCamUi;
 
-    RootGLTF::Ref   mRoot;
+    RootGLTFRef     mRootGLTF;
 };
 
 CINDER_APP(CinderPBRApp, RendererGl, [](App::Settings* settings) {
