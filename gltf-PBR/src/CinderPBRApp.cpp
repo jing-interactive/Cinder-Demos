@@ -518,8 +518,6 @@ MeshPrimitiveGLTF::Ref MeshPrimitiveGLTF::create(RootGLTFRef rootGLTF, const ygl
     {
         AccessorGLTF::Ref acc = rootGLTF->accessors[kv.second];
         geom::BufferLayout layout;
-        auto componentSize = getComponentSize(acc->property.componentType);
-        auto typeCount = getDims(acc->property.type);
         layout.append(
             getAttribFromString(kv.first),
             getDataType(acc->property.componentType),
