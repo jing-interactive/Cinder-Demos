@@ -1,0 +1,1 @@
+Textures in BoomBox are resized to reduce repository size after downloading from https://github.com/KhronosGroup/glTF-Sample-Models/tree/master/2.0/BoomBox/glTF
