@@ -20,14 +20,13 @@
  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "nodes/Node.h"
+#include "Node2D.h"
 #include "cinder/app/App.h"
 
 using namespace ci;
 using namespace ci::app;
 using namespace std;
 
-namespace ph {
 namespace nodes {
 
 int          Node::nodeCount = 0;
@@ -450,129 +449,4 @@ bool Node::resize()
 	return false;
 }
 
-////////////////// Node2D //////////////////
-
-
-Node2D::Node2D( void )
-    : mPosition( 0 )
-    , mScale( 1 )
-    , mAnchor( 0 )
-    , mAnchorIsPercentage( false )
-{
-}
-
-Node2D::~Node2D( void )
-{
-}
-
-vec2 Node2D::screenToParent( const vec2 &pt ) const
-{
-	vec2 p = pt;
-
-	Node2DRef node = getParent<Node2D>();
-	if( node )
-		p = node->screenToObject( p );
-
-	return p;
-}
-
-vec2 Node2D::screenToObject( const vec2 &pt, float z ) const
-{
-	// Build the viewport (x, y, width, height).
-	vec2 offset = gl::getViewport().first;
-	vec2 size = gl::getViewport().second;
-	vec4 viewport = vec4( offset.x, offset.y, size.x, size.y );
-
-	// Calculate the view-projection matrix.
-	mat4 model = getWorldTransform();
-	mat4 viewProjection = gl::getProjectionMatrix() * gl::getViewMatrix();
-
-	// Calculate the intersection of the mouse ray with the near (z=0) and far (z=1) planes.
-	vec3 near = glm::unProject( vec3( pt.x, size.y - pt.y - 1, 0 ), model, viewProjection, viewport );
-	vec3 far = glm::unProject( vec3( pt.x, size.y - pt.y - 1, 1 ), model, viewProjection, viewport );
-
-	// Calculate world position.
-	return vec2( ci::lerp( near, far, ( z - near.z ) / ( far.z - near.z ) ) );
-}
-
-vec2 Node2D::parentToScreen( const vec2 &pt ) const
-{
-	vec2 p = pt;
-
-	Node2DRef node = getParent<Node2D>();
-	if( node )
-		p = node->objectToScreen( p );
-
-	return p;
-}
-
-vec2 Node2D::parentToObject( const vec2 &pt ) const
-{
-	mat4 invTransform = glm::inverse( getTransform() );
-	vec4 p = invTransform * vec4( pt, 0, 1 );
-
-	return vec2( p.x, p.y );
-}
-
-vec2 Node2D::objectToParent( const vec2 &pt ) const
-{
-	vec4 p = getTransform() * vec4( pt, 0, 1 );
-	return vec2( p.x, p.y );
-}
-
-vec2 Node2D::objectToScreen( const vec2 &pt ) const
-{
-	// Build the viewport (x, y, width, height).
-	vec2 offset = gl::getViewport().first;
-	vec2 size = gl::getViewport().second;
-	vec4 viewport = vec4( offset.x, offset.y, size.x, size.y );
-
-	// Calculate the view-projection matrix.
-	mat4 model = getWorldTransform();
-	mat4 viewProjection = gl::getProjectionMatrix() * gl::getViewMatrix();
-
-	vec2 p = vec2( glm::project( vec3( pt, 0 ), model, viewProjection, viewport ) );
-	p.y = size.y - 1 - p.y;
-
-	return p;
-}
-
-////////////////// Node3D //////////////////
-
-Node3D::Node3D( void )
-    : mScale( 1 )
-{
-}
-
-Node3D::~Node3D( void )
-{
-}
-
-void Node3D::treeDrawWireframe()
-{
-	if( !mIsVisible )
-		return;
-
-	// apply transform
-	gl::pushModelView();
-
-	// usual way to update model matrix
-	gl::setModelMatrix( getWorldTransform() );
-
-	// draw this node by calling derived class
-	drawWireframe();
-
-	// draw this node's children
-	NodeList::iterator itr;
-	for( itr = mChildren.begin(); itr != mChildren.end(); ++itr ) {
-		// only call other Node3D's
-		Node3DRef node = std::dynamic_pointer_cast<Node3D>( *itr );
-		if( node )
-			node->treeDrawWireframe();
-	}
-
-	// restore transform
-	gl::popModelView();
-}
-}
-} // namespace ph::nodes
+} // namespace nodes
