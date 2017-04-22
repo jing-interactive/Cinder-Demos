@@ -9,6 +9,7 @@ Cinder blocks that I heavily use:
 * [Cinder-DepthSensor](https://github.com/jing-interactive/Cinder-DepthSensor)
 * [Cinder-VNM](https://github.com/jing-interactive/Cinder-VNM)
 * [Cinder-ImGui](https://github.com/jing-interactive/Cinder-ImGui)
+* [Cinder-Nodes](https://github.com/jing-interactive/Cinder-Nodes)
 
 Stand-alone Cinder projects:
 
