@@ -201,6 +201,9 @@
   <ItemGroup />
   <ItemGroup>
     <ClInclude Include="..\include\nodes\Node.h" />
+    <ClInclude Include="..\include\nodes\Node2D.h" />
+    <ClInclude Include="..\include\nodes\Node3D.h" />
+    <ClInclude Include="..\include\nodes\NodeGL.h" />
     <ClInclude Include="..\include\Resources.h" />
     <ClInclude Include="..\include\item.def" />
     <ClInclude Include="..\..\..\Cinder\blocks\Cinder-ImGui\include\CinderImGui.h" />
@@ -221,6 +224,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\include\nodes\Node.cpp" />
+    <ClCompile Include="..\include\nodes\Node2D.cpp" />
+    <ClCompile Include="..\include\nodes\Node3D.cpp" />
     <ClCompile Include="..\include\yocto\yocto_gltf.cpp" />
     <ClCompile Include="..\src\CinderPBRApp.cpp" />
     <ClCompile Include="..\..\..\Cinder\blocks\Cinder-ImGui\src\CinderImGui.cpp" />

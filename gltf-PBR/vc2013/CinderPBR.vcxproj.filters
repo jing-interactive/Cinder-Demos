@@ -132,6 +132,12 @@
     <ClCompile Include="..\include\yocto\yocto_gltf.cpp">
       <Filter>yocto</Filter>
     </ClCompile>
+    <ClCompile Include="..\include\nodes\Node2D.cpp">
+      <Filter>nodes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\include\nodes\Node3D.cpp">
+      <Filter>nodes</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\Resources.h">
@@ -142,6 +148,15 @@
     </ClInclude>
     <ClInclude Include="..\include\yocto\yocto_gltf.h">
       <Filter>yocto</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\nodes\Node2D.h">
+      <Filter>nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\nodes\NodeGL.h">
+      <Filter>nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\nodes\Node3D.h">
+      <Filter>nodes</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
