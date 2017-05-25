@@ -45,40 +45,40 @@
     <ClCompile Include="..\src\CinderOptiXApp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Cinder\blocks\Cinder-VNM\src\AssetManager.cpp">
+    <ClCompile Include="..\..\..\Cinder\blocks\Cinder-VNM\src\AssetManager.cpp">
       <Filter>Blocks\vnm\src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Cinder\blocks\Cinder-VNM\src\MiniConfig.cpp">
+    <ClCompile Include="..\..\..\Cinder\blocks\Cinder-VNM\src\MiniConfig.cpp">
       <Filter>Blocks\vnm\src</Filter>
     </ClCompile>
-    <ClInclude Include="..\..\Cinder\blocks\Cinder-VNM\include\AssetManager.h">
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\AssetManager.h">
       <Filter>Blocks\vnm\include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Cinder\blocks\Cinder-VNM\include\CaptureHelper.h">
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\CaptureHelper.h">
       <Filter>Blocks\vnm\include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Cinder\blocks\Cinder-VNM\include\FontHelper.h">
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\FontHelper.h">
       <Filter>Blocks\vnm\include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Cinder\blocks\Cinder-VNM\include\GlslParamsBuilder.h">
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\GlslParamsBuilder.h">
       <Filter>Blocks\vnm\include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Cinder\blocks\Cinder-VNM\include\GlslParamsBuilderImgui.h">
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\GlslParamsBuilderImgui.h">
       <Filter>Blocks\vnm\include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Cinder\blocks\Cinder-VNM\include\MiniConfig.h">
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\MiniConfig.h">
       <Filter>Blocks\vnm\include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Cinder\blocks\Cinder-VNM\include\MiniConfigImgui.h">
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\MiniConfigImgui.h">
       <Filter>Blocks\vnm\include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Cinder\blocks\Cinder-VNM\include\MotionHelper.h">
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\MotionHelper.h">
       <Filter>Blocks\vnm\include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Cinder\blocks\Cinder-VNM\include\StateMachine.h">
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\StateMachine.h">
       <Filter>Blocks\vnm\include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Cinder\blocks\Cinder-VNM\include\TextureHelper.h">
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\TextureHelper.h">
       <Filter>Blocks\vnm\include</Filter>
     </ClInclude>
     <ClCompile Include="..\include\sutil\Arcball.cpp">
@@ -132,47 +132,47 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\src\tutorial11.cu">
+    <CudaCompile Include="..\src\box.cu">
       <Filter>CUDA Files</Filter>
-    </None>
-    <None Include="..\src\tutorial0.cu">
+    </CudaCompile>
+    <CudaCompile Include="..\src\parallelogram.cu">
       <Filter>CUDA Files</Filter>
-    </None>
-    <None Include="..\src\tutorial1.cu">
+    </CudaCompile>
+    <CudaCompile Include="..\src\tutorial0.cu">
       <Filter>CUDA Files</Filter>
-    </None>
-    <None Include="..\src\tutorial2.cu">
+    </CudaCompile>
+    <CudaCompile Include="..\src\tutorial1.cu">
       <Filter>CUDA Files</Filter>
-    </None>
-    <None Include="..\src\tutorial3.cu">
+    </CudaCompile>
+    <CudaCompile Include="..\src\tutorial2.cu">
       <Filter>CUDA Files</Filter>
-    </None>
-    <None Include="..\src\tutorial4.cu">
+    </CudaCompile>
+    <CudaCompile Include="..\src\tutorial3.cu">
       <Filter>CUDA Files</Filter>
-    </None>
-    <None Include="..\src\tutorial5.cu">
+    </CudaCompile>
+    <CudaCompile Include="..\src\tutorial4.cu">
       <Filter>CUDA Files</Filter>
-    </None>
-    <None Include="..\src\tutorial6.cu">
+    </CudaCompile>
+    <CudaCompile Include="..\src\tutorial5.cu">
       <Filter>CUDA Files</Filter>
-    </None>
-    <None Include="..\src\tutorial7.cu">
+    </CudaCompile>
+    <CudaCompile Include="..\src\tutorial6.cu">
       <Filter>CUDA Files</Filter>
-    </None>
-    <None Include="..\src\tutorial8.cu">
+    </CudaCompile>
+    <CudaCompile Include="..\src\tutorial7.cu">
       <Filter>CUDA Files</Filter>
-    </None>
-    <None Include="..\src\tutorial9.cu">
+    </CudaCompile>
+    <CudaCompile Include="..\src\tutorial8.cu">
       <Filter>CUDA Files</Filter>
-    </None>
-    <None Include="..\src\tutorial10.cu">
+    </CudaCompile>
+    <CudaCompile Include="..\src\tutorial9.cu">
       <Filter>CUDA Files</Filter>
-    </None>
-    <None Include="..\src\box.cu">
+    </CudaCompile>
+    <CudaCompile Include="..\src\tutorial10.cu">
       <Filter>CUDA Files</Filter>
-    </None>
-    <None Include="..\src\parallelogram.cu">
+    </CudaCompile>
+    <CudaCompile Include="..\src\tutorial11.cu">
       <Filter>CUDA Files</Filter>
-    </None>
+    </CudaCompile>
   </ItemGroup>
 </Project>

@@ -8,12 +8,11 @@
 #include "MiniConfig.h"
 
 #include "yocto/yocto_gltf.h"
-#include "nodes/Node.h"
+#include "nodes/Node3D.h"
 
 using namespace ci;
 using namespace ci::app;
 using namespace std;
-using namespace ph::nodes;
 
 typedef shared_ptr<struct RootGLTF> RootGLTFRef;
 
@@ -222,7 +221,7 @@ struct SkinGLTF
     }
 };
 
-struct NodeGLTF : public Node3D
+struct NodeGLTF : public nodes::Node3D
 {
     typedef shared_ptr<NodeGLTF> Ref;
     ygltf::node_t property;
