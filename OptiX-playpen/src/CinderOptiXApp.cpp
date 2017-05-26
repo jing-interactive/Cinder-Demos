@@ -450,7 +450,7 @@ void CinderOptiXApp::setup() {
 
     gl::enableVerticalSync(false);
 
-    tutorial_number = 0; // 0-11
+    tutorial_number = 1; // 0-11
 
     // set up path to ptx file associated with tutorial number
     std::stringstream ss;
