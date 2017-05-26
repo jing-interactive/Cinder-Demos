@@ -1,6 +1,7 @@
 #include "cinder/app/App.h"
 #include "cinder/app/RendererGl.h"
 #include "cinder/gl/gl.h"
+#include "cinder/params/Params.h"
 
 #include "cinder/CameraUi.h"
 #include "cinder/Log.h"
@@ -21,7 +22,6 @@ using namespace std;
 using namespace optix;
 
 #pragma comment(lib, "optix.1.lib")
-#pragma comment(lib, "optix_prime.1.lib")
 #pragma comment(lib, "optixu.1.lib")
 
 static float rand_range(float min, float max)
@@ -30,18 +30,39 @@ static float rand_range(float min, float max)
     return min + (max - min) * rnd(seed);
 }
 
+class CinderOptiXApp : public App {
+public:
+    void setup() override;
+    void update() override;
+    void draw() override;
+    void resize() override;
+
+private:
+    gl::TextureRef mTexture;
+    CameraPersp mCam;
+    CameraUi mCamUi;
+    int mTutorialId = -1;
+
+    Context      context;
+
+    std::string ptxPath(const std::string& cuda_file);
+    optix::Buffer getOutputBuffer();
+    void destroyContext();
+    void createContext();
+    void createGeometry();
+    void setupLights();
+    void updateCamera(ci::Camera &cam);
+};
+
 //------------------------------------------------------------------------------
 //
 // Globals
 //
 //------------------------------------------------------------------------------
 
-Context      context;
 bool         use_pbo = false;
 
-std::string  texture_path = ci::app::getAssetDirectories()[0].string() + "/textures";
 std::string  tutorial_ptx_path;
-int          tutorial_number = 10;
 
 //------------------------------------------------------------------------------
 //
@@ -49,13 +70,7 @@ int          tutorial_number = 10;
 //
 //------------------------------------------------------------------------------
 
-std::string ptxPath(const std::string& cuda_file);
-optix::Buffer getOutputBuffer();
-void destroyContext();
-void createContext();
-void createGeometry();
-void setupLights();
-void updateCamera(ci::Camera &cam);
+
 
 //------------------------------------------------------------------------------
 //
@@ -63,17 +78,17 @@ void updateCamera(ci::Camera &cam);
 //
 //------------------------------------------------------------------------------
 
-std::string ptxPath(const std::string& cuda_file)
+std::string CinderOptiXApp::ptxPath(const std::string& cuda_file)
 {
     return ci::app::getAssetDirectories()[0].string() + "/ptx/" + cuda_file + ".ptx";
 }
 
-optix::Buffer getOutputBuffer()
+optix::Buffer CinderOptiXApp::getOutputBuffer()
 {
     return context["output_buffer"]->getBuffer();
 }
 
-void destroyContext()
+void CinderOptiXApp::destroyContext()
 {
     if (context) {
         context->destroy();
@@ -81,7 +96,7 @@ void destroyContext()
     }
 }
 
-void createContext()
+void CinderOptiXApp::createContext()
 {
     // Set up context
     context = Context::create();
@@ -113,7 +128,7 @@ void createContext()
 
     // Ray generation program
     {
-        const std::string camera_name = tutorial_number >= 11 ? "env_camera" : "pinhole_camera";
+        const std::string camera_name = mTutorialId >= 11 ? "env_camera" : "pinhole_camera";
         Program ray_gen_program = context->createProgramFromPTXFile(tutorial_ptx_path, camera_name);
         context->setRayGenerationProgram(0, ray_gen_program);
     }
@@ -125,10 +140,10 @@ void createContext()
 
     // Miss program
     {
-        const std::string miss_name = tutorial_number >= 5 ? "envmap_miss" : "miss";
+        const std::string miss_name = mTutorialId >= 5 ? "envmap_miss" : "miss";
         context->setMissProgram(0, context->createProgramFromPTXFile(tutorial_ptx_path, miss_name));
         const float3 default_color = make_float3(1.0f, 1.0f, 1.0f);
-        const std::string texpath = texture_path + "/" + std::string("CedarCity.hdr");
+        const std::string texpath = getAssetPath("CedarCity.hdr").string();
         context["envmap"]->setTextureSampler(sutil::loadTexture(context, texpath, default_color));
         context["bg_color"]->setFloat(make_float3(0.34f, 0.55f, 0.85f));
     }
@@ -172,7 +187,7 @@ float4 make_plane(float3 n, float3 p)
     return make_float4(n, d);
 }
 
-void createGeometry()
+void CinderOptiXApp::createGeometry()
 {
     const std::string box_ptx(ptxPath("box.cu"));
     Program box_bounds = context->createProgramFromPTXFile(box_ptx, "box_bounds");
@@ -188,7 +203,7 @@ void createGeometry()
 
     // Create chull
     Geometry chull = 0;
-    if (tutorial_number >= 9){
+    if (mTutorialId >= 9) {
         chull = context->createGeometry();
         chull->setPrimitiveCount(1u);
         chull->setBoundingBoxProgram(context->createProgramFromPTXFile(tutorial_ptx_path, "chull_bounds"));
@@ -201,7 +216,7 @@ void createGeometry()
         float radius = 1;
         float3 xlate = make_float3(-1.4f, 0, -3.7f);
 
-        for (int i = 0; i < nsides; i++){
+        for (int i = 0; i < nsides; i++) {
             float angle = float(i) / float(nsides) * M_PIf * 2.0f;
             float x = cos(angle);
             float y = sin(angle);
@@ -240,16 +255,16 @@ void createGeometry()
 
     // Materials
     std::string box_chname;
-    if (tutorial_number >= 8){
+    if (mTutorialId >= 8) {
         box_chname = "box_closest_hit_radiance";
     }
-    else if (tutorial_number >= 3){
+    else if (mTutorialId >= 3) {
         box_chname = "closest_hit_radiance3";
     }
-    else if (tutorial_number >= 2){
+    else if (mTutorialId >= 2) {
         box_chname = "closest_hit_radiance2";
     }
-    else if (tutorial_number >= 1){
+    else if (mTutorialId >= 1) {
         box_chname = "closest_hit_radiance1";
     }
     else {
@@ -259,7 +274,7 @@ void createGeometry()
     Material box_matl = context->createMaterial();
     Program box_ch = context->createProgramFromPTXFile(tutorial_ptx_path, box_chname);
     box_matl->setClosestHitProgram(0, box_ch);
-    if (tutorial_number >= 3) {
+    if (mTutorialId >= 3) {
         Program box_ah = context->createProgramFromPTXFile(tutorial_ptx_path, "any_hit_shadow");
         box_matl->setAnyHitProgram(1, box_ah);
     }
@@ -270,22 +285,22 @@ void createGeometry()
     box_matl["reflectivity_n"]->setFloat(0.2f, 0.2f, 0.2f);
 
     std::string floor_chname;
-    if (tutorial_number >= 7){
+    if (mTutorialId >= 7) {
         floor_chname = "floor_closest_hit_radiance";
     }
-    else if (tutorial_number >= 6){
+    else if (mTutorialId >= 6) {
         floor_chname = "floor_closest_hit_radiance5";
     }
-    else if (tutorial_number >= 4){
+    else if (mTutorialId >= 4) {
         floor_chname = "floor_closest_hit_radiance4";
     }
-    else if (tutorial_number >= 3){
+    else if (mTutorialId >= 3) {
         floor_chname = "closest_hit_radiance3";
     }
-    else if (tutorial_number >= 2){
+    else if (mTutorialId >= 2) {
         floor_chname = "closest_hit_radiance2";
     }
-    else if (tutorial_number >= 1){
+    else if (mTutorialId >= 1) {
         floor_chname = "closest_hit_radiance1";
     }
     else {
@@ -295,7 +310,7 @@ void createGeometry()
     Material floor_matl = context->createMaterial();
     Program floor_ch = context->createProgramFromPTXFile(tutorial_ptx_path, floor_chname);
     floor_matl->setClosestHitProgram(0, floor_ch);
-    if (tutorial_number >= 3) {
+    if (mTutorialId >= 3) {
         Program floor_ah = context->createProgramFromPTXFile(tutorial_ptx_path, "any_hit_shadow");
         floor_matl->setAnyHitProgram(1, floor_ah);
     }
@@ -314,7 +329,7 @@ void createGeometry()
     Material glass_matl;
     if (chull.get()) {
         Program glass_ch = context->createProgramFromPTXFile(tutorial_ptx_path, "glass_closest_hit_radiance");
-        const std::string glass_ahname = tutorial_number >= 10 ? "glass_any_hit_shadow" : "any_hit_shadow";
+        const std::string glass_ahname = mTutorialId >= 10 ? "glass_any_hit_shadow" : "any_hit_shadow";
         Program glass_ah = context->createProgramFromPTXFile(tutorial_ptx_path, glass_ahname);
         glass_matl = context->createMaterial();
         glass_matl->setClosestHitProgram(0, glass_ch);
@@ -357,7 +372,7 @@ void createGeometry()
 
 }
 
-void setupLights()
+void CinderOptiXApp::setupLights()
 {
     BasicLight lights[] = {
         { make_float3(-5.0f, 60.0f, -16.0f), make_float3(1.0f, 1.0f, 1.0f), 1 }
@@ -373,7 +388,7 @@ void setupLights()
     context["lights"]->set(light_buffer);
 }
 
-void updateCamera(ci::Camera &cam)
+void CinderOptiXApp::updateCamera(ci::Camera &cam)
 {
     const float vfov = cam.getFov();
     const float aspect_ratio = cam.getAspectRatio();
@@ -394,45 +409,6 @@ void updateCamera(ci::Camera &cam)
     context["V"]->setFloat(camera_v);
     context["W"]->setFloat(camera_w);
 }
-
-///
-/// TODO:
-/// move to class methods
-/// PBO
-///
-
-class CinderOptiXApp : public App {
-public:
-    void setup() override;
-    void update() override;
-    void draw() override;
-    void resize() override;
-
-private:
-    gl::TextureRef mTexture;
-    CameraPersp mCam;
-    CameraUi mCamUi;
-};
-
-//-----------------------------------------------------------------------------
-//
-//  tutorial
-//
-//-----------------------------------------------------------------------------
-
-// 0 - normal shader
-// 1 - lambertian
-// 2 - specular
-// 3 - shadows
-// 4 - reflections
-// 5 - miss
-// 6 - schlick
-// 7 - procedural texture on floor
-// 8 - LGRustyMetal
-// 9 - intersection
-// 10 - anyhit
-// 11 - camera
-
 void handleError2(RTcontext context, RTresult code, const char* file,
     int line)
 {
@@ -446,16 +422,25 @@ void handleError2(RTcontext context, RTresult code, const char* file,
 void CinderOptiXApp::setup() {
     log::makeLogger<log::LoggerFile>();
 
-    createConfigUI({ 200, 200 });
+    auto param = createConfigUI({ 300, 200 });
+    vector<string> tutorialNames =
+    {
+        "0 - normal shader",
+        "1 - lambertian",
+        "2 - specular",
+        "3 - shadows",
+        "4 - reflections",
+        "5 - miss",
+        "6 - schlick",
+        "7 - procedural texture on floor",
+        "8 - LGRustyMetal",
+        "9 - intersection",
+        "10 - anyhit",
+        "11 - camera",
+    };
+    ADD_ENUM_TO_INT(param, TUTORIAL_ID, tutorialNames);
 
     gl::enableVerticalSync(false);
-
-    tutorial_number = 1; // 0-11
-
-    // set up path to ptx file associated with tutorial number
-    std::stringstream ss;
-    ss << "tutorial" << tutorial_number << ".cu";
-    tutorial_ptx_path = ptxPath(ss.str());
 
     auto format = gl::Texture::Format().dataType(GL_UNSIGNED_BYTE);
     mTexture = gl::Texture::create(nullptr, GL_BGRA, APP_WIDTH, APP_HEIGHT, format);
@@ -464,38 +449,51 @@ void CinderOptiXApp::setup() {
     mCam.lookAt(vec3(7.0f, 9.2f, -6.0f), vec3(0.0f, 4.0f, 0.0f));
     mCamUi.setCamera(&mCam);
     mCamUi.connect(getWindow());
-
-    try {
-        createContext();
-        createGeometry();
-        setupLights();
-
-        context->validate();
-        // destroyContext();
-    }
-    catch (sutil::APIError& e) {
-        handleError2(context->get(), e.code, e.file.c_str(), e.line);
-    }
-    catch (std::exception& e) {
-        CI_LOG_EXCEPTION("", e);
-    }
 }
 
 void CinderOptiXApp::resize() {
     APP_WIDTH = getWindowWidth();
     APP_HEIGHT = getWindowHeight();
-    sutil::resizeBuffer(getOutputBuffer(), APP_WIDTH, APP_HEIGHT);
     auto format = gl::Texture::Format().dataType(GL_UNSIGNED_BYTE);
     mTexture = gl::Texture::create(nullptr, GL_BGRA, APP_WIDTH, APP_HEIGHT, format);
 
     mCam.setPerspective(60, getWindowAspectRatio(), 0.1f, 1000.0f);
+
+    if (context)
+    {
+        sutil::resizeBuffer(getOutputBuffer(), APP_WIDTH, APP_HEIGHT);
+    }
 }
 
 void CinderOptiXApp::update() {
-    getWindow()->setTitle(to_string((int)getAverageFps()));
+
+    if (mTutorialId != TUTORIAL_ID)
+    {
+        mTutorialId = TUTORIAL_ID;
+
+        // set up path to ptx file associated with tutorial number
+        std::stringstream ss;
+        ss << "tutorial" << mTutorialId << ".cu";
+        tutorial_ptx_path = ptxPath(ss.str());
+
+        try {
+            createContext();
+            createGeometry();
+            setupLights();
+
+            context->validate();
+            // destroyContext();
+        }
+        catch (sutil::APIError& e) {
+            handleError2(context->get(), e.code, e.file.c_str(), e.line);
+        }
+        catch (std::exception& e) {
+            CI_LOG_EXCEPTION("", e);
+        }
+    }
+    _FPS = getAverageFps();
 
     updateCamera(mCam);
-
     context->launch(0, APP_WIDTH, APP_HEIGHT);
 
     optix::Buffer buffer = context["output_buffer"]->getBuffer();
@@ -515,7 +513,5 @@ CINDER_APP(CinderOptiXApp, RendererGl(RendererGl::Options().msaa(0)), [](App::Se
     readConfig();
 
     settings->setWindowSize(APP_WIDTH, APP_HEIGHT);
-
     settings->disableFrameRate();
-    //	settings->setHighDensityDisplayEnabled();
 })

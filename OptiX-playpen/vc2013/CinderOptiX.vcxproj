@@ -133,7 +133,6 @@
       <FileType>Document</FileType>
       <CompileOut Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)..\assets\ptx\%(Filename)%(Extension).ptx</CompileOut>
     </CudaCompile>
-    <CudaCompile Include="..\src\draw_color.cu" />
     <CudaCompile Include="..\src\parallelogram.cu">
       <FileType>Document</FileType>
     </CudaCompile>

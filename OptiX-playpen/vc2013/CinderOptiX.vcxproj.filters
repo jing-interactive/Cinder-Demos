@@ -174,8 +174,5 @@
     <CudaCompile Include="..\src\tutorial11.cu">
       <Filter>CUDA Files</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\src\draw_color.cu">
-      <Filter>CUDA Files</Filter>
-    </CudaCompile>
   </ItemGroup>
 </Project>
