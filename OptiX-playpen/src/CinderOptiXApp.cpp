@@ -1,3 +1,4 @@
+// Cinder
 #include "cinder/app/App.h"
 #include "cinder/app/RendererGl.h"
 #include "cinder/gl/gl.h"
@@ -5,14 +6,16 @@
 
 #include "cinder/CameraUi.h"
 #include "cinder/Log.h"
+#include "cinder/Rand.h"
 
+// OptiX
 #include <optixu/optixpp_namespace.h>
 #include <optixu/optixu_math_stream_namespace.h>
 
 #include "sutil/sutil.h"
 #include "commonStructs.h"
-#include "random.h"
 
+// VNM
 #include "AssetManager.h"
 #include "MiniConfig.h"
 
@@ -24,13 +27,8 @@ using namespace optix;
 #pragma comment(lib, "optix.1.lib")
 #pragma comment(lib, "optixu.1.lib")
 
-static float rand_range(float min, float max)
+class CinderOptiXApp : public App
 {
-    static unsigned int seed = 0u;
-    return min + (max - min) * rnd(seed);
-}
-
-class CinderOptiXApp : public App {
 public:
     void setup() override;
     void update() override;
@@ -124,30 +122,7 @@ void CinderOptiXApp::createContext()
 
     optix::Buffer buffer = sutil::createOutputBuffer(context, RT_FORMAT_UNSIGNED_BYTE4, APP_WIDTH, APP_HEIGHT, use_pbo);
     context["output_buffer"]->set(buffer);
-
-
-    // Ray generation program
-    {
-        const std::string camera_name = mTutorialId >= 11 ? "env_camera" : "pinhole_camera";
-        Program ray_gen_program = context->createProgramFromPTXFile(tutorial_ptx_path, camera_name);
-        context->setRayGenerationProgram(0, ray_gen_program);
-    }
-
-    // Exception program
-    Program exception_program = context->createProgramFromPTXFile(tutorial_ptx_path, "exception");
-    context->setExceptionProgram(0, exception_program);
-    context["bad_color"]->setFloat(1.0f, 0.0f, 1.0f);
-
-    // Miss program
-    {
-        const std::string miss_name = mTutorialId >= 5 ? "envmap_miss" : "miss";
-        context->setMissProgram(0, context->createProgramFromPTXFile(tutorial_ptx_path, miss_name));
-        const float3 default_color = make_float3(1.0f, 1.0f, 1.0f);
-        const std::string texpath = getAssetPath("CedarCity.hdr").string();
-        context["envmap"]->setTextureSampler(sutil::loadTexture(context, texpath, default_color));
-        context["bg_color"]->setFloat(make_float3(0.34f, 0.55f, 0.85f));
-    }
-
+    
     // 3D solid noise buffer, 1 float channel, all entries in the range [0.0, 1.0].
 
     const int tex_APP_WIDTH = 64;
@@ -157,9 +132,10 @@ void CinderOptiXApp::createContext()
     float *tex_data = (float *)noiseBuffer->map();
 
     // Random noise in range [0, 1]
-    for (int i = tex_APP_WIDTH * tex_APP_HEIGHT * tex_depth; i > 0; i--) {
+    for (int i = tex_APP_WIDTH * tex_APP_HEIGHT * tex_depth; i > 0; i--)
+    {
         // One channel 3D noise in [0.0, 1.0] range.
-        *tex_data++ = rand_range(0.0f, 1.0f);
+        *tex_data++ = randFloat();
     }
     noiseBuffer->unmap();
 
@@ -189,6 +165,28 @@ float4 make_plane(float3 n, float3 p)
 
 void CinderOptiXApp::createGeometry()
 {
+    // Ray generation program
+    {
+        const std::string camera_name = mTutorialId >= 11 ? "env_camera" : "pinhole_camera";
+        Program ray_gen_program = context->createProgramFromPTXFile(tutorial_ptx_path, camera_name);
+        context->setRayGenerationProgram(0, ray_gen_program);
+    }
+
+    // Exception program
+    Program exception_program = context->createProgramFromPTXFile(tutorial_ptx_path, "exception");
+    context->setExceptionProgram(0, exception_program);
+    context["bad_color"]->setFloat(1.0f, 0.0f, 1.0f);
+
+    // Miss program
+    {
+        const std::string miss_name = mTutorialId >= 5 ? "envmap_miss" : "miss";
+        context->setMissProgram(0, context->createProgramFromPTXFile(tutorial_ptx_path, miss_name));
+        const float3 default_color = make_float3(1.0f, 1.0f, 1.0f);
+        const std::string texpath = getAssetPath("CedarCity.hdr").string();
+        context["envmap"]->setTextureSampler(sutil::loadTexture(context, texpath, default_color));
+        context["bg_color"]->setFloat(make_float3(0.34f, 0.55f, 0.85f));
+    }
+
     const std::string box_ptx(ptxPath("box.cu"));
     Program box_bounds = context->createProgramFromPTXFile(box_ptx, "box_bounds");
     Program box_intersect = context->createProgramFromPTXFile(box_ptx, "box_intersect");
@@ -409,8 +407,8 @@ void CinderOptiXApp::updateCamera(ci::Camera &cam)
     context["V"]->setFloat(camera_v);
     context["W"]->setFloat(camera_w);
 }
-void handleError2(RTcontext context, RTresult code, const char* file,
-    int line)
+
+void handleError2(RTcontext context, RTresult code, const char* file, int line)
 {
     const char* message;
     char s[2048];
@@ -441,9 +439,6 @@ void CinderOptiXApp::setup() {
     ADD_ENUM_TO_INT(param, TUTORIAL_ID, tutorialNames);
 
     gl::enableVerticalSync(false);
-
-    auto format = gl::Texture::Format().dataType(GL_UNSIGNED_BYTE);
-    mTexture = gl::Texture::create(nullptr, GL_BGRA, APP_WIDTH, APP_HEIGHT, format);
 
     mCam.setPerspective(60, getWindowAspectRatio(), 0.1f, 1000.0f);
     mCam.lookAt(vec3(7.0f, 9.2f, -6.0f), vec3(0.0f, 4.0f, 0.0f));
@@ -477,12 +472,12 @@ void CinderOptiXApp::update() {
         tutorial_ptx_path = ptxPath(ss.str());
 
         try {
+            destroyContext();
             createContext();
             createGeometry();
             setupLights();
 
             context->validate();
-            // destroyContext();
         }
         catch (sutil::APIError& e) {
             handleError2(context->get(), e.code, e.file.c_str(), e.line);
