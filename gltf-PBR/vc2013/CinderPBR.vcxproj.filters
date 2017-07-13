@@ -126,16 +126,19 @@
     <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\TextureHelper.h">
       <Filter>Blocks\vnm\include</Filter>
     </ClInclude>
-    <ClCompile Include="..\include\nodes\Node.cpp">
-      <Filter>nodes</Filter>
-    </ClCompile>
     <ClCompile Include="..\include\yocto\yocto_gltf.cpp">
       <Filter>yocto</Filter>
     </ClCompile>
-    <ClCompile Include="..\include\nodes\Node2D.cpp">
+    <ClCompile Include="..\..\..\Cinder\blocks\Cinder-Nodes\src\Node2D.cpp">
       <Filter>nodes</Filter>
     </ClCompile>
-    <ClCompile Include="..\include\nodes\Node3D.cpp">
+    <ClCompile Include="..\..\..\Cinder\blocks\Cinder-Nodes\src\NodeRectangle.cpp">
+      <Filter>nodes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Cinder\blocks\Cinder-Nodes\src\Node3D.cpp">
+      <Filter>nodes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Cinder\blocks\Cinder-Nodes\src\Node.cpp">
       <Filter>nodes</Filter>
     </ClCompile>
   </ItemGroup>
@@ -143,19 +146,25 @@
     <ClInclude Include="..\include\Resources.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\nodes\Node.h">
-      <Filter>nodes</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\yocto\yocto_gltf.h">
       <Filter>yocto</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\nodes\Node2D.h">
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-Nodes\include\Node.h">
       <Filter>nodes</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\nodes\NodeGL.h">
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-Nodes\include\Node2D.h">
       <Filter>nodes</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\nodes\Node3D.h">
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-Nodes\include\Node3D.h">
+      <Filter>nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-Nodes\include\NodeGL.h">
+      <Filter>nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-Nodes\include\NodeRectangle.h">
+      <Filter>nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-Nodes\include\NodeExt.h">
       <Filter>nodes</Filter>
     </ClInclude>
   </ItemGroup>

@@ -8,7 +8,7 @@
 #include "MiniConfig.h"
 
 #include "yocto/yocto_gltf.h"
-#include "nodes/Node3D.h"
+#include "Cinder-Nodes/include/Node3D.h"
 
 using namespace ci;
 using namespace ci::app;
