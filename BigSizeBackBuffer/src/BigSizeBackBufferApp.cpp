@@ -32,12 +32,18 @@ class BigSizeBackBufferApp : public App
         getWindow()->getSignalKeyUp().connect([&](KeyEvent& event) {
             if (event.getCode() == KeyEvent::KEY_ESCAPE) quit();
         });
+
+        APP_WIDTH = getWindowWidth();
+        APP_HEIGHT = getWindowHeight();
         
         mGlslProg = am::glslProg(VS_NAME, FS_NAME);
         mGlslProg->uniform("uTex0", 0);
         mGlslProg->uniform("uTex1", 1);
         mGlslProg->uniform("uTex2", 2);
         mGlslProg->uniform("uTex3", 3);
+
+        gl::Texture2d::Format format = gl::Texture2d::Format().mipmap().
+            minFilter(GL_LINEAR_MIPMAP_LINEAR).magFilter(GL_LINEAR);
 
         getWindow()->getSignalDraw().connect([&] {
             gl::setMatrices( mCam );
@@ -62,5 +68,6 @@ private:
 CINDER_APP( BigSizeBackBufferApp, RendererGl, [](App::Settings* settings) {
     readConfig();
     settings->setWindowSize(APP_WIDTH, APP_HEIGHT);
+    settings->setFullScreen();
     settings->setMultiTouchEnabled(false);
 } )
