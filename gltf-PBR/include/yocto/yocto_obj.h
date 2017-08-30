@@ -12,7 +12,10 @@
 /// of textures Y axis. So in many cases textures appears flipped. To handle
 /// that, use the option to flip textures coordinates on either saving or
 /// loading. By default texture coordinates are flipped since this seems
-/// the convention found on test cases collected on the web.
+/// the convention found on test cases collected on the web. The value Tr
+/// has similar problems, since its relation to opacity is software specific.
+/// Again we let the user chose the convension and set the default to the
+/// one found on the web.
 ///
 /// In the high level interface, shapes are indexed meshes and are described
 /// by arrays of vertex indices for points/lines/triangles and arrays for vertex
@@ -55,6 +58,14 @@
 ///
 /// ## History
 ///
+/// - v 0.30: support for smoothing groups
+/// - v 0.29: use reference interface for textures
+/// - v 0.28: add function to split meshes into single shapes
+/// - v 0.27: explicit transforms
+/// - v 0.26: added interpreting of illum in scene conversions
+/// - v 0.25: added convention for Tr
+/// - v 0.24: remove exception from code and add explicit error handling
+/// - v 0.23: texture have always 4 channels
 /// - v 0.22: change variable names for compilation on gcc
 /// - v 0.21: bug fixes
 /// - v 0.20: use yocto_math in the interface and remove inline compilation
@@ -141,16 +152,23 @@ using property_map = std::map<std::string, std::vector<T>>;
 struct texture {
     /// path
     std::string path;
-    /// if loaded, image width
-    int width = 0;
-    /// if loaded, image hieght
-    int height = 0;
-    /// if loaded, number of component (1-4)
-    int ncomp = 0;
-    /// if loaded, pixel data for HDRs
-    std::vector<float> dataf;
-    /// if loaded, pixel data for LDRs
-    std::vector<unsigned char> datab;
+    /// if loaded, ldr image
+    ym::image4b ldr;
+    /// if loaded, hdr image
+    ym::image4f hdr;
+
+    /// get texture width
+    int width() const {
+        if (ldr) return ldr.width();
+        if (hdr) return hdr.width();
+        return 0;
+    }
+    /// get texture height
+    int height() const {
+        if (ldr) return ldr.height();
+        if (hdr) return hdr.height();
+        return 0;
+    }
 };
 
 ///
@@ -198,6 +216,8 @@ struct material {
     texture* kt_txt = nullptr;
     /// roughness texture
     texture* rs_txt = nullptr;
+    /// opacity texture
+    texture* op_txt = nullptr;
     /// bump map texture (heighfield)
     texture* bump_txt = nullptr;
     /// displacement map texture (heighfield)
@@ -222,12 +242,6 @@ struct material {
     texture_info disp_txt_info = {};
     /// normal texture
     texture_info norm_txt_info = {};
-
-    // physics extensions ---------------------
-    /// stiffness
-    float stiffness = 0.0f;
-    /// density
-    float density = 0.0f;
 
     // unknown properties ---------------------
     /// unknown string props
@@ -287,10 +301,22 @@ struct mesh {
 struct instance {
     // name
     std::string name;
-    /// transform
-    ym::mat4f xform = ym::identity_mat4f;
+    /// translation
+    ym::vec3f translation = {0, 0, 0};
+    /// rotation
+    ym::quat4f rotation = {0, 0, 0, 1};
+    /// scale
+    ym::vec3f scale = {1, 1, 1};
+    /// generic transform matrix
+    ym::mat4f matrix = ym::identity_mat4f;
     /// mesh instances
     mesh* msh = nullptr;
+
+    /// xform
+    ym::mat4f xform() const {
+        return ym::translation_mat4(translation) * ym::rotation_mat4(rotation) *
+               ym::scaling_mat4(scale) * matrix;
+    }
 };
 
 ///
@@ -299,8 +325,12 @@ struct instance {
 struct camera {
     /// name
     std::string name;
-    /// transform
-    ym::mat4f xform = ym::identity_mat4f;
+    /// translation
+    ym::vec3f translation = {0, 0, 0};
+    /// rotation
+    ym::quat4f rotation = {0, 0, 0, 1};
+    /// generic transform matrix
+    ym::mat4f matrix = ym::identity_mat4f;
     /// ortho cam
     bool ortho = false;
     /// vertical field of view
@@ -311,6 +341,12 @@ struct camera {
     float focus = 1;
     /// lens aperture
     float aperture = 0;
+
+    /// xform
+    ym::mat4f xform() const {
+        return ym::translation_mat4(translation) * ym::rotation_mat4(rotation) *
+               matrix;
+    }
 };
 
 ///
@@ -321,8 +357,13 @@ struct environment {
     std::string name;
     /// index of material in material array
     material* mat = nullptr;
-    /// transform
-    ym::mat4f xform = ym::identity_mat4f;
+    /// rotation
+    ym::quat4f rotation = {0, 0, 0, 1};
+    /// generic transform matrix
+    ym::mat4f matrix = ym::identity_mat4f;
+
+    /// xform
+    ym::mat4f xform() const { return ym::rotation_mat4(rotation) * matrix; }
 };
 
 ///
@@ -353,12 +394,17 @@ struct scene {
 ///     - filename: filename
 ///     - load_textures: whether to load textures (default to false)
 ///     - flip_texcoord: whether to flip the v coordinate
+///     - facet_non_smooth: duplicate vertices if smoothing off
 ///     - skip_missing: skip missing textures
+///     - flip_tr: whether to flip tr
+///     - err: if set, store error message on error
 /// - Returns:
-///     - scene
+///     - scene (nullptr on error)
 ///
 scene* load_scene(const std::string& filename, bool load_textures,
-    bool flip_texcoord = true, bool skip_missing = true);
+    bool skip_missing = true, bool flip_texcoord = true,
+    bool facent_non_smooth = false, bool flip_tr = true,
+    std::string* err = nullptr);
 
 ///
 /// Save scene
@@ -368,9 +414,14 @@ scene* load_scene(const std::string& filename, bool load_textures,
 ///     - scn: scene data to save
 ///     - save_textures: whether to save textures (default to false)
 ///     - flip_texcoord: whether to flip the v coordinate
+///     - flip_tr: whether to flip tr
+///     - err: if set, store error message on error
+/// - Returns:
+///     - whether an error occurred
 ///
-void save_scene(const std::string& filename, const scene* scn,
-    bool save_textures, bool flip_texcoord = true);
+bool save_scene(const std::string& filename, const scene* scn,
+    bool save_textures, bool flip_texcoord = true, bool flip_tr = true,
+    std::string* err = nullptr);
 
 #ifndef YOBJ_NO_IMAGE
 
@@ -380,10 +431,13 @@ void save_scene(const std::string& filename, const scene* scn,
 /// - Parameters:
 ///     - scn: scene to load textures into
 ///     - dirname: base directory name for texture files
-///     - skip_missing: whether to skip missing textures or throw an expection
+///     - skip_missing: whether to skip missing textures or stops with error
+///     - err: if set, store error message on error
+/// - Returns:
+///     - whether an error occurred
 ///
-void load_textures(
-    scene* scn, const std::string& dirname, bool skip_missing = false);
+bool load_textures(scene* scn, const std::string& dirname,
+    bool skip_missing = false, std::string* err = nullptr);
 
 ///
 /// Saves textures for an scene.
@@ -391,10 +445,13 @@ void load_textures(
 /// - Parameters:
 ///     - scn: scene to write textures from
 ///     - dirname: base directory name for texture files
-///     - skip_missing: whether to skip missing textures or throw an expection
+///     - skip_missing: whether to skip missing textures or stops with error
+///     - err: if set, store error message on error
+/// - Returns:
+///     - whether an error occurred
 ///
-void save_textures(
-    const scene* scn, const std::string& dirname, bool skip_missing = false);
+bool save_textures(const scene* scn, const std::string& dirname,
+    bool skip_missing = false, std::string* err = nullptr);
 
 #endif
 
@@ -442,6 +499,11 @@ void add_default_camera(scene* scn);
 /// Flatten scene instances into separate meshes.
 ///
 void flatten_instances(scene* scn);
+
+///
+/// Split meshes into single shapes
+///
+void split_shapes(scene* scn);
 
 // -----------------------------------------------------------------------------
 // LOW-LEVEL INTERFACE
@@ -507,6 +569,8 @@ struct obj_group {
     std::string matname;
     /// group name
     std::string groupname;
+    /// smoothing
+    bool smoothing = true;
 
     // element data -------------------------
     /// element vertices
@@ -610,12 +674,6 @@ struct obj_material {
     /// normal texture
     property_map<std::string> norm_txt_info = {};
 
-    // physics extensions --------------------
-    /// overall stiffness
-    float stiffness = 0;
-    /// density
-    float density = 0;
-
     // unknown properties ---------------------
     /// unknown string props
     property_map<std::string> unknown_props;
@@ -627,8 +685,14 @@ struct obj_material {
 struct obj_camera {
     /// camera name
     std::string name;
-    /// camera transform
-    ym::mat4f xform = ym::identity_mat4f;
+    /// translation
+    ym::vec3f translation = {0, 0, 0};
+    /// rotation
+    ym::quat4f rotation = {0, 0, 0, 1};
+    /// scale
+    ym::vec3f scale = {1, 1, 1};
+    /// generic transform matrix
+    ym::mat4f matrix = ym::identity_mat4f;
     /// orthografic camera
     bool ortho = false;
     /// vertical field of view
@@ -647,8 +711,10 @@ struct obj_camera {
 struct obj_environment {
     /// environment name
     std::string name;
-    /// transform
-    ym::mat4f xform = ym::identity_mat4f;
+    /// rotation
+    ym::quat4f rotation = {0, 0, 0, 1};
+    /// generic transform matrix
+    ym::mat4f matrix = ym::identity_mat4f;
     /// material name
     std::string matname;
 };
@@ -659,8 +725,14 @@ struct obj_environment {
 struct obj_instance {
     /// instance name
     std::string name;
-    /// transform
-    ym::mat4f xform = ym::identity_mat4f;
+    /// translation
+    ym::vec3f translation = {0, 0, 0};
+    /// rotation
+    ym::quat4f rotation = {0, 0, 0, 1};
+    /// scale
+    ym::vec3f scale = {1, 1, 1};
+    /// generic transform matrix
+    ym::mat4f matrix = ym::identity_mat4f;
     /// object name
     std::string meshname;
 };
@@ -695,39 +767,31 @@ struct obj {
 };
 
 ///
-/// IO Exception.
-///
-struct obj_exception : std::exception {
-    /// constructor with error message
-    obj_exception(const std::string& errmsg) : _errmsg(errmsg) {}
-
-    /// retieval of error message
-    virtual const char* what() const throw() { return _errmsg.c_str(); }
-
-   private:
-    std::string _errmsg;
-};
-
-///
 /// Load OBJ
 ///
 /// - Parameters:
 ///     - filename: filename
 ///     - flip_texcoord: whether to flip the v coordinate
+///     - flip_tr: whether to flip the Tr value
+///     - err: if set, store error message on error
 /// - Return:
-///     - obj
+///     - obj (nullptr on error)
 ///
-obj* load_obj(const std::string& filename, bool flip_texcoord = true);
+obj* load_obj(const std::string& filename, bool flip_texcoord = true,
+    bool flip_tr = true, std::string* err = nullptr);
 
 ///
 /// Load MTL
 ///
 /// - Parameters:
 ///     - filename: filename
+///     - flip_tr: whether to flip the Tr value
+///     - err: if set, store error message on error
 /// - Return:
-///     - loaded materials
+///     - loaded materials (empty on error)
 ///
-std::vector<obj_material> load_mtl(const std::string& filename);
+std::vector<obj_material> load_mtl(const std::string& filename,
+    bool flip_tr = true, std::string* err = nullptr);
 
 ///
 /// Save OBJ
@@ -736,24 +800,29 @@ std::vector<obj_material> load_mtl(const std::string& filename);
 ///     - filename: filename
 ///     - asset: obj data to save
 ///     - flip_texcoord: whether to flip the v coordinate
+///     - flip_tr: whether to flip the Tr value
+///     - err: if set, store error message on error
+/// - Returns:
+///     - whether an error occurred
 ///
-void save_obj(
-    const std::string& filename, const obj* asset, bool flip_texcoord = true);
+bool save_obj(const std::string& filename, const obj* asset,
+    bool flip_texcoord = true, bool flip_tr = true, std::string* err = nullptr);
 
 ///
 /// Save MTL (@deprecated interface)
 ///
-///
-void save_mtl(
-    const std::string& filename, const std::vector<obj_material>& materials);
+bool save_mtl(const std::string& filename,
+    const std::vector<obj_material>& materials, bool flip_tr = true,
+    std::string* err = nullptr);
 
 ///
 /// Converts an OBJ into a scene.
 ///
 /// - Parameters:
 ///     - obj: obj to be flattened
+///     - facet_non_smooth: duplicate vertices if smoothing off
 ///
-scene* obj_to_scene(const obj* obj);
+scene* obj_to_scene(const obj* obj, bool facet_non_smooth);
 
 ///
 /// Save a scene in an OBJ file.

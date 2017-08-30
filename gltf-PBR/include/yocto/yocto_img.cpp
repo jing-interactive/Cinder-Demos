@@ -29,8 +29,8 @@
 #include "yocto_img.h"
 
 #include <cmath>
-
-#ifndef YIMG_NO_STBIMAGE
+#include <map>
+#include <memory>
 
 #ifndef _WIN32
 #pragma GCC diagnostic push
@@ -57,189 +57,203 @@
 #pragma GCC diagnostic pop
 #endif
 
-#endif
+#define TINYEXR_IMPLEMENTATION
+#include "ext/tinyexr.h"
 
 namespace yimg {
 //
 // Get extension (including '.').
 //
-static inline std::string _get_extension(const std::string& filename) {
+std::string get_extension(const std::string& filename) {
     auto pos = filename.rfind('.');
     if (pos == std::string::npos) return "";
     return filename.substr(pos);
 }
 
 //
-// Loads an image
+// Check if an image is HDR based on filename
 //
-void load_image(const std::string& filename, int& width, int& height,
-    int& ncomp, float*& hdr) {
-    hdr = stbi_loadf(filename.c_str(), &width, &height, &ncomp, 0);
-    if (!hdr) { throw std::runtime_error("cannot load image " + filename); }
+bool is_hdr_filename(const std::string& filename) {
+    auto ext = get_extension(filename);
+    return ext == ".hdr" || ext == ".exr";
+}
+
+//
+// Loads an ldr image.
+//
+ym::image4b load_image4b(const std::string& filename) {
+    auto w = 0, h = 0, c = 0;
+    auto pixels =
+        std::unique_ptr<byte>(stbi_load(filename.c_str(), &w, &h, &c, 4));
+    if (!pixels) return {};
+    return ym::image4b(w, h, (ym::vec4b*)pixels.get());
+}
+
+//
+// Loads an hdr image.
+//
+ym::image4f load_image4f(const std::string& filename) {
+    auto ext = get_extension(filename);
+    auto w = 0, h = 0, c = 0;
+    auto pixels = std::unique_ptr<float>(nullptr);
+    if (ext == ".exr") {
+        auto pixels_ = (float*)nullptr;
+        if (!LoadEXR(&pixels_, &w, &h, filename.c_str(), nullptr))
+            pixels = std::unique_ptr<float>(pixels_);
+    } else {
+        pixels =
+            std::unique_ptr<float>(stbi_loadf(filename.c_str(), &w, &h, &c, 4));
+    }
+    if (!pixels) return {};
+    return ym::image4f(w, h, (ym::vec4f*)pixels.get());
+}
+
+//
+// Saves an ldr image.
+//
+bool save_image4b(const std::string& filename, const ym::image4b& img) {
+    if (get_extension(filename) == ".png") {
+        return stbi_write_png(filename.c_str(), img.width(), img.height(), 4,
+            (byte*)img.data(), img.width() * 4);
+    } else if (get_extension(filename) == ".jpg") {
+        return stbi_write_jpg(filename.c_str(), img.width(), img.height(), 4,
+            (byte*)img.data(), 75);
+    } else {
+        return false;
+    }
+}
+
+//
+// Saves an hdr image.
+//
+bool save_image4f(const std::string& filename, const ym::image4f& img) {
+    if (get_extension(filename) == ".hdr") {
+        return stbi_write_hdr(
+            filename.c_str(), img.width(), img.height(), 4, (float*)img.data());
+    } else if (get_extension(filename) == ".exr") {
+        return !SaveEXR(
+            (float*)img.data(), img.width(), img.height(), 4, filename.c_str());
+    } else {
+        return false;
+    }
 }
 
 //
 // Loads an image
 //
-void load_image(const std::string& filename, int& width, int& height,
-    int& ncomp, byte*& ldr) {
-    ldr = stbi_load(filename.c_str(), &width, &height, &ncomp, 0);
-    if (!ldr) { throw std::runtime_error("cannot load image " + filename); }
+std::vector<float> load_imagef(
+    const std::string& filename, int& width, int& height, int& ncomp) {
+    auto pixels = stbi_loadf(filename.c_str(), &width, &height, &ncomp, 0);
+    if (!pixels) return {};
+    auto ret = std::vector<float>(pixels, pixels + width * height * ncomp);
+    free(pixels);
+    return ret;
+}
+
+//
+// Loads an image
+//
+std::vector<byte> load_image(
+    const std::string& filename, int& width, int& height, int& ncomp) {
+    auto pixels = stbi_load(filename.c_str(), &width, &height, &ncomp, 0);
+    if (!pixels) return {};
+    auto ret = std::vector<byte>(pixels, pixels + width * height * ncomp);
+    free(pixels);
+    return ret;
 }
 
 //
 // Loads an image from memory.
 //
-void load_image_from_memory(const std::string& fmt, const byte* data,
-    int length, int& width, int& height, int& ncomp, float*& hdr) {
-    hdr = stbi_loadf_from_memory(data, length, &width, &height, &ncomp, 0);
-    if (!*hdr) {
-        throw std::runtime_error(
-            "cannot load image from memory with format " + fmt);
-    }
+std::vector<float> load_imagef_from_memory(const std::string& filename,
+    const byte* data, int length, int& width, int& height, int& ncomp) {
+    auto pixels =
+        stbi_loadf_from_memory(data, length, &width, &height, &ncomp, 0);
+    if (!pixels) return {};
+    auto ret = std::vector<float>(pixels, pixels + width * height * ncomp);
+    free(pixels);
+    return ret;
 }
 
 //
 // Loads an image from memory.
 //
-void load_image_from_memory(const std::string& fmt, const byte* data,
-    int length, int& width, int& height, int& ncomp, byte*& ldr) {
-    ldr = stbi_load_from_memory(data, length, &width, &height, &ncomp, 0);
-    if (!ldr) {
-        throw std::runtime_error(
-            "cannot load image from memory with format " + fmt);
-    }
-}
-
-//
-// Loads an image from memory.
-//
-void load_image_from_memory(const std::string& fmt, byte* data, int length,
-    int& width, int& height, int& ncomp, float*& hdr, byte*& ldr) {
-    if (fmt == "hdr")
-        load_image_from_memory(fmt, data, length, width, height, ncomp, hdr);
-    else
-        load_image_from_memory(fmt, data, length, width, height, ncomp, ldr);
-}
-
-//
-// Loads an image
-//
-void load_image(const std::string& filename, int& width, int& height,
-    int& ncomp, float*& hdr, byte*& ldr) {
-    if (_get_extension(filename) == ".hdr")
-        load_image(filename, width, height, ncomp, hdr);
-    else
-        load_image(filename, width, height, ncomp, ldr);
-}
-
-//
-// Loads an image
-//
-void load_image(const std::string& filename, int& width, int& height,
-    int& ncomp, std::vector<float>& hdr, std::vector<byte>& ldr) {
-    auto hdr_ = (float*)nullptr;
-    auto ldr_ = (byte*)nullptr;
-    load_image(filename, width, height, ncomp, hdr_, ldr_);
-    if (hdr_) {
-        hdr = std::vector<float>(hdr_, hdr_ + width * height * ncomp);
-        delete hdr_;
-    }
-    if (ldr_) {
-        ldr = std::vector<unsigned char>(ldr_, ldr_ + width * height * ncomp);
-        delete ldr_;
-    }
-}
-
-//
-// Loads an image from memory.
-//
-void load_image_from_memory(const std::string& fmt, const byte* data,
-    int length, int& width, int& height, int& ncomp, std::vector<float>& hdr,
-    std::vector<byte>& ldr) {
-    auto hdr_ = (float*)nullptr;
-    auto ldr_ = (byte*)nullptr;
-    load_image_from_memory(
-        fmt, (byte*)data, length, width, height, ncomp, hdr_, ldr_);
-    if (hdr_) {
-        hdr = std::vector<float>(hdr_, hdr_ + width * height * ncomp);
-        delete hdr_;
-    }
-    if (ldr_) {
-        ldr = std::vector<unsigned char>(ldr_, ldr_ + width * height * ncomp);
-        delete ldr_;
-    }
+std::vector<byte> load_image_from_memory(const std::string& filename,
+    const byte* data, int length, int& width, int& height, int& ncomp) {
+    auto pixels =
+        stbi_load_from_memory(data, length, &width, &height, &ncomp, 0);
+    if (!pixels) return {};
+    auto ret = std::vector<byte>(pixels, pixels + width * height * ncomp);
+    free(pixels);
+    return ret;
 }
 
 //
 // Saves an image
 //
-void save_image(const std::string& filename, int width, int height, int ncomp,
+bool save_imagef(const std::string& filename, int width, int height, int ncomp,
     const float* hdr) {
-    if (_get_extension(filename) == ".hdr") {
-        stbi_write_hdr(filename.c_str(), width, height, ncomp, hdr);
+    if (get_extension(filename) == ".hdr") {
+        return stbi_write_hdr(filename.c_str(), width, height, ncomp, hdr);
     } else {
-        throw std::invalid_argument("unsupported output extension " + filename);
+        return false;
     }
 }
 
 //
 // Saves an image
 //
-void save_image(const std::string& filename, int width, int height, int ncomp,
+bool save_image(const std::string& filename, int width, int height, int ncomp,
     const byte* ldr) {
-    if (_get_extension(filename) == ".png") {
-        if (!ldr) throw std::invalid_argument("ldr data required");
-        stbi_write_png(
+    if (get_extension(filename) == ".png") {
+        return stbi_write_png(
             filename.c_str(), width, height, ncomp, ldr, width * ncomp);
+    } else if (get_extension(filename) == ".jpg") {
+        return stbi_write_jpg(filename.c_str(), width, height, ncomp, ldr, 75);
     } else {
-        throw std::invalid_argument("unsupported output extension " + filename);
+        return false;
     }
 }
 
-//
-// Resize image.
-//
-void resize_image(int width, int height, int ncomp, const float* hdr,
-    int res_width, int res_height, float* res_hdr) {
-    auto img_stride = (int)sizeof(float) * width * ncomp;
-    auto res_stride = (int)sizeof(float) * res_width * ncomp;
-    stbir_resize_float(hdr, width, height, img_stride, res_hdr, res_width,
-        res_height, res_stride, ncomp);
+static const auto filter_map = std::map<resize_filter, stbir_filter>{
+    {resize_filter::def, STBIR_FILTER_DEFAULT},
+    {resize_filter::box, STBIR_FILTER_BOX},
+    {resize_filter::triangle, STBIR_FILTER_TRIANGLE},
+    {resize_filter::cubic_spline, STBIR_FILTER_CUBICBSPLINE},
+    {resize_filter::catmull_rom, STBIR_FILTER_CATMULLROM},
+    {resize_filter::mitchell, STBIR_FILTER_MITCHELL}};
+
+static const auto edge_map = std::map<resize_edge, stbir_edge>{
+    {resize_edge::def, STBIR_EDGE_CLAMP},
+    {resize_edge::clamp, STBIR_EDGE_CLAMP},
+    {resize_edge::reflect, STBIR_EDGE_REFLECT},
+    {resize_edge::wrap, STBIR_EDGE_WRAP}, {resize_edge::zero, STBIR_EDGE_ZERO}};
+
+///
+/// Resize image.
+///
+void resize_image(const ym::image4f& img, ym::image4f& res_img,
+    resize_filter filter, resize_edge edge, bool premultiplied_alpha) {
+    stbir_resize_float_generic((float*)img.data(), img.width(), img.height(),
+        sizeof(ym::vec4f) * img.width(), (float*)res_img.data(),
+        res_img.width(), res_img.height(), sizeof(ym::vec4f) * res_img.width(),
+        4, 3, (premultiplied_alpha) ? STBIR_FLAG_ALPHA_PREMULTIPLIED : 0,
+        edge_map.at(edge), filter_map.at(filter), STBIR_COLORSPACE_LINEAR,
+        nullptr);
 }
 
-//
-// Resize image.
-//
-void resize_image(int width, int height, int ncomp, const byte* ldr,
-    int res_width, int res_height, byte* res_ldr) {
-    auto img_stride = (int)sizeof(byte) * width * ncomp;
-    auto res_stride = (int)sizeof(byte) * res_width * ncomp;
-    stbir_resize_uint8_srgb(ldr, width, height, img_stride, res_ldr, res_width,
-        res_height, res_stride, ncomp,
-        (ncomp == 4) ? 3 : STBIR_ALPHA_CHANNEL_NONE, 0);
-}
-
-//
-// Resize image.
-//
-void resize_image(int width, int height, int ncomp,
-    const std::vector<float>& img, int res_width, int res_height,
-    std::vector<float>& res_img) {
-    res_img.resize(res_width * res_height);
-    resize_image(width, height, ncomp, img.data(), res_width, res_height,
-        res_img.data());
-}
-
-//
-// Resize image.
-//
-void resize_image(int width, int height, int ncomp,
-    const std::vector<byte>& img, int res_width, int res_height,
-    std::vector<byte>& res_img) {
-    res_img.resize(res_width * res_height);
-    resize_image(width, height, ncomp, img.data(), res_width, res_height,
-        res_img.data());
+///
+/// Resize image.
+///
+void resize_image(const ym::image4b& img, ym::image4b& res_img,
+    resize_filter filter, resize_edge edge, bool premultiplied_alpha) {
+    stbir_resize_uint8_generic((unsigned char*)img.data(), img.width(),
+        img.height(), sizeof(ym::vec4b) * img.width(),
+        (unsigned char*)res_img.data(), res_img.width(), res_img.height(),
+        sizeof(ym::vec4b) * res_img.width(), 4, 3,
+        (premultiplied_alpha) ? STBIR_FLAG_ALPHA_PREMULTIPLIED : 0,
+        edge_map.at(edge), filter_map.at(filter), STBIR_COLORSPACE_LINEAR,
+        nullptr);
 }
 
 }  // namespace yimg

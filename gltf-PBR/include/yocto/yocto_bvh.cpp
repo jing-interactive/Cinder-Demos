@@ -99,15 +99,15 @@ struct shape {
     const float* radius = nullptr;   // vertex radius
 
     // [private] bvh data -----------------
-    bvh_tree* _bvh = nullptr;  // bvh [private]
+    bvh_tree* bvh = nullptr;               // bvh [private]
+    ym::bbox3f bbox = ym::invalid_bbox3f;  // bbox [private]
 
     // [private] methods ------------------
     float rad(int i) const { return (radius) ? radius[i] : 0; }
-    ym::bbox3f bbox() const { return _bvh->nodes[0].bbox; }
 
     // destructor
     ~shape() {
-        if (_bvh) delete _bvh;
+        if (bvh) delete bvh;
     }
 };
 
@@ -119,14 +119,14 @@ struct instance {
     int iid = -1;  // instance id
 
     // instance transform ----------------
-    ym::frame3f frame;  // instance transform
+    ym::mat4f xform;      // instance transform
+    ym::mat4f xform_inv;  // instance transform inverse
 
     // instance data ---------------------
     shape* shp = nullptr;  // shape
 
-    // [private] methods -----------------
-    ym::bbox3f bbox() const { return ym::transform_bbox(frame, shp->bbox()); }
-    ym::bbox3f local_bbox() const { return shp->bbox(); }
+    // [private] bvh data -----------------
+    ym::bbox3f bbox = ym::invalid_bbox3f;  // bbox [private]
 };
 
 //
@@ -138,13 +138,17 @@ struct scene {
     std::vector<shape*> shapes;        // shapes
 
     // bvh private data -------------------
-    bvh_tree* _bvh = nullptr;  // bvh [private]
+    bvh_tree* bvh = nullptr;  // bvh [private]
 
     // [private] methods -----------------
-    ym::bbox3f bbox() const { return _bvh->nodes[0].bbox; }
+    ym::bbox3f bbox() const { return bvh->nodes[0].bbox; }
 
     // destructor
-    ~scene();
+    ~scene() {
+        for (auto& shp : shapes) delete shp;
+        for (auto& ist : instances) delete ist;
+        if (bvh) delete bvh;
+    }
 };
 
 // -----------------------------------------------------------------------------
@@ -159,17 +163,9 @@ scene* make_scene() { return new scene(); }
 ///
 /// Free scene.
 ///
-void free_scene(scene* scn) {
+void free_scene(scene*& scn) {
     if (scn) delete scn;
-}
-
-//
-// Destructor
-//
-scene::~scene() {
-    for (auto& shp : shapes) delete shp;
-    for (auto& ist : instances) delete ist;
-    if (_bvh) delete _bvh;
+    scn = nullptr;
 }
 
 //
@@ -270,10 +266,12 @@ int add_point_shape(
 //
 // Set instance frame. Public API.
 //
-int add_instance(scene* scn, const ym::frame3f& frame, int sid) {
+int add_instance(
+    scene* scn, const ym::mat4f& xf, const ym::mat4f& xf_inv, int sid) {
     auto ist = new instance();
     ist->iid = (int)scn->instances.size();
-    ist->frame = frame;
+    ist->xform = xf;
+    ist->xform_inv = xf_inv;
     ist->shp = scn->shapes[sid];
     scn->instances.push_back(ist);
     return ist->iid;
@@ -282,8 +280,10 @@ int add_instance(scene* scn, const ym::frame3f& frame, int sid) {
 //
 // Set instance frame. Public API.
 //
-void set_instance_frame(scene* scn, int iid, const ym::frame3f& frame) {
-    scn->instances[iid]->frame = frame;
+void set_instance_transform(
+    scene* scn, int iid, const ym::mat4f& xform, const ym::mat4f& xform_inv) {
+    scn->instances[iid]->xform = xform;
+    scn->instances[iid]->xform_inv = xform_inv;
 }
 
 // -----------------------------------------------------------------------------
@@ -327,7 +327,7 @@ struct bound_prim_comp {
 // used and nodes added sequentially in the preallocated nodes array and
 // the number of nodes nnodes is updated.
 //
-static void make_node(bvh_node* node, std::vector<bvh_node>& nodes,
+void make_node(bvh_node* node, std::vector<bvh_node>& nodes,
     bound_prim* sorted_prims, int start, int end, bool equalsize) {
     // compute node bounds
     node->bbox = ym::invalid_bbox3f;
@@ -447,32 +447,33 @@ void build_bvh(
 //
 void build_shape_bvh(shape* shp, bool equalsize) {
     if (shp->point) {
-        return build_bvh(shp->_bvh, shp->nelems, equalsize, [shp](int eid) {
+        build_bvh(shp->bvh, shp->nelems, equalsize, [shp](int eid) {
             auto f = shp->point[eid];
             return point_bbox(shp->pos[f], shp->rad(f));
         });
     } else if (shp->line) {
-        return build_bvh(shp->_bvh, shp->nelems, equalsize, [shp](int eid) {
+        build_bvh(shp->bvh, shp->nelems, equalsize, [shp](int eid) {
             auto f = shp->line[eid];
             return line_bbox(
                 shp->pos[f.x], shp->pos[f.y], shp->rad(f.x), shp->rad(f.y));
         });
     } else if (shp->triangle) {
-        return build_bvh(shp->_bvh, shp->nelems, equalsize, [shp](int eid) {
+        build_bvh(shp->bvh, shp->nelems, equalsize, [shp](int eid) {
             auto f = shp->triangle[eid];
             return triangle_bbox(shp->pos[f.x], shp->pos[f.y], shp->pos[f.z]);
         });
     } else if (shp->tetra) {
-        return build_bvh(shp->_bvh, shp->nelems, equalsize, [shp](int eid) {
+        build_bvh(shp->bvh, shp->nelems, equalsize, [shp](int eid) {
             auto f = shp->tetra[eid];
             return tetrahedron_bbox(
                 shp->pos[f.x], shp->pos[f.y], shp->pos[f.z], shp->pos[f.w]);
         });
     } else {
-        return build_bvh(shp->_bvh, shp->nelems, equalsize, [shp](int eid) {
+        build_bvh(shp->bvh, shp->nelems, equalsize, [shp](int eid) {
             return point_bbox(shp->pos[eid], shp->rad(eid));
         });
     }
+    shp->bbox = shp->bvh->nodes[0].bbox;
 }
 
 //
@@ -484,16 +485,20 @@ void build_scene_bvh(scene* scn, bool equalsize, bool do_shapes) {
         for (auto shp : scn->shapes) build_shape_bvh(shp, equalsize);
     }
 
+    // update instance bbox
+    for (auto ist : scn->instances)
+        ist->bbox = ym::transform_bbox(ist->xform, ist->shp->bbox);
+
     // tree bvh
-    build_bvh(scn->_bvh, (int)scn->instances.size(), equalsize,
-        [scn](int eid) { return scn->instances[eid]->bbox(); });
+    build_bvh(scn->bvh, (int)scn->instances.size(), equalsize,
+        [scn](int eid) { return scn->instances[eid]->bbox; });
 }
 
 //
 // Recursively recomputes the node bounds for a shape bvh
 //
 template <typename ElemBbox>
-static void refit_bvh(bvh_tree* bvh, int nodeid, const ElemBbox& elem_bbox) {
+void refit_bvh(bvh_tree* bvh, int nodeid, const ElemBbox& elem_bbox) {
     // refit
     auto node = &bvh->nodes[nodeid];
     node->bbox = ym::invalid_bbox3f;
@@ -506,7 +511,7 @@ static void refit_bvh(bvh_tree* bvh, int nodeid, const ElemBbox& elem_bbox) {
         for (auto i = 0; i < node->count; i++) {
             auto idx = node->start + i;
             refit_bvh(bvh, idx, elem_bbox);
-            node->bbox += bvh->nodes[i].bbox;
+            node->bbox += bvh->nodes[idx].bbox;
         }
     }
 }
@@ -516,32 +521,33 @@ static void refit_bvh(bvh_tree* bvh, int nodeid, const ElemBbox& elem_bbox) {
 //
 void refit_shape_bvh(shape* shp) {
     if (shp->point) {
-        return refit_bvh(shp->_bvh, 0, [shp](int eid) {
+        refit_bvh(shp->bvh, 0, [shp](int eid) {
             auto f = shp->point[eid];
             return point_bbox(shp->pos[f], shp->rad(f));
         });
     } else if (shp->line) {
-        return refit_bvh(shp->_bvh, 0, [shp](int eid) {
+        refit_bvh(shp->bvh, 0, [shp](int eid) {
             auto f = shp->line[eid];
             return line_bbox(
                 shp->pos[f.x], shp->pos[f.y], shp->rad(f.x), shp->rad(f.y));
         });
     } else if (shp->triangle) {
-        return refit_bvh(shp->_bvh, 0, [shp](int eid) {
+        refit_bvh(shp->bvh, 0, [shp](int eid) {
             auto f = shp->triangle[eid];
             return triangle_bbox(shp->pos[f.x], shp->pos[f.y], shp->pos[f.z]);
         });
     } else if (shp->tetra) {
-        return refit_bvh(shp->_bvh, 0, [shp](int eid) {
+        refit_bvh(shp->bvh, 0, [shp](int eid) {
             auto f = shp->tetra[eid];
             return tetrahedron_bbox(
                 shp->pos[f.x], shp->pos[f.y], shp->pos[f.z], shp->pos[f.w]);
         });
     } else {
-        return refit_bvh(shp->_bvh, 0, [shp](int eid) {
+        refit_bvh(shp->bvh, 0, [shp](int eid) {
             return point_bbox(shp->pos[eid], shp->rad(eid));
         });
     }
+    shp->bbox = shp->bvh->nodes[0].bbox;
 }
 
 //
@@ -559,9 +565,13 @@ void refit_scene_bvh(scene* scn, bool do_shapes) {
         for (auto shp : scn->shapes) refit_shape_bvh(scn, shp->sid);
     }
 
+    // update instance bbox
+    for (auto ist : scn->instances)
+        ist->bbox = ym::transform_bbox(ist->xform, ist->shp->bbox);
+
     // recompute bvh bounds
     refit_bvh(
-        scn->_bvh, 0, [scn](int eid) { return scn->instances[eid]->bbox(); });
+        scn->bvh, 0, [scn](int eid) { return scn->instances[eid]->bbox; });
 }
 
 // -----------------------------------------------------------------------------
@@ -608,8 +618,8 @@ void get_ray_log(int& nrays, int& nbbox_inters, int& npoint_inters,
 // rejected in the tmax tests
 //
 template <typename Isec>
-static intersection_point intersect_bvh(const bvh_tree* bvh,
-    const ym::ray3f& ray_, bool early_exit, const Isec& intersect_elem) {
+intersection_point intersect_bvh(const bvh_tree* bvh, const ym::ray3f& ray_,
+    bool early_exit, const Isec& intersect_elem) {
     // node stack
     int node_stack[64];
     auto node_cur = 0;
@@ -681,7 +691,7 @@ intersection_point intersect_shape(
 
     // switch over shape type
     if (shp->triangle) {
-        pt = intersect_bvh(shp->_bvh, ray, early_exit,
+        pt = intersect_bvh(shp->bvh, ray, early_exit,
             [shp](int eid, const ym::ray3f& ray, bool early_exit) {
                 auto pt = intersection_point();
                 auto f = shp->triangle[eid];
@@ -694,7 +704,7 @@ intersection_point intersect_shape(
             });
     } else if (shp->line) {
         assert(shp->radius);
-        pt = intersect_bvh(shp->_bvh, ray, early_exit,
+        pt = intersect_bvh(shp->bvh, ray, early_exit,
             [shp](int eid, const ym::ray3f& ray, bool early_exit) {
                 auto pt = intersection_point();
                 auto f = shp->line[eid];
@@ -708,7 +718,7 @@ intersection_point intersect_shape(
             });
     } else if (shp->point) {
         assert(shp->radius);
-        pt = intersect_bvh(shp->_bvh, ray, early_exit,
+        pt = intersect_bvh(shp->bvh, ray, early_exit,
             [shp](int eid, const ym::ray3f& ray, bool early_exit) {
                 auto pt = intersection_point();
                 auto f = shp->point[eid];
@@ -720,7 +730,7 @@ intersection_point intersect_shape(
                 return pt;
             });
     } else if (shp->tetra) {
-        pt = intersect_bvh(shp->_bvh, ray, early_exit,
+        pt = intersect_bvh(shp->bvh, ray, early_exit,
             [shp](int eid, const ym::ray3f& ray, bool early_exit) {
                 auto pt = intersection_point();
                 auto f = shp->tetra[eid];
@@ -733,7 +743,7 @@ intersection_point intersect_shape(
             });
     } else {
         assert(shp->radius);
-        pt = intersect_bvh(shp->_bvh, ray, early_exit,
+        pt = intersect_bvh(shp->bvh, ray, early_exit,
             [shp](int eid, const ym::ray3f& ray, bool early_exit) {
                 auto pt = intersection_point();
                 if (!ym::intersect_point(
@@ -754,7 +764,7 @@ intersection_point intersect_shape(
 intersection_point intersect_instance(
     const instance* ist, const ym::ray3f& ray, bool early_exit) {
     auto pt = intersect_shape(
-        ist->shp, ym::transform_ray_inverse(ist->frame, ray), early_exit);
+        ist->shp, ym::transform_ray(ist->xform_inv, ray), early_exit);
     if (pt.eid >= 0) pt.iid = ist->iid;
     return pt;
 }
@@ -764,7 +774,7 @@ intersection_point intersect_instance(
 //
 intersection_point intersect_scene(
     const scene* scn, const ym::ray3f& ray, bool early_exit) {
-    return intersect_bvh(scn->_bvh, ray, early_exit,
+    return intersect_bvh(scn->bvh, ray, early_exit,
         [scn](int eid, const ym::ray3f& ray, bool early_exit) {
             return intersect_instance(scn->instances[eid], ray, early_exit);
         });
@@ -791,7 +801,7 @@ intersection_point intersect_scene(
 // rejected in the tmax tests
 //
 template <typename OverlapElem>
-static intersection_point overlap_bvh(const bvh_tree* bvh, const ym::vec3f& pos,
+intersection_point overlap_bvh(const bvh_tree* bvh, const ym::vec3f& pos,
     float max_dist, bool early_exit, const OverlapElem& overlap_elem) {
     // node stack
     int node_stack[64];
@@ -843,7 +853,7 @@ intersection_point overlap_shape(
 
     // switch over elemenet type
     if (shp->triangle) {
-        pt = overlap_bvh(shp->_bvh, pos, max_dist, early_exit,
+        pt = overlap_bvh(shp->bvh, pos, max_dist, early_exit,
             [shp](int eid, const ym::vec3f& pos, float max_dist,
                 bool early_exit) {
                 auto pt = intersection_point();
@@ -858,7 +868,7 @@ intersection_point overlap_shape(
                 return pt;
             });
     } else if (shp->line) {
-        pt = overlap_bvh(shp->_bvh, pos, max_dist, early_exit,
+        pt = overlap_bvh(shp->bvh, pos, max_dist, early_exit,
             [shp](int eid, const ym::vec3f& pos, float max_dist,
                 bool early_exit) {
                 auto pt = intersection_point();
@@ -872,7 +882,7 @@ intersection_point overlap_shape(
                 return pt;
             });
     } else if (shp->point) {
-        pt = overlap_bvh(shp->_bvh, pos, max_dist, early_exit,
+        pt = overlap_bvh(shp->bvh, pos, max_dist, early_exit,
             [shp](int eid, const ym::vec3f& pos, float max_dist,
                 bool early_exit) {
                 auto pt = intersection_point();
@@ -885,7 +895,7 @@ intersection_point overlap_shape(
                 return pt;
             });
     } else if (shp->tetra) {
-        pt = overlap_bvh(shp->_bvh, pos, max_dist, early_exit,
+        pt = overlap_bvh(shp->bvh, pos, max_dist, early_exit,
             [shp](int eid, const ym::vec3f& pos, float max_dist,
                 bool early_exit) {
                 auto pt = intersection_point();
@@ -899,7 +909,7 @@ intersection_point overlap_shape(
                 return pt;
             });
     } else {
-        pt = overlap_bvh(shp->_bvh, pos, max_dist, early_exit,
+        pt = overlap_bvh(shp->bvh, pos, max_dist, early_exit,
             [shp](int eid, const ym::vec3f& pos, float max_dist,
                 bool early_exit) {
                 auto pt = intersection_point();
@@ -930,7 +940,7 @@ intersection_point overlap_shape(const scene* scn, int sid,
 intersection_point overlap_instance(const instance* ist, const ym::vec3f& pos,
     float max_dist, bool early_exit) {
     auto pt = overlap_shape(ist->shp,
-        ym::transform_point_inverse(ist->frame, (ym::vec3f)pos), max_dist,
+        ym::transform_point(ist->xform_inv, (ym::vec3f)pos), max_dist,
         early_exit);
     if (pt.eid >= 0) pt.iid = ist->iid;
     return pt;
@@ -949,7 +959,7 @@ intersection_point overlap_instance(const scene* scn, int iid,
 //
 intersection_point overlap_scene(
     const scene* scn, const ym::vec3f& pos, float max_dist, bool early_exit) {
-    return overlap_bvh(scn->_bvh, pos, max_dist, early_exit,
+    return overlap_bvh(scn->bvh, pos, max_dist, early_exit,
         [scn](int eid, const ym::vec3f& pos, float max_dist, bool early_exit) {
             return overlap_instance(
                 scn->instances[eid], pos, max_dist, early_exit);
@@ -967,7 +977,7 @@ intersection_point overlap_scene(
 //
 // TODO: avoid duplicate elements
 //
-static void overlap_elem(const shape* shp1, const shape* shp2, int idx1,
+void overlap_elem(const shape* shp1, const shape* shp2, int idx1,
     int idx2, bool exclude_self, float radius, bool first_only,
     std::vector<std::pair<point, ym::vec2i>>* overlaps,
     std::unordered_map<int, int>* closest) {
@@ -1067,15 +1077,15 @@ static void overlap_elem(const shape* shp1, const shape* shp2, int idx1,
 // the code; note in fact that all subsequent farthest iterations will be
 // rejected in the tmax tests
 //
-static void overlap_verts(const scene* scn1, const scene* scn2,
+void overlap_verts(const scene* scn1, const scene* scn2,
     int sid1, int sid2, bool exclude_self, float radius, bool first_only,
     std::vector<std::pair<point, ym::vec2i>>* overlaps,
     std::unordered_map<int, int>* closest) {
     // get shape and bvh
     auto shp1 = (sid1 < 0) ? nullptr : scn1->shapes[sid1];
-    auto bvh1 = (!shp1) ? scn1->_bvh : shp1->_bvh;
+    auto bvh1 = (!shp1) ? scn1->bvh : shp1->bvh;
     auto shp2 = (sid2 < 0) ? nullptr : scn2->shapes[sid2];
-    auto bvh2 = (!shp2) ? scn2->_bvh : shp2->_bvh;
+    auto bvh2 = (!shp2) ? scn2->bvh : shp2->bvh;
 
     // node stack
     ym::vec2i node_stack[128];
@@ -1199,12 +1209,11 @@ static void overlap_verts(const scene* scn1, const scene* scn2,
 // Finds the overlap between shape bounds.
 // Similat interface as the public function.
 //
-static void overlap_instance_bounds_(const scene* scn1, const scene* scn2,
-    bool conservative, bool skip_duplicates, bool skip_self,
-    std::vector<ym::vec2i>* overlaps) {
+void overlap_instance_bounds_(const scene* scn1, const scene* scn2,
+    bool skip_duplicates, bool skip_self, std::vector<ym::vec2i>* overlaps) {
     // get bvhs
-    auto bvh1 = scn1->_bvh;
-    auto bvh2 = scn2->_bvh;
+    auto bvh1 = scn1->bvh;
+    auto bvh2 = scn2->bvh;
 
     // node stack
     ym::vec2i node_stack[128];
@@ -1233,14 +1242,8 @@ static void overlap_instance_bounds_(const scene* scn1, const scene* scn2,
                     auto ist2 = scn2->instances[idx2];
                     if (skip_duplicates && ist1->iid > ist2->iid) continue;
                     if (skip_self && ist1->iid == ist2->iid) continue;
-                    if (conservative) {
-                        if (ym::overlap_bbox(ist1->bbox(), ist2->bbox()))
-                            overlaps->push_back({ist1->iid, ist2->iid});
-                    } else {
-                        if (ym::overlap_bbox(ist1->local_bbox(),
-                                ist2->local_bbox(), ist1->frame, ist2->frame))
-                            overlaps->push_back({ist1->iid, ist2->iid});
-                    }
+                    if (ym::overlap_bbox(ist1->bbox, ist2->bbox))
+                        overlaps->push_back({ist1->iid, ist2->iid});
                 }
             }
         } else {
@@ -1276,11 +1279,9 @@ static void overlap_instance_bounds_(const scene* scn1, const scene* scn2,
 // Public function whose interface is described above.
 //
 void overlap_instance_bounds(const scene* scn1, const scene* scn2,
-    bool conservative, bool skip_duplicates, bool skip_self,
-    std::vector<ym::vec2i>* overlaps) {
+    bool skip_duplicates, bool skip_self, std::vector<ym::vec2i>* overlaps) {
     overlaps->clear();
-    overlap_instance_bounds_(
-        scn1, scn2, conservative, skip_duplicates, skip_self, overlaps);
+    overlap_instance_bounds_(scn1, scn2, skip_duplicates, skip_self, overlaps);
 }
 
 // -----------------------------------------------------------------------------
@@ -1294,7 +1295,7 @@ void compute_bvh_stats(const scene* scn, int shape_id, bool include_shapes,
     int depth, int& nprims, int& ninternals, int& nleaves, int& min_depth,
     int& max_depth) {
     // get bvh
-    auto bvh = (shape_id >= 0) ? scn->shapes[shape_id]->_bvh : scn->_bvh;
+    auto bvh = (shape_id >= 0) ? scn->shapes[shape_id]->bvh : scn->bvh;
 
     // node stack
     ym::vec2i node_stack[128];  // node and depth

@@ -13,6 +13,8 @@
 ///
 /// ## History
 ///
+/// - v 0.4: widget size
+/// - v 0.3: changed image widget sizing
 /// - v 0.2: added widgets explicit IDs
 /// - v 0.1: added more widgets
 /// - v 0.0: initial release split from yocto_glu
@@ -85,12 +87,12 @@ typedef void (*refresh_callback)(window*);
 /// initialize glfw
 ///
 window* init_window(int width, int height, const std::string& title,
-    void* user_pointer = nullptr);
+    void* user_pointer = nullptr, bool width_exclude_widgets = false);
 
 ///
 /// Clear glfw
 ///
-void clear_window(window* window);
+void clear_window(window* win);
 
 ///
 /// initialize glfw
@@ -126,32 +128,42 @@ bool should_close(window* win);
 ///
 /// User pointer
 ///
-void* get_user_pointer(window* window);
+void* get_user_pointer(window* win);
 
 ///
 /// Mouse button
 ///
-int get_mouse_button(window* window);
+int get_mouse_button(window* win);
 
 ///
 /// Mouse position
 ///
-ym::vec2i get_mouse_posi(window* window);
+ym::vec2i get_mouse_posi(window* win);
 
 ///
 /// Mouse position
 ///
-ym::vec2f get_mouse_posf(window* window);
+ym::vec2f get_mouse_posf(window* win);
 
 ///
 /// Window size
 ///
-ym::vec2i get_window_size(window* window);
+ym::vec2i get_window_size(window* win);
+
+///
+/// Check if a key is pressed (not all keys are supported)
+///
+bool get_key(window* win, int key);
 
 ///
 /// Framebuffer size
 ///
-ym::vec2i get_framebuffer_size(window* window);
+ym::vec2i get_framebuffer_size(window* win);
+
+///
+/// Widgets
+///
+int get_widget_size(window* win);
 
 ///
 /// Read pixels
@@ -198,6 +210,11 @@ void indent_begin_widgets(window* win);
 /// Indent widget
 ///
 void indent_end_widgets(window* win);
+
+///
+/// Continue line with next widget
+///
+void continue_line_widgets(window* win);
 
 ///
 /// Label widget
@@ -292,16 +309,41 @@ bool slider_widget(window* win, const std::string& lbl, float* val, float min,
 ///
 bool slider_widget(window* win, const std::string& lbl, ym::vec2f* val,
     float min, float max, float incr = 1.0f);
+
 ///
 /// Slider widget
 ///
 bool slider_widget(window* win, const std::string& lbl, ym::vec3f* val,
     float min, float max, float incr = 1.0f);
+
 ///
 /// Slider widget
 ///
 bool slider_widget(window* win, const std::string& lbl, ym::vec4f* val,
     float min, float max, float incr = 1.0f);
+
+///
+/// Slider widget
+///
+bool slider_widget(window* win, const std::string& lbl, ym::mat4f* val,
+    float min, float max, float incr = 1.0f);
+
+///
+/// Slider widget
+///
+bool slider_widget(
+    window* win, const std::string& lbl, ym::quat4f* val, float incr = 1.0f);
+
+//
+// Color widget
+//
+bool color_widget(window* win, const std::string& lbl, ym::vec4f* val);
+
+//
+// Color widget
+//
+bool color_widget(window* win, const std::string& lbl, ym::vec4b* val);
+
 ///
 /// Bool widget
 ///
@@ -379,6 +421,12 @@ bool tree_begin_widget(
     window* win, const std::string& lbl, void** selection, void* content);
 
 ///
+/// Start selectable tree node
+///
+bool tree_begin_widget(window* win, const std::string& lbl, void** selection,
+    void* content, const ym::vec4f& col);
+
+///
 /// End selectable tree node
 ///
 void tree_end_widget(window* win, void* content);
@@ -390,9 +438,16 @@ void tree_leaf_widget(
     window* win, const std::string& lbl, void** selection, void* content);
 
 ///
-/// Image widget
+/// Selectable tree leaf node
 ///
-void image_widget(window* win, int tid, ym::vec2i size);
+void tree_leaf_widget(window* win, const std::string& lbl, void** selection,
+    void* content, const ym::vec4f& col);
+
+///
+/// Image widget with desired size size, taken from an image of size imsize.
+///
+void image_widget(
+    window* win, int tid, const ym::vec2i& size, const ym::vec2i& imsize);
 
 ///
 /// Scroll region
@@ -409,6 +464,21 @@ void scroll_region_end_widget(window* win);
 /// Scroll region
 ///
 void scroll_region_here_widget(window* win);
+
+///
+/// Group ids
+///
+void groupid_begin_widget(window* win, int gid);
+
+///
+/// Group ids
+///
+void groupid_begin_widget(window* win, void* gid);
+
+///
+/// Group ids
+///
+void groupid_end_widget(window* win);
 
 }  // namespace ygui
 

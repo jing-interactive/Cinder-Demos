@@ -37,6 +37,8 @@
 ///
 /// ## History
 ///
+/// - v 0.16: simpler logging
+/// - v 0.15: removal of group overlap
 /// - v 0.14: use yocto_math in the interface and remove inline compilation
 /// - v 0.13: move to add api
 /// - v 1.12: internally use yocto_bvh if desired
@@ -114,7 +116,7 @@ scene* make_scene();
 /// - Parameters:
 ///     - scn: rigid body scene
 ///
-void free_scene(scene* scn);
+void free_scene(scene*& scn);
 
 ///
 /// Sets a rigid shape.
@@ -220,54 +222,36 @@ struct overlap_point {
 /// Shape-shape intersection (conservative)
 ///
 /// - Out Parameters:
-///     - ctx: context
 ///     - overlaps: overlaps array
 ///
-using overlap_shapes_cb = void (*)(void* ctx, std::vector<ym::vec2i>*);
+using overlap_shapes_cb = std::function<void(std::vector<ym::vec2i>*)>;
 
 ///
 /// Closest element intersection callback
 ///
 /// - Parameters:
-///     - ctx: context
 ///     - sid: shape to check
 ///     - pt: point
 ///     - max_dist: maximum distance
 /// - Return:
 ///     - overlap point
 ///
-using overlap_shape_cb = overlap_point (*)(
-    void* ctx, int sid, const ym::vec3f& pt, float max_dist);
-
-///
-/// Closest vertex-to-element overlap
-///
-/// - Parameters:
-///     - ctx: context
-///     - sid1: element shape to check
-///     - sid2: vertex shape to check
-///     - max_dist: maximum distance from each vert
-/// - Out Params:
-///     - overlaps: overlapping elements
-///
-using overlap_verts_cb = void (*)(void* ctx, int sid1, int sid2, float max_dist,
-    std::vector<std::pair<overlap_point, ym::vec2i>>* overlaps);
+using overlap_shape_cb =
+    std::function<overlap_point(int sid, const ym::vec3f& pt, float max_dist)>;
 
 ///
 /// Refit data structure after transform updates
 ///
 /// - Parameters:
-///     - ctx: context
 ///     - scn: scene
 ///
-using overlap_refit_cb = void (*)(void* ctx, const scene* scn, int nshapes);
+using overlap_refit_cb = std::function<void(const scene* scn, int nshapes)>;
 
 ///
 /// Set overlap functions
 ///
-void set_overlap_callbacks(scene* scn, void* ctx,
-    overlap_shapes_cb overlap_shapes, overlap_shape_cb overlap_shape,
-    overlap_verts_cb overlap_verts, overlap_refit_cb overlap_refit);
+void set_overlap_callbacks(scene* scn, overlap_shapes_cb overlap_shapes,
+    overlap_shape_cb overlap_shape, overlap_refit_cb overlap_refit);
 
 ///
 /// Initialize overlap functions using internal structures.
@@ -303,7 +287,7 @@ void compute_moments(int ntetra, const ym::vec4i* tetra, int nverts,
     const ym::vec3f* pos, float* volume, ym::vec3f* center, ym::mat3f* inertia);
 
 ///
-/// Initialize the simulation
+/// Initialize the simulation.
 ///
 /// - Paramaters:
 ///     - scene: rigib body scene

@@ -61,6 +61,7 @@
 
 //
 // TODO: spline animation
+// TODO: better errpr checkin on biunary gltf
 //
 
 #include "yocto_gltf.h"
@@ -93,131 +94,138 @@ struct parse_stack {
 
 // Parse support function.
 template <typename T>
-static void parse(std::vector<T>& vals, const json& js, parse_stack& err) {
-    if (!js.is_array())
-        throw gltf_exception("json array expected at " + err.pathname());
+static bool parse(std::vector<T>& vals, const json& js, parse_stack& err) {
+    if (!js.is_array()) return false;
     vals.resize(js.size());
     for (auto i = 0; i < js.size(); i++) {
         // this is contrived to support for vector<bool>
         auto v = T();
-        parse(v, js[i], err);
+        if (!parse(v, js[i], err)) return false;
         vals[i] = v;
     }
+    return true;
 }
 
 // Parse support function.
 template <typename T, int N>
-static void parse(ym::vec<T, N>& vals, const json& js, parse_stack& err) {
-    if (!js.is_array())
-        throw gltf_exception("json array expected at " + err.pathname());
-    if (N != js.size())
-        throw gltf_exception("json array expected at " + err.pathname());
-    for (auto i = 0; i < N; i++) { parse(vals[i], js[i], err); }
+static bool parse(ym::vec<T, N>& vals, const json& js, parse_stack& err) {
+    if (!js.is_array()) return false;
+    if (N != js.size()) return false;
+    for (auto i = 0; i < N; i++) {
+        if (!parse(vals[i], js[i], err)) return false;
+    }
+    return true;
 }
 
 // Parse support function.
 template <typename T, int N>
-static void parse(ym::quat<T, N>& vals, const json& js, parse_stack& err) {
-    if (!js.is_array())
-        throw gltf_exception("json array expected at " + err.pathname());
-    if (N != js.size())
-        throw gltf_exception("json array expected at " + err.pathname());
-    for (auto i = 0; i < N; i++) { parse(vals[i], js[i], err); }
+static bool parse(ym::quat<T, N>& vals, const json& js, parse_stack& err) {
+    if (!js.is_array()) return false;
+    if (N != js.size()) return false;
+    for (auto i = 0; i < N; i++) {
+        if (!parse(vals[i], js[i], err)) return false;
+    }
+    return true;
 }
 
 // Parse support function.
 template <typename T, int N, int M>
-static void parse(ym::mat<T, N, M>& vals, const json& js, parse_stack& err) {
-    if (!js.is_array())
-        throw gltf_exception("json array expected at " + err.pathname());
-    if (N * M != js.size())
-        throw gltf_exception("json array expected at " + err.pathname());
+static bool parse(ym::mat<T, N, M>& vals, const json& js, parse_stack& err) {
+    if (!js.is_array()) return false;
+    if (N * M != js.size()) return false;
     for (auto j = 0; j < M; j++) {
-        for (auto i = 0; i < N; i++) { parse(vals[j][i], js[j * N + i], err); }
+        for (auto i = 0; i < N; i++) {
+            if (!parse(vals[j][i], js[j * N + i], err)) return false;
+        }
     }
+    return true;
 }
 
 // Parse support function.
 template <typename T>
-static void parse(
+static bool parse(
     std::map<std::string, T>& vals, const json& js, parse_stack& err) {
-    if (!js.is_object())
-        throw gltf_exception("json object expected at " + err.pathname());
+    if (!js.is_object()) return false;
     for (auto kv = js.begin(); kv != js.end(); ++kv) {
-        parse(vals[kv.key()], kv.value(), err);
+        if (!parse(vals[kv.key()], kv.value(), err)) return false;
     }
+    return true;
 }
 
 // Parse support function.
 template <typename T>
-static void parse_attr(
+static bool parse_attr(
     T& val, const char* name, const json& js, parse_stack& err) {
     auto iter = js.find(name);
-    if (iter == js.end()) return;
+    if (iter == js.end()) return true;
     err.path.push_back(name);
-    parse(val, *iter, err);
+    if (!parse(val, *iter, err)) return false;
     err.path.pop_back();
+    return true;
 }
 
 // Parse int function.
-static void parse(int& val, const json& js, parse_stack& err) {
-    if (!js.is_number_integer()) throw gltf_exception(err.pathname());
+static bool parse(int& val, const json& js, parse_stack& err) {
+    if (!js.is_number_integer()) return false;
     val = js;
+    return true;
 }
 
 // Parse float function.
-static void parse(float& val, const json& js, parse_stack& err) {
-    if (!js.is_number())
-        throw gltf_exception("json number expected at " + err.pathname());
+static bool parse(float& val, const json& js, parse_stack& err) {
+    if (!js.is_number()) return false;
     val = js;
+    return true;
 }
 
 // Parse bool function.
-static void parse(bool& val, const json& js, parse_stack& err) {
-    if (!js.is_boolean())
-        throw gltf_exception("json bool expected at " + err.pathname());
+static bool parse(bool& val, const json& js, parse_stack& err) {
+    if (!js.is_boolean()) return false;
     val = js;
+    return true;
 }
 
 // Parse std::string function.
-static void parse(std::string& val, const json& js, parse_stack& err) {
-    if (!js.is_string())
-        throw gltf_exception("json string expected at " + err.pathname());
+static bool parse(std::string& val, const json& js, parse_stack& err) {
+    if (!js.is_string()) return false;
     val = js;
+    return true;
 }
 
 // Parse json function.
-static void parse(json& val, const json& js, parse_stack& err) { val = js; }
+static bool parse(json& val, const json& js, parse_stack& err) {
+    val = js;
+    return true;
+}
 
 // Parse id function.
 template <typename T>
-static void parse(glTFid<T>& val, const json& js, parse_stack& err) {
-    if (!js.is_number_integer())
-        throw gltf_exception(
-            "json unsigned integer expected at " + err.pathname());
+static bool parse(glTFid<T>& val, const json& js, parse_stack& err) {
+    if (!js.is_number_integer()) return false;
     val = glTFid<T>((int)js);
+    return true;
 }
 // Parses a glTFProperty object
-static void parse(glTFProperty*& val, const json& js, parse_stack& err) {
-    if (!js.is_object())
-        throw gltf_exception("json object expected" + err.pathname());
+static bool parse(glTFProperty*& val, const json& js, parse_stack& err) {
+    if (!js.is_object()) return false;
     if (!val) val = new glTFProperty;
-    parse_attr(val->extensions, "extensions", js, err);
-    parse_attr(val->extras, "extras", js, err);
+    if (!parse_attr(val->extensions, "extensions", js, err)) return false;
+    if (!parse_attr(val->extras, "extras", js, err)) return false;
+    return true;
 }
 
 // Parses a glTFChildOfRootProperty object
-static void parse(
+static bool parse(
     glTFChildOfRootProperty*& val, const json& js, parse_stack& err) {
-    if (!js.is_object())
-        throw gltf_exception("json object expected" + err.pathname());
+    if (!js.is_object()) return false;
     if (!val) val = new glTFChildOfRootProperty;
-    parse((glTFProperty*&)val, js, err);
-    parse_attr(val->name, "name", js, err);
+    if (!parse((glTFProperty*&)val, js, err)) return false;
+    if (!parse_attr(val->name, "name", js, err)) return false;
+    return true;
 }
 
 // Parse a glTFAccessorSparseIndicesComponentType enum
-static void parse(glTFAccessorSparseIndicesComponentType& val, const json& js,
+static bool parse(glTFAccessorSparseIndicesComponentType& val, const json& js,
     parse_stack& err) {
     static std::map<int, glTFAccessorSparseIndicesComponentType> table = {
         {5121, glTFAccessorSparseIndicesComponentType::UnsignedByte},
@@ -226,57 +234,53 @@ static void parse(glTFAccessorSparseIndicesComponentType& val, const json& js,
     };
     auto v = int();
     parse(v, js, err);
-    if (table.find(v) == table.end()) throw gltf_exception(err.pathname());
+    if (table.find(v) == table.end()) return false;
     val = table[v];
+    return true;
 }
 
 // Parses a glTFAccessorSparseIndices object
-static void parse(
+static bool parse(
     glTFAccessorSparseIndices*& val, const json& js, parse_stack& err) {
-    if (!js.is_object())
-        throw gltf_exception("json object expected" + err.pathname());
+    if (!js.is_object()) return false;
     if (!val) val = new glTFAccessorSparseIndices;
-    parse((glTFProperty*&)val, js, err);
-    if (!js.count("bufferView"))
-        throw gltf_exception("missing required json value");
-    parse_attr(val->bufferView, "bufferView", js, err);
-    parse_attr(val->byteOffset, "byteOffset", js, err);
-    if (!js.count("componentType"))
-        throw gltf_exception("missing required json value");
-    parse_attr(val->componentType, "componentType", js, err);
+    if (!parse((glTFProperty*&)val, js, err)) return false;
+    if (!js.count("bufferView")) return false;
+    if (!parse_attr(val->bufferView, "bufferView", js, err)) return false;
+    if (!parse_attr(val->byteOffset, "byteOffset", js, err)) return false;
+    if (!js.count("componentType")) return false;
+    if (!parse_attr(val->componentType, "componentType", js, err)) return false;
+    return true;
 }
 
 // Parses a glTFAccessorSparseValues object
-static void parse(
+static bool parse(
     glTFAccessorSparseValues*& val, const json& js, parse_stack& err) {
-    if (!js.is_object())
-        throw gltf_exception("json object expected" + err.pathname());
+    if (!js.is_object()) return false;
     if (!val) val = new glTFAccessorSparseValues;
-    parse((glTFProperty*&)val, js, err);
-    if (!js.count("bufferView"))
-        throw gltf_exception("missing required json value");
-    parse_attr(val->bufferView, "bufferView", js, err);
-    parse_attr(val->byteOffset, "byteOffset", js, err);
+    if (!parse((glTFProperty*&)val, js, err)) return false;
+    if (!js.count("bufferView")) return false;
+    if (!parse_attr(val->bufferView, "bufferView", js, err)) return false;
+    if (!parse_attr(val->byteOffset, "byteOffset", js, err)) return false;
+    return true;
 }
 
 // Parses a glTFAccessorSparse object
-static void parse(glTFAccessorSparse*& val, const json& js, parse_stack& err) {
-    if (!js.is_object())
-        throw gltf_exception("json object expected" + err.pathname());
+static bool parse(glTFAccessorSparse*& val, const json& js, parse_stack& err) {
+    if (!js.is_object()) return false;
     if (!val) val = new glTFAccessorSparse;
-    parse((glTFProperty*&)val, js, err);
-    if (!js.count("count")) throw gltf_exception("missing required json value");
-    parse_attr(val->count, "count", js, err);
-    if (!js.count("indices"))
-        throw gltf_exception("missing required json value");
-    parse_attr(val->indices, "indices", js, err);
-    if (!js.count("values"))
-        throw gltf_exception("missing required json value");
-    parse_attr(val->values, "values", js, err);
+    if (!parse((glTFProperty*&)val, js, err)) return false;
+    if (!js.count("count")) return false;
+    if (!parse_attr(val->count, "count", js, err)) return false;
+    if (!js.count("indices")) return false;
+    if (!parse_attr(val->indices, "indices", js, err)) return false;
+    if (!js.count("values")) return false;
+    if (!parse_attr(val->values, "values", js, err)) return false;
+    return true;
 }
 
 // Parse a glTFAccessorComponentType enum
-static void parse(
+static bool parse(
     glTFAccessorComponentType& val, const json& js, parse_stack& err) {
     static std::map<int, glTFAccessorComponentType> table = {
         {5120, glTFAccessorComponentType::Byte},
@@ -288,12 +292,13 @@ static void parse(
     };
     auto v = int();
     parse(v, js, err);
-    if (table.find(v) == table.end()) throw gltf_exception(err.pathname());
+    if (table.find(v) == table.end()) return false;
     val = table[v];
+    return true;
 }
 
 // Parse a glTFAccessorType enum
-static void parse(glTFAccessorType& val, const json& js, parse_stack& err) {
+static bool parse(glTFAccessorType& val, const json& js, parse_stack& err) {
     static std::map<std::string, glTFAccessorType> table = {
         {"SCALAR", glTFAccessorType::Scalar}, {"VEC2", glTFAccessorType::Vec2},
         {"VEC3", glTFAccessorType::Vec3}, {"VEC4", glTFAccessorType::Vec4},
@@ -302,33 +307,33 @@ static void parse(glTFAccessorType& val, const json& js, parse_stack& err) {
     };
     auto v = std::string();
     parse(v, js, err);
-    if (table.find(v) == table.end()) throw gltf_exception(err.pathname());
+    if (table.find(v) == table.end()) return false;
     val = table[v];
+    return true;
 }
 
 // Parses a glTFAccessor object
-static void parse(glTFAccessor*& val, const json& js, parse_stack& err) {
-    if (!js.is_object())
-        throw gltf_exception("json object expected" + err.pathname());
+static bool parse(glTFAccessor*& val, const json& js, parse_stack& err) {
+    if (!js.is_object()) return false;
     if (!val) val = new glTFAccessor;
-    parse((glTFChildOfRootProperty*&)val, js, err);
-    parse_attr(val->bufferView, "bufferView", js, err);
-    parse_attr(val->byteOffset, "byteOffset", js, err);
-    if (!js.count("componentType"))
-        throw gltf_exception("missing required json value");
-    parse_attr(val->componentType, "componentType", js, err);
-    if (!js.count("count")) throw gltf_exception("missing required json value");
-    parse_attr(val->count, "count", js, err);
-    parse_attr(val->max, "max", js, err);
-    parse_attr(val->min, "min", js, err);
-    parse_attr(val->normalized, "normalized", js, err);
-    parse_attr(val->sparse, "sparse", js, err);
-    if (!js.count("type")) throw gltf_exception("missing required json value");
-    parse_attr(val->type, "type", js, err);
+    if (!parse((glTFChildOfRootProperty*&)val, js, err)) return false;
+    if (!parse_attr(val->bufferView, "bufferView", js, err)) return false;
+    if (!parse_attr(val->byteOffset, "byteOffset", js, err)) return false;
+    if (!js.count("componentType")) return false;
+    if (!parse_attr(val->componentType, "componentType", js, err)) return false;
+    if (!js.count("count")) return false;
+    if (!parse_attr(val->count, "count", js, err)) return false;
+    if (!parse_attr(val->max, "max", js, err)) return false;
+    if (!parse_attr(val->min, "min", js, err)) return false;
+    if (!parse_attr(val->normalized, "normalized", js, err)) return false;
+    if (!parse_attr(val->sparse, "sparse", js, err)) return false;
+    if (!js.count("type")) return false;
+    if (!parse_attr(val->type, "type", js, err)) return false;
+    return true;
 }
 
 // Parse a glTFAnimationChannelTargetPath enum
-static void parse(
+static bool parse(
     glTFAnimationChannelTargetPath& val, const json& js, parse_stack& err) {
     static std::map<std::string, glTFAnimationChannelTargetPath> table = {
         {"translation", glTFAnimationChannelTargetPath::Translation},
@@ -338,40 +343,39 @@ static void parse(
     };
     auto v = std::string();
     parse(v, js, err);
-    if (table.find(v) == table.end()) throw gltf_exception(err.pathname());
+    if (table.find(v) == table.end()) return false;
     val = table[v];
+    return true;
 }
 
 // Parses a glTFAnimationChannelTarget object
-static void parse(
+static bool parse(
     glTFAnimationChannelTarget*& val, const json& js, parse_stack& err) {
-    if (!js.is_object())
-        throw gltf_exception("json object expected" + err.pathname());
+    if (!js.is_object()) return false;
     if (!val) val = new glTFAnimationChannelTarget;
-    parse((glTFProperty*&)val, js, err);
-    if (!js.count("node")) throw gltf_exception("missing required json value");
-    parse_attr(val->node, "node", js, err);
-    if (!js.count("path")) throw gltf_exception("missing required json value");
-    parse_attr(val->path, "path", js, err);
+    if (!parse((glTFProperty*&)val, js, err)) return false;
+    if (!js.count("node")) return false;
+    if (!parse_attr(val->node, "node", js, err)) return false;
+    if (!js.count("path")) return false;
+    if (!parse_attr(val->path, "path", js, err)) return false;
+    return true;
 }
 
 // Parses a glTFAnimationChannel object
-static void parse(
+static bool parse(
     glTFAnimationChannel*& val, const json& js, parse_stack& err) {
-    if (!js.is_object())
-        throw gltf_exception("json object expected" + err.pathname());
+    if (!js.is_object()) return false;
     if (!val) val = new glTFAnimationChannel;
-    parse((glTFProperty*&)val, js, err);
-    if (!js.count("sampler"))
-        throw gltf_exception("missing required json value");
-    parse_attr(val->sampler, "sampler", js, err);
-    if (!js.count("target"))
-        throw gltf_exception("missing required json value");
-    parse_attr(val->target, "target", js, err);
+    if (!parse((glTFProperty*&)val, js, err)) return false;
+    if (!js.count("sampler")) return false;
+    if (!parse_attr(val->sampler, "sampler", js, err)) return false;
+    if (!js.count("target")) return false;
+    if (!parse_attr(val->target, "target", js, err)) return false;
+    return true;
 }
 
 // Parse a glTFAnimationSamplerInterpolation enum
-static void parse(
+static bool parse(
     glTFAnimationSamplerInterpolation& val, const json& js, parse_stack& err) {
     static std::map<std::string, glTFAnimationSamplerInterpolation> table = {
         {"LINEAR", glTFAnimationSamplerInterpolation::Linear},
@@ -382,246 +386,252 @@ static void parse(
     };
     auto v = std::string();
     parse(v, js, err);
-    if (table.find(v) == table.end()) throw gltf_exception(err.pathname());
+    if (table.find(v) == table.end()) return false;
     val = table[v];
+    return true;
 }
 
 // Parses a glTFAnimationSampler object
-static void parse(
+static bool parse(
     glTFAnimationSampler*& val, const json& js, parse_stack& err) {
-    if (!js.is_object())
-        throw gltf_exception("json object expected" + err.pathname());
+    if (!js.is_object()) return false;
     if (!val) val = new glTFAnimationSampler;
-    parse((glTFProperty*&)val, js, err);
-    if (!js.count("input")) throw gltf_exception("missing required json value");
-    parse_attr(val->input, "input", js, err);
-    parse_attr(val->interpolation, "interpolation", js, err);
-    if (!js.count("output"))
-        throw gltf_exception("missing required json value");
-    parse_attr(val->output, "output", js, err);
+    if (!parse((glTFProperty*&)val, js, err)) return false;
+    if (!js.count("input")) return false;
+    if (!parse_attr(val->input, "input", js, err)) return false;
+    if (!parse_attr(val->interpolation, "interpolation", js, err)) return false;
+    if (!js.count("output")) return false;
+    if (!parse_attr(val->output, "output", js, err)) return false;
+    return true;
 }
 
 // Parses a glTFAnimation object
-static void parse(glTFAnimation*& val, const json& js, parse_stack& err) {
-    if (!js.is_object())
-        throw gltf_exception("json object expected" + err.pathname());
+static bool parse(glTFAnimation*& val, const json& js, parse_stack& err) {
+    if (!js.is_object()) return false;
     if (!val) val = new glTFAnimation;
-    parse((glTFChildOfRootProperty*&)val, js, err);
-    if (!js.count("channels"))
-        throw gltf_exception("missing required json value");
-    parse_attr(val->channels, "channels", js, err);
-    if (!js.count("samplers"))
-        throw gltf_exception("missing required json value");
-    parse_attr(val->samplers, "samplers", js, err);
+    if (!parse((glTFChildOfRootProperty*&)val, js, err)) return false;
+    if (!js.count("channels")) return false;
+    if (!parse_attr(val->channels, "channels", js, err)) return false;
+    if (!js.count("samplers")) return false;
+    if (!parse_attr(val->samplers, "samplers", js, err)) return false;
+    return true;
 }
 
 // Parses a glTFAsset object
-static void parse(glTFAsset*& val, const json& js, parse_stack& err) {
-    if (!js.is_object())
-        throw gltf_exception("json object expected" + err.pathname());
+static bool parse(glTFAsset*& val, const json& js, parse_stack& err) {
+    if (!js.is_object()) return false;
     if (!val) val = new glTFAsset;
-    parse((glTFProperty*&)val, js, err);
-    parse_attr(val->copyright, "copyright", js, err);
-    parse_attr(val->generator, "generator", js, err);
-    parse_attr(val->minVersion, "minVersion", js, err);
-    if (!js.count("version"))
-        throw gltf_exception("missing required json value");
-    parse_attr(val->version, "version", js, err);
+    if (!parse((glTFProperty*&)val, js, err)) return false;
+    if (!parse_attr(val->copyright, "copyright", js, err)) return false;
+    if (!parse_attr(val->generator, "generator", js, err)) return false;
+    if (!parse_attr(val->minVersion, "minVersion", js, err)) return false;
+    if (!js.count("version")) return false;
+    if (!parse_attr(val->version, "version", js, err)) return false;
+    return true;
 }
 
 // Parses a glTFBuffer object
-static void parse(glTFBuffer*& val, const json& js, parse_stack& err) {
-    if (!js.is_object())
-        throw gltf_exception("json object expected" + err.pathname());
+static bool parse(glTFBuffer*& val, const json& js, parse_stack& err) {
+    if (!js.is_object()) return false;
     if (!val) val = new glTFBuffer;
-    parse((glTFChildOfRootProperty*&)val, js, err);
-    if (!js.count("byteLength"))
-        throw gltf_exception("missing required json value");
-    parse_attr(val->byteLength, "byteLength", js, err);
-    parse_attr(val->uri, "uri", js, err);
+    if (!parse((glTFChildOfRootProperty*&)val, js, err)) return false;
+    if (!js.count("byteLength")) return false;
+    if (!parse_attr(val->byteLength, "byteLength", js, err)) return false;
+    if (!parse_attr(val->uri, "uri", js, err)) return false;
+    return true;
 }
 
 // Parse a glTFBufferViewTarget enum
-static void parse(glTFBufferViewTarget& val, const json& js, parse_stack& err) {
+static bool parse(glTFBufferViewTarget& val, const json& js, parse_stack& err) {
     static std::map<int, glTFBufferViewTarget> table = {
         {34962, glTFBufferViewTarget::ArrayBuffer},
         {34963, glTFBufferViewTarget::ElementArrayBuffer},
     };
     auto v = int();
     parse(v, js, err);
-    if (table.find(v) == table.end()) throw gltf_exception(err.pathname());
+    if (table.find(v) == table.end()) return false;
     val = table[v];
+    return true;
 }
 
 // Parses a glTFBufferView object
-static void parse(glTFBufferView*& val, const json& js, parse_stack& err) {
-    if (!js.is_object())
-        throw gltf_exception("json object expected" + err.pathname());
+static bool parse(glTFBufferView*& val, const json& js, parse_stack& err) {
+    if (!js.is_object()) return false;
     if (!val) val = new glTFBufferView;
-    parse((glTFChildOfRootProperty*&)val, js, err);
-    if (!js.count("buffer"))
-        throw gltf_exception("missing required json value");
-    parse_attr(val->buffer, "buffer", js, err);
-    if (!js.count("byteLength"))
-        throw gltf_exception("missing required json value");
-    parse_attr(val->byteLength, "byteLength", js, err);
-    parse_attr(val->byteOffset, "byteOffset", js, err);
-    parse_attr(val->byteStride, "byteStride", js, err);
-    parse_attr(val->target, "target", js, err);
+    if (!parse((glTFChildOfRootProperty*&)val, js, err)) return false;
+    if (!js.count("buffer")) return false;
+    if (!parse_attr(val->buffer, "buffer", js, err)) return false;
+    if (!js.count("byteLength")) return false;
+    if (!parse_attr(val->byteLength, "byteLength", js, err)) return false;
+    if (!parse_attr(val->byteOffset, "byteOffset", js, err)) return false;
+    if (!parse_attr(val->byteStride, "byteStride", js, err)) return false;
+    if (!parse_attr(val->target, "target", js, err)) return false;
+    return true;
 }
 
 // Parses a glTFCameraOrthographic object
-static void parse(
+static bool parse(
     glTFCameraOrthographic*& val, const json& js, parse_stack& err) {
-    if (!js.is_object())
-        throw gltf_exception("json object expected" + err.pathname());
+    if (!js.is_object()) return false;
     if (!val) val = new glTFCameraOrthographic;
-    parse((glTFProperty*&)val, js, err);
-    if (!js.count("xmag")) throw gltf_exception("missing required json value");
-    parse_attr(val->xmag, "xmag", js, err);
-    if (!js.count("ymag")) throw gltf_exception("missing required json value");
-    parse_attr(val->ymag, "ymag", js, err);
-    if (!js.count("zfar")) throw gltf_exception("missing required json value");
-    parse_attr(val->zfar, "zfar", js, err);
-    if (!js.count("znear")) throw gltf_exception("missing required json value");
-    parse_attr(val->znear, "znear", js, err);
+    if (!parse((glTFProperty*&)val, js, err)) return false;
+    if (!js.count("xmag")) return false;
+    if (!parse_attr(val->xmag, "xmag", js, err)) return false;
+    if (!js.count("ymag")) return false;
+    if (!parse_attr(val->ymag, "ymag", js, err)) return false;
+    if (!js.count("zfar")) return false;
+    if (!parse_attr(val->zfar, "zfar", js, err)) return false;
+    if (!js.count("znear")) return false;
+    if (!parse_attr(val->znear, "znear", js, err)) return false;
+    return true;
 }
 
 // Parses a glTFCameraPerspective object
-static void parse(
+static bool parse(
     glTFCameraPerspective*& val, const json& js, parse_stack& err) {
-    if (!js.is_object())
-        throw gltf_exception("json object expected" + err.pathname());
+    if (!js.is_object()) return false;
     if (!val) val = new glTFCameraPerspective;
-    parse((glTFProperty*&)val, js, err);
-    parse_attr(val->aspectRatio, "aspectRatio", js, err);
-    if (!js.count("yfov")) throw gltf_exception("missing required json value");
-    parse_attr(val->yfov, "yfov", js, err);
-    parse_attr(val->zfar, "zfar", js, err);
-    if (!js.count("znear")) throw gltf_exception("missing required json value");
-    parse_attr(val->znear, "znear", js, err);
+    if (!parse((glTFProperty*&)val, js, err)) return false;
+    if (!parse_attr(val->aspectRatio, "aspectRatio", js, err)) return false;
+    if (!js.count("yfov")) return false;
+    if (!parse_attr(val->yfov, "yfov", js, err)) return false;
+    if (!parse_attr(val->zfar, "zfar", js, err)) return false;
+    if (!js.count("znear")) return false;
+    if (!parse_attr(val->znear, "znear", js, err)) return false;
+    return true;
 }
 
 // Parse a glTFCameraType enum
-static void parse(glTFCameraType& val, const json& js, parse_stack& err) {
+static bool parse(glTFCameraType& val, const json& js, parse_stack& err) {
     static std::map<std::string, glTFCameraType> table = {
         {"perspective", glTFCameraType::Perspective},
         {"orthographic", glTFCameraType::Orthographic},
     };
     auto v = std::string();
     parse(v, js, err);
-    if (table.find(v) == table.end()) throw gltf_exception(err.pathname());
+    if (table.find(v) == table.end()) return false;
     val = table[v];
+    return true;
 }
 
 // Parses a glTFCamera object
-static void parse(glTFCamera*& val, const json& js, parse_stack& err) {
-    if (!js.is_object())
-        throw gltf_exception("json object expected" + err.pathname());
+static bool parse(glTFCamera*& val, const json& js, parse_stack& err) {
+    if (!js.is_object()) return false;
     if (!val) val = new glTFCamera;
-    parse((glTFChildOfRootProperty*&)val, js, err);
-    parse_attr(val->orthographic, "orthographic", js, err);
-    parse_attr(val->perspective, "perspective", js, err);
-    if (!js.count("type")) throw gltf_exception("missing required json value");
-    parse_attr(val->type, "type", js, err);
+    if (!parse((glTFChildOfRootProperty*&)val, js, err)) return false;
+    if (!parse_attr(val->orthographic, "orthographic", js, err)) return false;
+    if (!parse_attr(val->perspective, "perspective", js, err)) return false;
+    if (!js.count("type")) return false;
+    if (!parse_attr(val->type, "type", js, err)) return false;
+    return true;
 }
 
 // Parse a glTFImageMimeType enum
-static void parse(glTFImageMimeType& val, const json& js, parse_stack& err) {
+static bool parse(glTFImageMimeType& val, const json& js, parse_stack& err) {
     static std::map<std::string, glTFImageMimeType> table = {
         {"image/jpeg", glTFImageMimeType::ImageJpeg},
         {"image/png", glTFImageMimeType::ImagePng},
     };
     auto v = std::string();
     parse(v, js, err);
-    if (table.find(v) == table.end()) throw gltf_exception(err.pathname());
+    if (table.find(v) == table.end()) return false;
     val = table[v];
+    return true;
 }
 
 // Parses a glTFImage object
-static void parse(glTFImage*& val, const json& js, parse_stack& err) {
-    if (!js.is_object())
-        throw gltf_exception("json object expected" + err.pathname());
+static bool parse(glTFImage*& val, const json& js, parse_stack& err) {
+    if (!js.is_object()) return false;
     if (!val) val = new glTFImage;
-    parse((glTFChildOfRootProperty*&)val, js, err);
-    parse_attr(val->bufferView, "bufferView", js, err);
-    parse_attr(val->mimeType, "mimeType", js, err);
-    parse_attr(val->uri, "uri", js, err);
+    if (!parse((glTFChildOfRootProperty*&)val, js, err)) return false;
+    if (!parse_attr(val->bufferView, "bufferView", js, err)) return false;
+    if (!parse_attr(val->mimeType, "mimeType", js, err)) return false;
+    if (!parse_attr(val->uri, "uri", js, err)) return false;
+    return true;
 }
 
 // Parses a glTFTextureInfo object
-static void parse(glTFTextureInfo*& val, const json& js, parse_stack& err) {
-    if (!js.is_object())
-        throw gltf_exception("json object expected" + err.pathname());
+static bool parse(glTFTextureInfo*& val, const json& js, parse_stack& err) {
+    if (!js.is_object()) return false;
     if (!val) val = new glTFTextureInfo;
-    parse((glTFProperty*&)val, js, err);
-    if (!js.count("index")) throw gltf_exception("missing required json value");
-    parse_attr(val->index, "index", js, err);
-    parse_attr(val->texCoord, "texCoord", js, err);
+    if (!parse((glTFProperty*&)val, js, err)) return false;
+    if (!js.count("index")) return false;
+    if (!parse_attr(val->index, "index", js, err)) return false;
+    if (!parse_attr(val->texCoord, "texCoord", js, err)) return false;
+    return true;
 }
 
 // Parses a glTFTexture object
-static void parse(glTFTexture*& val, const json& js, parse_stack& err) {
-    if (!js.is_object())
-        throw gltf_exception("json object expected" + err.pathname());
+static bool parse(glTFTexture*& val, const json& js, parse_stack& err) {
+    if (!js.is_object()) return false;
     if (!val) val = new glTFTexture;
-    parse((glTFChildOfRootProperty*&)val, js, err);
-    parse_attr(val->sampler, "sampler", js, err);
-    parse_attr(val->source, "source", js, err);
+    if (!parse((glTFChildOfRootProperty*&)val, js, err)) return false;
+    if (!parse_attr(val->sampler, "sampler", js, err)) return false;
+    if (!parse_attr(val->source, "source", js, err)) return false;
+    return true;
 }
 
 // Parses a glTFMaterialNormalTextureInfo object
-static void parse(
+static bool parse(
     glTFMaterialNormalTextureInfo*& val, const json& js, parse_stack& err) {
-    if (!js.is_object())
-        throw gltf_exception("json object expected" + err.pathname());
+    if (!js.is_object()) return false;
     if (!val) val = new glTFMaterialNormalTextureInfo;
-    parse((glTFTextureInfo*&)val, js, err);
-    parse_attr(val->scale, "scale", js, err);
+    if (!parse((glTFTextureInfo*&)val, js, err)) return false;
+    if (!parse_attr(val->scale, "scale", js, err)) return false;
+    return true;
 }
 
 // Parses a glTFMaterialOcclusionTextureInfo object
-static void parse(
+static bool parse(
     glTFMaterialOcclusionTextureInfo*& val, const json& js, parse_stack& err) {
-    if (!js.is_object())
-        throw gltf_exception("json object expected" + err.pathname());
+    if (!js.is_object()) return false;
     if (!val) val = new glTFMaterialOcclusionTextureInfo;
-    parse((glTFTextureInfo*&)val, js, err);
-    parse_attr(val->strength, "strength", js, err);
+    if (!parse((glTFTextureInfo*&)val, js, err)) return false;
+    if (!parse_attr(val->strength, "strength", js, err)) return false;
+    return true;
 }
 
 // Parses a glTFMaterialPbrMetallicRoughness object
-static void parse(
+static bool parse(
     glTFMaterialPbrMetallicRoughness*& val, const json& js, parse_stack& err) {
-    if (!js.is_object())
-        throw gltf_exception("json object expected" + err.pathname());
+    if (!js.is_object()) return false;
     if (!val) val = new glTFMaterialPbrMetallicRoughness;
-    parse((glTFProperty*&)val, js, err);
-    parse_attr(val->baseColorFactor, "baseColorFactor", js, err);
-    parse_attr(val->baseColorTexture, "baseColorTexture", js, err);
-    parse_attr(val->metallicFactor, "metallicFactor", js, err);
-    parse_attr(
-        val->metallicRoughnessTexture, "metallicRoughnessTexture", js, err);
-    parse_attr(val->roughnessFactor, "roughnessFactor", js, err);
+    if (!parse((glTFProperty*&)val, js, err)) return false;
+    if (!parse_attr(val->baseColorFactor, "baseColorFactor", js, err))
+        return false;
+    if (!parse_attr(val->baseColorTexture, "baseColorTexture", js, err))
+        return false;
+    if (!parse_attr(val->metallicFactor, "metallicFactor", js, err))
+        return false;
+    if (!parse_attr(
+            val->metallicRoughnessTexture, "metallicRoughnessTexture", js, err))
+        return false;
+    if (!parse_attr(val->roughnessFactor, "roughnessFactor", js, err))
+        return false;
+    return true;
 }
 
 // Parses a glTFMaterialPbrSpecularGlossiness object
-static void parse(
+static bool parse(
     glTFMaterialPbrSpecularGlossiness*& val, const json& js, parse_stack& err) {
-    if (!js.is_object())
-        throw gltf_exception("json object expected" + err.pathname());
+    if (!js.is_object()) return false;
     if (!val) val = new glTFMaterialPbrSpecularGlossiness;
-    parse((glTFProperty*&)val, js, err);
-    parse_attr(val->diffuseFactor, "diffuseFactor", js, err);
-    parse_attr(val->diffuseTexture, "diffuseTexture", js, err);
-    parse_attr(val->glossinessFactor, "glossinessFactor", js, err);
-    parse_attr(val->specularFactor, "specularFactor", js, err);
-    parse_attr(
-        val->specularGlossinessTexture, "specularGlossinessTexture", js, err);
+    if (!parse((glTFProperty*&)val, js, err)) return false;
+    if (!parse_attr(val->diffuseFactor, "diffuseFactor", js, err)) return false;
+    if (!parse_attr(val->diffuseTexture, "diffuseTexture", js, err))
+        return false;
+    if (!parse_attr(val->glossinessFactor, "glossinessFactor", js, err))
+        return false;
+    if (!parse_attr(val->specularFactor, "specularFactor", js, err))
+        return false;
+    if (!parse_attr(val->specularGlossinessTexture, "specularGlossinessTexture",
+            js, err))
+        return false;
+    return true;
 }
 
 // Parse a glTFMaterialAlphaMode enum
-static void parse(
+static bool parse(
     glTFMaterialAlphaMode& val, const json& js, parse_stack& err) {
     static std::map<std::string, glTFMaterialAlphaMode> table = {
         {"OPAQUE", glTFMaterialAlphaMode::Opaque},
@@ -630,33 +640,38 @@ static void parse(
     };
     auto v = std::string();
     parse(v, js, err);
-    if (table.find(v) == table.end()) throw gltf_exception(err.pathname());
+    if (table.find(v) == table.end()) return false;
     val = table[v];
+    return true;
 }
 
 // Parses a glTFMaterial object
-static void parse(glTFMaterial*& val, const json& js, parse_stack& err) {
-    if (!js.is_object())
-        throw gltf_exception("json object expected" + err.pathname());
+static bool parse(glTFMaterial*& val, const json& js, parse_stack& err) {
+    if (!js.is_object()) return false;
     if (!val) val = new glTFMaterial;
-    parse((glTFChildOfRootProperty*&)val, js, err);
-    parse_attr(val->alphaCutoff, "alphaCutoff", js, err);
-    parse_attr(val->alphaMode, "alphaMode", js, err);
-    parse_attr(val->doubleSided, "doubleSided", js, err);
-    parse_attr(val->emissiveFactor, "emissiveFactor", js, err);
-    parse_attr(val->emissiveTexture, "emissiveTexture", js, err);
-    parse_attr(val->normalTexture, "normalTexture", js, err);
-    parse_attr(val->occlusionTexture, "occlusionTexture", js, err);
-    parse_attr(val->pbrMetallicRoughness, "pbrMetallicRoughness", js, err);
+    if (!parse((glTFChildOfRootProperty*&)val, js, err)) return false;
+    if (!parse_attr(val->alphaCutoff, "alphaCutoff", js, err)) return false;
+    if (!parse_attr(val->alphaMode, "alphaMode", js, err)) return false;
+    if (!parse_attr(val->doubleSided, "doubleSided", js, err)) return false;
+    if (!parse_attr(val->emissiveFactor, "emissiveFactor", js, err))
+        return false;
+    if (!parse_attr(val->emissiveTexture, "emissiveTexture", js, err))
+        return false;
+    if (!parse_attr(val->normalTexture, "normalTexture", js, err)) return false;
+    if (!parse_attr(val->occlusionTexture, "occlusionTexture", js, err))
+        return false;
+    if (!parse_attr(val->pbrMetallicRoughness, "pbrMetallicRoughness", js, err))
+        return false;
     if (js.count("extensions")) {
         auto& js_ext = js["extensions"];
         parse_attr(val->pbrSpecularGlossiness,
             "KHR_materials_pbrSpecularGlossiness", js_ext, err);
     }
+    return true;
 }
 
 // Parse a glTFMeshPrimitiveMode enum
-static void parse(
+static bool parse(
     glTFMeshPrimitiveMode& val, const json& js, parse_stack& err) {
     static std::map<int, glTFMeshPrimitiveMode> table = {
         {0, glTFMeshPrimitiveMode::Points}, {1, glTFMeshPrimitiveMode::Lines},
@@ -668,68 +683,68 @@ static void parse(
     };
     auto v = int();
     parse(v, js, err);
-    if (table.find(v) == table.end()) throw gltf_exception(err.pathname());
+    if (table.find(v) == table.end()) return false;
     val = table[v];
+    return true;
 }
 
 // Parses a glTFMeshPrimitive object
-static void parse(glTFMeshPrimitive*& val, const json& js, parse_stack& err) {
-    if (!js.is_object())
-        throw gltf_exception("json object expected" + err.pathname());
+static bool parse(glTFMeshPrimitive*& val, const json& js, parse_stack& err) {
+    if (!js.is_object()) return false;
     if (!val) val = new glTFMeshPrimitive;
-    parse((glTFProperty*&)val, js, err);
-    if (!js.count("attributes"))
-        throw gltf_exception("missing required json value");
-    parse_attr(val->attributes, "attributes", js, err);
-    parse_attr(val->indices, "indices", js, err);
-    parse_attr(val->material, "material", js, err);
-    parse_attr(val->mode, "mode", js, err);
-    parse_attr(val->targets, "targets", js, err);
+    if (!parse((glTFProperty*&)val, js, err)) return false;
+    if (!js.count("attributes")) return false;
+    if (!parse_attr(val->attributes, "attributes", js, err)) return false;
+    if (!parse_attr(val->indices, "indices", js, err)) return false;
+    if (!parse_attr(val->material, "material", js, err)) return false;
+    if (!parse_attr(val->mode, "mode", js, err)) return false;
+    if (!parse_attr(val->targets, "targets", js, err)) return false;
+    return true;
 }
 
 // Parses a glTFMesh object
-static void parse(glTFMesh*& val, const json& js, parse_stack& err) {
-    if (!js.is_object())
-        throw gltf_exception("json object expected" + err.pathname());
+static bool parse(glTFMesh*& val, const json& js, parse_stack& err) {
+    if (!js.is_object()) return false;
     if (!val) val = new glTFMesh;
-    parse((glTFChildOfRootProperty*&)val, js, err);
-    if (!js.count("primitives"))
-        throw gltf_exception("missing required json value");
-    parse_attr(val->primitives, "primitives", js, err);
-    parse_attr(val->weights, "weights", js, err);
+    if (!parse((glTFChildOfRootProperty*&)val, js, err)) return false;
+    if (!js.count("primitives")) return false;
+    if (!parse_attr(val->primitives, "primitives", js, err)) return false;
+    if (!parse_attr(val->weights, "weights", js, err)) return false;
+    return true;
 }
 
 // Parses a glTFNode object
-static void parse(glTFNode*& val, const json& js, parse_stack& err) {
-    if (!js.is_object())
-        throw gltf_exception("json object expected" + err.pathname());
+static bool parse(glTFNode*& val, const json& js, parse_stack& err) {
+    if (!js.is_object()) return false;
     if (!val) val = new glTFNode;
-    parse((glTFChildOfRootProperty*&)val, js, err);
-    parse_attr(val->camera, "camera", js, err);
-    parse_attr(val->children, "children", js, err);
-    parse_attr(val->matrix, "matrix", js, err);
-    parse_attr(val->mesh, "mesh", js, err);
-    parse_attr(val->rotation, "rotation", js, err);
-    parse_attr(val->scale, "scale", js, err);
-    parse_attr(val->skin, "skin", js, err);
-    parse_attr(val->translation, "translation", js, err);
-    parse_attr(val->weights, "weights", js, err);
+    if (!parse((glTFChildOfRootProperty*&)val, js, err)) return false;
+    if (!parse_attr(val->camera, "camera", js, err)) return false;
+    if (!parse_attr(val->children, "children", js, err)) return false;
+    if (!parse_attr(val->matrix, "matrix", js, err)) return false;
+    if (!parse_attr(val->mesh, "mesh", js, err)) return false;
+    if (!parse_attr(val->rotation, "rotation", js, err)) return false;
+    if (!parse_attr(val->scale, "scale", js, err)) return false;
+    if (!parse_attr(val->skin, "skin", js, err)) return false;
+    if (!parse_attr(val->translation, "translation", js, err)) return false;
+    if (!parse_attr(val->weights, "weights", js, err)) return false;
+    return true;
 }
 
 // Parse a glTFSamplerMagFilter enum
-static void parse(glTFSamplerMagFilter& val, const json& js, parse_stack& err) {
+static bool parse(glTFSamplerMagFilter& val, const json& js, parse_stack& err) {
     static std::map<int, glTFSamplerMagFilter> table = {
         {9728, glTFSamplerMagFilter::Nearest},
         {9729, glTFSamplerMagFilter::Linear},
     };
     auto v = int();
     parse(v, js, err);
-    if (table.find(v) == table.end()) throw gltf_exception(err.pathname());
+    if (table.find(v) == table.end()) return false;
     val = table[v];
+    return true;
 }
 
 // Parse a glTFSamplerMinFilter enum
-static void parse(glTFSamplerMinFilter& val, const json& js, parse_stack& err) {
+static bool parse(glTFSamplerMinFilter& val, const json& js, parse_stack& err) {
     static std::map<int, glTFSamplerMinFilter> table = {
         {9728, glTFSamplerMinFilter::Nearest},
         {9729, glTFSamplerMinFilter::Linear},
@@ -740,12 +755,13 @@ static void parse(glTFSamplerMinFilter& val, const json& js, parse_stack& err) {
     };
     auto v = int();
     parse(v, js, err);
-    if (table.find(v) == table.end()) throw gltf_exception(err.pathname());
+    if (table.find(v) == table.end()) return false;
     val = table[v];
+    return true;
 }
 
 // Parse a glTFSamplerWrapS enum
-static void parse(glTFSamplerWrapS& val, const json& js, parse_stack& err) {
+static bool parse(glTFSamplerWrapS& val, const json& js, parse_stack& err) {
     static std::map<int, glTFSamplerWrapS> table = {
         {33071, glTFSamplerWrapS::ClampToEdge},
         {33648, glTFSamplerWrapS::MirroredRepeat},
@@ -753,12 +769,13 @@ static void parse(glTFSamplerWrapS& val, const json& js, parse_stack& err) {
     };
     auto v = int();
     parse(v, js, err);
-    if (table.find(v) == table.end()) throw gltf_exception(err.pathname());
+    if (table.find(v) == table.end()) return false;
     val = table[v];
+    return true;
 }
 
 // Parse a glTFSamplerWrapT enum
-static void parse(glTFSamplerWrapT& val, const json& js, parse_stack& err) {
+static bool parse(glTFSamplerWrapT& val, const json& js, parse_stack& err) {
     static std::map<int, glTFSamplerWrapT> table = {
         {33071, glTFSamplerWrapT::ClampToEdge},
         {33648, glTFSamplerWrapT::MirroredRepeat},
@@ -766,68 +783,71 @@ static void parse(glTFSamplerWrapT& val, const json& js, parse_stack& err) {
     };
     auto v = int();
     parse(v, js, err);
-    if (table.find(v) == table.end()) throw gltf_exception(err.pathname());
+    if (table.find(v) == table.end()) return false;
     val = table[v];
+    return true;
 }
 
 // Parses a glTFSampler object
-static void parse(glTFSampler*& val, const json& js, parse_stack& err) {
-    if (!js.is_object())
-        throw gltf_exception("json object expected" + err.pathname());
+static bool parse(glTFSampler*& val, const json& js, parse_stack& err) {
+    if (!js.is_object()) return false;
     if (!val) val = new glTFSampler;
-    parse((glTFChildOfRootProperty*&)val, js, err);
-    parse_attr(val->magFilter, "magFilter", js, err);
-    parse_attr(val->minFilter, "minFilter", js, err);
-    parse_attr(val->wrapS, "wrapS", js, err);
-    parse_attr(val->wrapT, "wrapT", js, err);
+    if (!parse((glTFChildOfRootProperty*&)val, js, err)) return false;
+    if (!parse_attr(val->magFilter, "magFilter", js, err)) return false;
+    if (!parse_attr(val->minFilter, "minFilter", js, err)) return false;
+    if (!parse_attr(val->wrapS, "wrapS", js, err)) return false;
+    if (!parse_attr(val->wrapT, "wrapT", js, err)) return false;
+    return true;
 }
 
 // Parses a glTFScene object
-static void parse(glTFScene*& val, const json& js, parse_stack& err) {
-    if (!js.is_object())
-        throw gltf_exception("json object expected" + err.pathname());
+static bool parse(glTFScene*& val, const json& js, parse_stack& err) {
+    if (!js.is_object()) return false;
     if (!val) val = new glTFScene;
-    parse((glTFChildOfRootProperty*&)val, js, err);
-    parse_attr(val->nodes, "nodes", js, err);
+    if (!parse((glTFChildOfRootProperty*&)val, js, err)) return false;
+    if (!parse_attr(val->nodes, "nodes", js, err)) return false;
+    return true;
 }
 
 // Parses a glTFSkin object
-static void parse(glTFSkin*& val, const json& js, parse_stack& err) {
-    if (!js.is_object())
-        throw gltf_exception("json object expected" + err.pathname());
+static bool parse(glTFSkin*& val, const json& js, parse_stack& err) {
+    if (!js.is_object()) return false;
     if (!val) val = new glTFSkin;
-    parse((glTFChildOfRootProperty*&)val, js, err);
-    parse_attr(val->inverseBindMatrices, "inverseBindMatrices", js, err);
-    if (!js.count("joints"))
-        throw gltf_exception("missing required json value");
-    parse_attr(val->joints, "joints", js, err);
-    parse_attr(val->skeleton, "skeleton", js, err);
+    if (!parse((glTFChildOfRootProperty*&)val, js, err)) return false;
+    if (!parse_attr(val->inverseBindMatrices, "inverseBindMatrices", js, err))
+        return false;
+    if (!js.count("joints")) return false;
+    if (!parse_attr(val->joints, "joints", js, err)) return false;
+    if (!parse_attr(val->skeleton, "skeleton", js, err)) return false;
+    return true;
 }
 
 // Parses a glTF object
-static void parse(glTF*& val, const json& js, parse_stack& err) {
-    if (!js.is_object())
-        throw gltf_exception("json object expected" + err.pathname());
+static bool parse(glTF*& val, const json& js, parse_stack& err) {
+    if (!js.is_object()) return false;
     if (!val) val = new glTF;
-    parse((glTFProperty*&)val, js, err);
-    parse_attr(val->accessors, "accessors", js, err);
-    parse_attr(val->animations, "animations", js, err);
-    if (!js.count("asset")) throw gltf_exception("missing required json value");
-    parse_attr(val->asset, "asset", js, err);
-    parse_attr(val->bufferViews, "bufferViews", js, err);
-    parse_attr(val->buffers, "buffers", js, err);
-    parse_attr(val->cameras, "cameras", js, err);
-    parse_attr(val->extensionsRequired, "extensionsRequired", js, err);
-    parse_attr(val->extensionsUsed, "extensionsUsed", js, err);
-    parse_attr(val->images, "images", js, err);
-    parse_attr(val->materials, "materials", js, err);
-    parse_attr(val->meshes, "meshes", js, err);
-    parse_attr(val->nodes, "nodes", js, err);
-    parse_attr(val->samplers, "samplers", js, err);
-    parse_attr(val->scene, "scene", js, err);
-    parse_attr(val->scenes, "scenes", js, err);
-    parse_attr(val->skins, "skins", js, err);
-    parse_attr(val->textures, "textures", js, err);
+    if (!parse((glTFProperty*&)val, js, err)) return false;
+    if (!parse_attr(val->accessors, "accessors", js, err)) return false;
+    if (!parse_attr(val->animations, "animations", js, err)) return false;
+    if (!js.count("asset")) return false;
+    if (!parse_attr(val->asset, "asset", js, err)) return false;
+    if (!parse_attr(val->bufferViews, "bufferViews", js, err)) return false;
+    if (!parse_attr(val->buffers, "buffers", js, err)) return false;
+    if (!parse_attr(val->cameras, "cameras", js, err)) return false;
+    if (!parse_attr(val->extensionsRequired, "extensionsRequired", js, err))
+        return false;
+    if (!parse_attr(val->extensionsUsed, "extensionsUsed", js, err))
+        return false;
+    if (!parse_attr(val->images, "images", js, err)) return false;
+    if (!parse_attr(val->materials, "materials", js, err)) return false;
+    if (!parse_attr(val->meshes, "meshes", js, err)) return false;
+    if (!parse_attr(val->nodes, "nodes", js, err)) return false;
+    if (!parse_attr(val->samplers, "samplers", js, err)) return false;
+    if (!parse_attr(val->scene, "scene", js, err)) return false;
+    if (!parse_attr(val->scenes, "scenes", js, err)) return false;
+    if (!parse_attr(val->skins, "skins", js, err)) return false;
+    if (!parse_attr(val->textures, "textures", js, err)) return false;
+    return true;
 }
 
 // Dump support function.
@@ -1918,13 +1938,14 @@ inline std::string _fix_path(const std::string& path_) {
 // Load a binary file in memory
 // http://stackoverflow.com/questions/116038/what-is-the-best-way-to-read-an-entire-file-into-a-stdstring-in-c
 //
-static inline std::vector<unsigned char> _load_binfile(
-    const std::string& filename, bool skip_missing) {
+std::vector<unsigned char> load_binfile(
+    const std::string& filename, bool skip_missing, std::string* err) {
     std::ifstream ifs(
         filename.c_str(), std::ios::in | std::ios::binary | std::ios::ate);
     if (!ifs) {
         if (skip_missing) return {};
-        throw gltf_exception("could not open file " + filename);
+        *err = "could not open file " + filename;
+        return {};
     }
     std::ifstream::pos_type fileSize = ifs.tellg();
     ifs.seekg(0, std::ios::beg);
@@ -1936,11 +1957,11 @@ static inline std::vector<unsigned char> _load_binfile(
 //
 // Saves text.
 //
-static inline bool _save_textfile(
-    const std::string& filename, const std::string& txt, std::string& errmsg) {
+bool save_textfile(
+    const std::string& filename, const std::string& txt, std::string* err) {
     auto f = fopen(filename.c_str(), "wt");
     if (!f) {
-        errmsg = "cannot write file " + filename;
+        if (err) *err = "cannot write file " + filename;
         return false;
     }
     fwrite(txt.c_str(), 1, (int)txt.size(), f);
@@ -1949,23 +1970,13 @@ static inline bool _save_textfile(
 }
 
 //
-// Saves text.
-//
-static inline void _save_textfile(
-    const std::string& filename, const std::string& txt) {
-    std::string errmsg;
-    auto ok = _save_textfile(filename, txt, errmsg);
-    if (!ok) throw gltf_exception(errmsg);
-}
-
-//
 // Saves binary.
 //
-static inline bool _save_binfile(const std::string& filename,
-    const std::vector<unsigned char>& bin, std::string& errmsg) {
+bool save_binfile(const std::string& filename,
+    const std::vector<unsigned char>& bin, std::string* err) {
     auto f = fopen(filename.c_str(), "wb");
     if (!f) {
-        errmsg = "cannot write file " + filename;
+        if (err) *err = "cannot write file " + filename;
         return false;
     }
     fwrite(bin.data(), 1, (int)bin.size(), f);
@@ -1974,20 +1985,10 @@ static inline bool _save_binfile(const std::string& filename,
 }
 
 //
-// Saves binary.
-//
-static inline void _save_binfile(
-    const std::string& filename, const std::vector<unsigned char>& bin) {
-    std::string errmsg;
-    auto ok = _save_binfile(filename, bin, errmsg);
-    if (!ok) throw gltf_exception(errmsg);
-}
-
-//
 // Loads a gltf.
 //
 glTF* load_gltf(const std::string& filename, bool load_bin, bool load_image,
-    bool skip_missing) {
+    bool skip_missing, std::string* err) {
     // clear data
     auto gltf = std::unique_ptr<glTF>(new glTF());
 
@@ -1995,21 +1996,33 @@ glTF* load_gltf(const std::string& filename, bool load_bin, bool load_image,
     auto js = json();
     try {
         std::ifstream stream(filename.c_str());
-        if (!stream) throw gltf_exception("could not load json");
+        if (!stream) {
+            if (err) *err = "could not load json";
+            return nullptr;
+        }
         stream >> js;
     } catch (const std::exception&) {
-        throw gltf_exception("could not load json");
+        if (err) *err = "could not load json";
+        return nullptr;
     }
 
     // parse json
-    auto err = parse_stack();
+    auto stack = parse_stack();
     auto gltf_ = gltf.get();
-    parse(gltf_, js, err);
+    if (!parse(gltf_, js, stack)) {
+        if (err) *err = "error parsing gltf at " + stack.pathname();
+        return nullptr;
+    }
 
     // load external resources
     auto dirname = _get_dirname(filename);
-    if (load_bin) load_buffers(gltf.get(), dirname, skip_missing);
-    if (load_image) load_images(gltf.get(), dirname, skip_missing);
+    if (load_bin)
+        if (!load_buffers(gltf.get(), dirname, skip_missing, err))
+            return nullptr;
+    if (load_image)
+        if (!load_images(gltf.get(), dirname, skip_missing, err))
+            return nullptr;
+
     // done
     return gltf.release();
 }
@@ -2017,66 +2030,85 @@ glTF* load_gltf(const std::string& filename, bool load_bin, bool load_image,
 //
 // Saves a gltf.
 //
-void save_gltf(const std::string& filename, const glTF* gltf, bool save_bin,
-    bool save_image) {
+bool save_gltf(const std::string& filename, const glTF* gltf, bool save_bin,
+    bool save_image, std::string* err) {
     // dumps json
     auto js = json();
-    auto err = parse_stack();
-    dump(gltf, js, err);
+    auto stack = parse_stack();
+    dump(gltf, js, stack);
 
     // save json
-    _save_textfile(filename, js.dump(2));
+    if (!save_textfile(filename, js.dump(2), err)) return false;
 
     // save external resources
     auto dirname = _get_dirname(filename);
-    if (save_bin) save_buffers(gltf, dirname);
-    if (save_image) save_images(gltf, dirname);
+    if (save_bin)
+        if (!save_buffers(gltf, dirname, err)) return false;
+    if (save_image)
+        if (!save_images(gltf, dirname, err)) return false;
+
+    // done
+    return true;
 }
 
 //
 // reading shortcut
 //
 template <typename T>
-static inline void _fread(FILE* f, T* v, int count) {
-    if (fread(v, sizeof(T), count, f) != count)
-        throw gltf_exception("could not read binary file");
+inline bool read(FILE* f, T* v, int count, std::string* err) {
+    if (fread(v, sizeof(T), count, f) != count) {
+        if (err) *err = "could not read binary file";
+        return false;
+    }
+    return true;
 }
 
 //
 // writing shortcut
 //
 template <typename T>
-static inline void _fwrite(FILE* f, const T* v, int count) {
-    if (fwrite(v, sizeof(T), count, f) != count)
-        throw gltf_exception("could not write binary file");
+inline bool fwrite(FILE* f, const T* v, int count, std::string* err) {
+    if (fwrite(v, sizeof(T), count, f) != count) {
+        if (err) *err = "could not write binary file";
+        return false;
+    }
+    return true;
 }
 
 //
 // Loads a binary gltf.
 //
 glTF* load_binary_gltf(const std::string& filename, bool load_bin,
-    bool load_image, bool skip_missing) {
+    bool load_image, bool skip_missing, std::string* err) {
     // clear data
     auto gltf = std::unique_ptr<glTF>(new glTF());
 
     // opens binary file
     auto f = std::fopen(filename.c_str(), "rb");
-    if (!f) throw gltf_exception("could not load binary file");
+    if (!f) {
+        if (err) *err = "could not load binary file";
+        return nullptr;
+    }
 
     // read magic
     uint32_t magic;
-    _fread(f, &magic, 1);
-    if (magic != 0x46546C67) throw gltf_exception("corrupted glb format");
+    if (!read(f, &magic, 1, err)) return nullptr;
+    if (magic != 0x46546C67) {
+        if (err) *err = "corrupted glb format";
+        return nullptr;
+    }
 
     // read version
     uint32_t version;
-    _fread(f, &version, 1);
-    if (version != 1 && version != 2)
-        throw gltf_exception("unsupported glb version");
+    if (!read(f, &version, 1, err)) return nullptr;
+    if (version != 1 && version != 2) {
+        if (err) *err = "unsupported glb version";
+        return nullptr;
+    }
 
     // read length
     uint32_t length;
-    _fread(f, &length, 1);
+    if (!read(f, &length, 1, err)) return nullptr;
 
     // data
     auto json_bytes = std::vector<char>();
@@ -2086,44 +2118,51 @@ glTF* load_binary_gltf(const std::string& filename, bool load_bin,
     if (version == 1) {
         // read content length and format
         uint32_t json_length, json_format;
-        _fread(f, &json_length, 1);
-        _fread(f, &json_format, 1);
+        if (!read(f, &json_length, 1, err)) return nullptr;
+        if (!read(f, &json_format, 1, err)) return nullptr;
 
         // read json bytes
         json_bytes.resize(json_length);
-        _fread(f, json_bytes.data(), json_length);
+        if (!read(f, json_bytes.data(), json_length, err)) return nullptr;
 
         // read buffer bytes
         if (load_bin) {
             buffer_bytes.resize(length - json_length - 20);
-            _fread(f, buffer_bytes.data(), (int)buffer_bytes.size());
-            buffer_length = buffer_bytes.size();
+            if (!read(f, buffer_bytes.data(), (int)buffer_bytes.size(), err))
+                return nullptr;
+            buffer_length = (int)buffer_bytes.size();
         }
     }
 
     if (version == 2) {
         // read content length and format
         uint32_t json_length, json_format;
-        _fread(f, &json_length, 1);
-        _fread(f, &json_format, 1);
-        if (json_format != 0x4E4F534A)
-            throw gltf_exception("corrupt binary format");
+        if (!read(f, &json_length, 1, err)) return nullptr;
+        if (!read(f, &json_format, 1, err)) return nullptr;
+        if (json_format != 0x4E4F534A) {
+            if (err) *err = "corrupt binary format";
+            return nullptr;
+        }
 
         // read json bytes
         json_bytes.resize(json_length);
-        _fread(f, json_bytes.data(), (int)json_bytes.size());
+        if (!read(f, json_bytes.data(), (int)json_bytes.size(), err))
+            return nullptr;
 
         // read content length and format
         uint32_t buffer_format;
-        _fread(f, &buffer_length, 1);
-        _fread(f, &buffer_format, 1);
-        if (buffer_format != 0x004E4942)
-            throw gltf_exception("corrupt binary format");
+        if (!read(f, &buffer_length, 1, err)) return nullptr;
+        if (!read(f, &buffer_format, 1, err)) return nullptr;
+        if (buffer_format != 0x004E4942) {
+            if (err) *err = "corrupt binary format";
+            return nullptr;
+        }
 
         // read buffer bytes
         if (load_bin) {
             buffer_bytes.resize(buffer_length);
-            _fread(f, buffer_bytes.data(), (int)buffer_bytes.size());
+            if (!read(f, buffer_bytes.data(), (int)buffer_bytes.size(), err))
+                return nullptr;
         }
     }
 
@@ -2133,13 +2172,14 @@ glTF* load_binary_gltf(const std::string& filename, bool load_bin,
         json_bytes.push_back(0);
         js = json::parse(json_bytes.data());
     } catch (const std::exception&) {
-        throw gltf_exception("could not load json");
+        if (err) *err = "could not load json";
+        return nullptr;
     }
 
     // parse json
-    auto err = parse_stack();
+    auto stack = parse_stack();
     auto gltf_ = gltf.get();
-    parse(gltf_, js, err);
+    if (!parse(gltf_, js, stack)) return nullptr;
 
     // fix internal buffer
     auto buffer = gltf->buffers.at(0);
@@ -2149,8 +2189,10 @@ glTF* load_binary_gltf(const std::string& filename, bool load_bin,
 
     // load external resources
     auto dirname = _get_dirname(filename);
-    if (load_bin) load_buffers(gltf.get(), dirname, skip_missing);
-    if (load_image) load_images(gltf.get(), dirname, skip_missing);
+    if (load_bin)
+        if (!load_buffers(gltf.get(), dirname, skip_missing)) return nullptr;
+    if (load_image)
+        if (!load_images(gltf.get(), dirname, skip_missing)) return nullptr;
 
     // close
     fclose(f);
@@ -2162,16 +2204,19 @@ glTF* load_binary_gltf(const std::string& filename, bool load_bin,
 //
 // Saves a binary gltf.
 //
-void save_binary_gltf(const std::string& filename, const glTF* gltf,
-    bool save_bin, bool save_image) {
+bool save_binary_gltf(const std::string& filename, const glTF* gltf,
+    bool save_bin, bool save_image, std::string* err) {
     // opens binary file
     auto f = std::fopen(filename.c_str(), "wb");
-    if (!f) throw gltf_exception("could not write binary file");
+    if (!f) {
+        if (err) *err = "could not write binary file";
+        return false;
+    }
 
     // dumps json
     auto js = json();
-    auto err = parse_stack();
-    dump(gltf, js, err);
+    auto stack = parse_stack();
+    dump(gltf, js, stack);
 
     // fix string
     auto js_str = js.dump(2);
@@ -2179,7 +2224,7 @@ void save_binary_gltf(const std::string& filename, const glTF* gltf,
         auto count = js_str.length() % 4;
         for (auto c = 0; c < count; c++) js_str += " ";
     }
-    uint32_t json_length = js_str.size();
+    uint32_t json_length = (uint32_t)js_str.size();
 
     // internal buffer
     auto buffer = gltf->buffers.at(0);
@@ -2188,26 +2233,27 @@ void save_binary_gltf(const std::string& filename, const glTF* gltf,
 
     // write header
     uint32_t magic = 0x46546C67;
-    _fwrite(f, &magic, 1);
+    if (!fwrite(f, &magic, 1, err)) return false;
     uint32_t version = 2;
-    _fwrite(f, &version, 1);
+    if (!fwrite(f, &version, 1, err)) return false;
     uint32_t length = 12 + 8 + json_length + 8 + buffer_length;
-    _fread(f, &length, 1);
+    if (!fwrite(f, &length, 1, err)) return false;
 
     // write json
     uint32_t json_type = 0x4E4F534A;
-    _fwrite(f, &json_length, 1);
-    _fwrite(f, &json_type, 1);
-    _fwrite(f, js_str.data(), (int)json_length);
+    if (!fwrite(f, &json_length, 1, err)) return false;
+    if (!fwrite(f, &json_type, 1, err)) return false;
+    if (!fwrite(f, js_str.data(), (int)json_length, err)) return false;
 
     if (save_bin) {
         uint32_t buffer_type = 0x004E4942;
-        _fwrite(f, &buffer_length, 1);
-        _fwrite(f, &buffer_type, 1);
-        _fwrite(f, buffer->data.data(), (int)buffer->data.size());
+        if (!fwrite(f, &buffer_length, 1, err)) return false;
+        if (!fwrite(f, &buffer_type, 1, err)) return false;
+        if (!fwrite(f, buffer->data.data(), (int)buffer->data.size(), err))
+            return false;
         char pad = 0;
         for (auto i = 0; i < buffer_length - buffer->data.size(); i++) {
-            _fwrite(f, &pad, 1);
+            if (!fwrite(f, &pad, 1, err)) return false;
         }
     }
 
@@ -2216,8 +2262,13 @@ void save_binary_gltf(const std::string& filename, const glTF* gltf,
 
     // save external resources
     auto dirname = _get_dirname(filename);
-    if (save_bin) save_buffers(gltf, dirname);
-    if (save_image) save_images(gltf, dirname);
+    if (save_bin)
+        if (!save_buffers(gltf, dirname, err)) return false;
+    if (save_image)
+        if (!save_images(gltf, dirname, err)) return false;
+
+    // done
+    return true;
 }
 
 //
@@ -2327,7 +2378,7 @@ static inline std::string base64_decode(std::string const& encoded_string) {
 //
 // Check if a string starts with a prefix
 //
-static inline bool _startsiwith(
+static inline bool startsiwith(
     const std::string& str, const std::string& prefix) {
     if (str.length() < prefix.length()) return false;
     return str.substr(0, prefix.length()) == prefix;
@@ -2336,145 +2387,193 @@ static inline bool _startsiwith(
 //
 // Load buffer data.
 //
-void load_buffers(glTF* gltf, const std::string& dirname, bool skip_missing) {
+bool load_buffers(glTF* gltf, const std::string& dirname, bool skip_missing,
+    std::string* err) {
     for (auto buffer : gltf->buffers) {
         if (buffer->uri == "") continue;
-        if (_startsiwith(buffer->uri, "data:")) {
+        if (startsiwith(buffer->uri, "data:")) {
             // assume it is base64 and find ','
             auto pos = buffer->uri.find(',');
-            if (pos == buffer->uri.npos)
-                throw gltf_exception("could not decode base64 data");
+            if (pos == buffer->uri.npos) {
+                if (skip_missing) continue;
+                if (err) *err = "could not decode base64 data";
+                return false;
+            }
             // decode
             auto data = _base64::base64_decode(buffer->uri.substr(pos + 1));
             buffer->data =
                 std::vector<unsigned char>((unsigned char*)data.c_str(),
                     (unsigned char*)data.c_str() + data.length());
         } else {
-            buffer->data =
-                _load_binfile(_fix_path(dirname + buffer->uri), skip_missing);
+            buffer->data = load_binfile(
+                _fix_path(dirname + buffer->uri), skip_missing, err);
+            if (buffer->data.empty()) {
+                if (skip_missing) continue;
+                if (err)
+                    *err = "could not load binary file " +
+                           _fix_path(dirname + buffer->uri);
+                return false;
+            }
+        }
+        if (buffer->byteLength != buffer->data.size()) {
+            if (skip_missing) continue;
+            if (err) *err = "mismatched buffer size";
+            return false;
         }
     }
-}
-
-//
-// Load shaders data.
-//
-void load_shaders(glTF* gltf, const std::string& dirname, bool skip_missing) {
-#if 0
-    for (auto kv : gltf->shaders) {
-        auto shader = &kv.second;
-        if (_startsiwith(shader->uri, "data:")) {
-            // assume it is base64 and find ','
-            auto pos = shader->uri.find(',');
-            if (pos == shader->uri.npos)
-                throw gltf_exception("could not decode base64 data");
-            // decode
-            shader->data = _base64::base64_decode(shader->uri.substr(pos + 1));
-        } else {
-            shader->data =
-                _load_textfile(_fix_path(dirname + shader->uri), skip_missing);
-        }
-    }
-#endif
+    return true;
 }
 
 //
 // Loads images.
 //
-void load_images(glTF* gltf, const std::string& dirname, bool skip_missing) {
-#ifndef YGL_NO_STBIMAGE
-
+bool load_images(glTF* gltf, const std::string& dirname, bool skip_missing,
+    std::string* err) {
+#ifndef YGLTF_NO_IMAGE
     for (auto image : gltf->images) {
         image->data = image_data();
-        if (image->bufferView) {
-            auto view = gltf->get(image->bufferView);
-            auto buffer = gltf->get(view->buffer);
-            if (!view || !buffer || view->byteStride) {
-                if (skip_missing) continue;
-                throw gltf_exception("invalid image buffer view");
+        if (image->bufferView || startsiwith(image->uri, "data:")) {
+            auto fake_filename = std::string();
+            auto buffer = std::string();
+            auto data = (unsigned char*)nullptr;
+            auto data_size = 0;
+            if (image->bufferView) {
+                auto view = gltf->get(image->bufferView);
+                auto buffer = gltf->get(view->buffer);
+                if (!view || !buffer || view->byteStride) {
+                    if (skip_missing) continue;
+                    if (err) *err = "invalid image buffer view";
+                    return false;
+                }
+                if (image->mimeType == glTFImageMimeType::ImagePng)
+                    fake_filename = "fake.png";
+                else if (image->mimeType == glTFImageMimeType::ImageJpeg)
+                    fake_filename = "fake.jpg";
+                else {
+                    if (skip_missing) continue;
+                    if (err) *err = "unsupported image format";
+                    return false;
+                }
+                data = buffer->data.data() + view->byteOffset;
+                data_size = view->byteLength;
+            } else {
+                // assume it is base64 and find ','
+                auto pos = image->uri.find(',');
+                if (pos == image->uri.npos) {
+                    if (skip_missing) continue;
+                    if (err) *err = "could not decode base64 data";
+                    return false;
+                }
+                auto header = image->uri.substr(0, pos);
+                for (auto format : {"png", "jpg", "jpeg", "tga", "ppm", "hdr"})
+                    if (header.find(format) != header.npos)
+                        fake_filename = std::string("fake.") + format;
+                if (yimg::is_hdr_filename(fake_filename)) {
+                    if (skip_missing) continue;
+                    if (err)
+                        *err = "unsupported embedded image format " +
+                               header.substr(0, pos);
+                    return false;
+                }
+                // decode
+                buffer = _base64::base64_decode(image->uri.substr(pos + 1));
+                data_size = (int)buffer.size();
+                data = (unsigned char*)buffer.data();
             }
-            auto ext = std::string();
-            if (image->mimeType == glTFImageMimeType::ImagePng)
-                ext = "png";
-            else if (image->mimeType == glTFImageMimeType::ImageJpeg)
-                ext = "jpg";
-            else {
-                if (skip_missing) continue;
-                throw gltf_exception("unsupported image format");
+            if (yimg::is_hdr_filename(fake_filename)) {
+                image->data.dataf = yimg::load_imagef_from_memory(fake_filename,
+                    data, data_size, image->data.width, image->data.height,
+                    image->data.ncomp);
+            } else {
+                image->data.datab = yimg::load_image_from_memory(fake_filename,
+                    data, data_size, image->data.width, image->data.height,
+                    image->data.ncomp);
             }
-            yimg::load_image_from_memory(ext,
-                buffer->data.data() + view->byteOffset, view->byteLength,
-                image->data.width, image->data.height, image->data.ncomp,
-                image->data.dataf, image->data.datab);
-        } else if (_startsiwith(image->uri, "data:")) {
-            // assume it is base64 and find ','
-            auto pos = image->uri.find(',');
-            auto ext = std::string();
-            if (pos == image->uri.npos)
-                throw gltf_exception("could not decode base64 data");
-            auto header = image->uri.substr(0, pos);
-            for (auto format : {"png", "jpg", "jpeg", "tga", "ppm", "hdr"})
-                if (header.find(format) != header.npos) ext = format;
-            if (ext.empty()) {
+            if (image->data.dataf.empty() && image->data.datab.empty()) {
                 if (skip_missing) continue;
-                throw gltf_exception("unsupported embedded image format " +
-                                     header.substr(0, pos));
+                if (err) *err = "cannot load image from memory";
+                return false;
             }
-            // decode
-            auto data = _base64::base64_decode(image->uri.substr(pos + 1));
-            yimg::load_image_from_memory(ext, (unsigned char*)data.c_str(),
-                (int)data.length(), image->data.width, image->data.height,
-                image->data.ncomp, image->data.dataf, image->data.datab);
         } else {
-            try {
-                yimg::load_image(_fix_path(dirname + image->uri),
-                    image->data.width, image->data.height, image->data.ncomp,
-                    image->data.dataf, image->data.datab);
-            } catch (...) {
-                if (!skip_missing) throw;
+            auto filename = _fix_path(dirname + image->uri);
+            if (yimg::is_hdr_filename(filename)) {
+                image->data.dataf = yimg::load_imagef(filename,
+                    image->data.width, image->data.height, image->data.ncomp);
+            } else {
+                image->data.datab = yimg::load_image(
+                    _fix_path(dirname + image->uri), image->data.width,
+                    image->data.height, image->data.ncomp);
+            }
+            if (image->data.dataf.empty() && image->data.datab.empty()) {
+                if (skip_missing) continue;
+                if (err) *err = "cannot load image " + filename;
+                return false;
             }
         }
     }
-
 #endif
+    return true;
 }
 
 //
 // Save buffer data.
 //
-void save_buffers(const glTF* gltf, const std::string& dirname) {
+bool save_buffers(const glTF* gltf, const std::string& dirname,
+    bool skip_missing, std::string* err) {
     for (auto buffer : gltf->buffers) {
-        if (_startsiwith(buffer->uri, "data:"))
-            throw gltf_exception("saving of embedded data not supported");
-        _save_binfile(dirname + buffer->uri, buffer->data);
+        if (startsiwith(buffer->uri, "data:")) {
+            if (skip_missing) continue;
+            if (err) *err = "saving of embedded data not supported";
+            return false;
+        }
+        if (!save_binfile(dirname + buffer->uri, buffer->data, err)) {
+            if (skip_missing) continue;
+            if (err) *err = "error writing buffer " + dirname + buffer->uri;
+            return false;
+        }
     }
+    return true;
 }
 
 //
 // Save images.
 //
-void save_images(const glTF* gltf, const std::string& dirname) {
-#ifndef YGL_NO_STBIMAGE
-
+bool save_images(const glTF* gltf, const std::string& dirname,
+    bool skip_missing, std::string* err) {
+#ifndef YGLTF_NO_IMAGE
     for (auto image : gltf->images) {
-        if (_startsiwith(image->uri, "data:"))
-            throw gltf_exception("saving of embedded data not supported");
-        if (!image->data.dataf.empty()) {
-            yimg::save_image(dirname + image->uri, image->data.width,
-                image->data.height, image->data.ncomp,
-                image->data.dataf.data());
+        if (startsiwith(image->uri, "data:")) {
+            if (skip_missing) continue;
+            if (err) *err = "saving of embedded data not supported";
+            return false;
         }
-        if (!image->data.datab.empty()) {
-            yimg::save_image(dirname + image->uri, image->data.width,
-                image->data.height, image->data.ncomp,
-                image->data.datab.data());
+        if (!image->data.dataf.empty()) {
+            if (!yimg::save_imagef(dirname + image->uri, image->data.width,
+                    image->data.height, image->data.ncomp,
+                    image->data.dataf.data())) {
+                if (skip_missing) continue;
+                if (!err) *err = "error writing image " + dirname + image->uri;
+                return false;
+            }
+        } else if (!image->data.datab.empty()) {
+            if (!yimg::save_image(dirname + image->uri, image->data.width,
+                    image->data.height, image->data.ncomp,
+                    image->data.datab.data())) {
+                if (skip_missing) continue;
+                if (!err) *err = "error writing image " + dirname + image->uri;
+                return false;
+            }
+        } else {
+            if (skip_missing) continue;
+            if (!err) *err = "image empty " + dirname + image->uri;
+            return false;
         }
     }
-
 #endif
+    return true;
 }
 
-inline vec_array_view::vec_array_view(
+inline accessor_view::accessor_view(
     const glTF* gltf, const glTFAccessor* accessor) {
     _size = accessor->count;
     _ncomp = _num_components(accessor->type);
@@ -2486,9 +2585,13 @@ inline vec_array_view::vec_array_view(
     auto buffer = gltf->get(buffer_view->buffer);
     _data =
         buffer->data.data() + accessor->byteOffset + buffer_view->byteOffset;
+    auto remaining_buffer_bytes =
+        buffer->data.size() - (_data - buffer->data.data());
+    auto view_bytes = _size * _stride;
+    _valid = remaining_buffer_bytes >= view_bytes;
 }
 
-inline float vec_array_view::get(int idx, int c) const {
+inline float accessor_view::get(int idx, int c) const {
     auto i = std::min(std::max(c, 0), ncomp() - 1);
     auto valb = _data + _stride * idx + i * _ctype_size(_ctype);
     // use double for integer conversion to attempt to maintain precision
@@ -2533,14 +2636,7 @@ inline float vec_array_view::get(int idx, int c) const {
 }
 
 template <int N>
-inline ym::vec<float, N> vec_array_view::get(int idx) const {
-    auto def = ym::vec<float, N>();
-    for (auto i = 0; i < N; i++) def[i] = 0;
-    return get<N>(idx, def);
-}
-
-template <int N>
-inline ym::vec<float, N> vec_array_view::get(
+inline ym::vec<float, N> accessor_view::getv(
     int idx, const ym::vec<float, N>& def) const {
     auto v = def;
     for (auto i = 0; i < std::min(_ncomp, N); i++) v[i] = get(idx, i);
@@ -2548,15 +2644,15 @@ inline ym::vec<float, N> vec_array_view::get(
 }
 
 template <int N, int M>
-inline ym::mat<float, N, M> vec_array_view::get(int idx) const {
+inline ym::mat<float, N, M> accessor_view::getm(int idx) const {
     auto v = ym::mat<float, N, M>();
-    if (_ncomp != N * M) throw gltf_exception("bad array view access");
+    assert(_ncomp == N * M);
     for (auto j = 0; j < M; j++)
         for (auto i = 0; i < N; i++) v[j][i] = get(idx, j * N + i);
     return v;
 }
 
-inline int vec_array_view::geti(int idx, int c) const {
+inline int accessor_view::geti(int idx, int c) const {
     auto i = std::min(std::max(c, 0), ncomp() - 1);
     auto valb = _data + _stride * idx + i * _ctype_size(_ctype);
     // use double for integer conversion to attempt to maintain precision
@@ -2578,14 +2674,14 @@ inline int vec_array_view::geti(int idx, int c) const {
 }
 
 template <int N>
-inline ym::vec<int, N> vec_array_view::geti(int idx) const {
-    auto v = ym::vec<int, N>();
+inline ym::vec<int, N> accessor_view::getiv(
+    int idx, const ym::vec<int, N>& def) const {
+    auto v = def;
     for (auto i = 0; i < std::min(_ncomp, N); i++) { v[i] = geti(idx, i); }
-    for (auto i = std::min(_ncomp, N); i < N; i++) v[i] = 0;
     return v;
 }
 
-inline int vec_array_view::_num_components(glTFAccessorType type) {
+inline int accessor_view::_num_components(glTFAccessorType type) {
     switch (type) {
         case glTFAccessorType::Scalar: return 1;
         case glTFAccessorType::Vec2: return 2;
@@ -2598,8 +2694,7 @@ inline int vec_array_view::_num_components(glTFAccessorType type) {
     }
 }
 
-inline int vec_array_view::_ctype_size(
-    glTFAccessorComponentType componentType) {
+inline int accessor_view::_ctype_size(glTFAccessorComponentType componentType) {
     switch (componentType) {
         case glTFAccessorComponentType::Byte: return 1;
         case glTFAccessorComponentType::UnsignedByte: return 1;
@@ -2607,56 +2702,6 @@ inline int vec_array_view::_ctype_size(
         case glTFAccessorComponentType::UnsignedShort: return 2;
         case glTFAccessorComponentType::UnsignedInt: return 4;
         case glTFAccessorComponentType::Float: return 4;
-        default: assert(false); return 0;
-    }
-}
-
-//
-// element_attay_view implementation
-//
-inline element_array_view::element_array_view(
-    const glTF* gltf, const glTFAccessor* accessor) {
-    _size = accessor->count;
-    _ctype = accessor->componentType;
-    auto buffer_view = gltf->get(accessor->bufferView);
-    _stride = (buffer_view->byteStride) ? buffer_view->byteStride :
-                                          _ctype_size(_ctype);
-    auto buffer = gltf->get(buffer_view->buffer);
-    _data =
-        buffer->data.data() + accessor->byteOffset + buffer_view->byteOffset;
-    assert(accessor->type == glTFAccessorType::Scalar);
-}
-
-//
-// element_attay_view implementation
-//
-inline int element_array_view::operator[](int idx) const {
-    auto valb = _data + _stride * idx;
-    switch (_ctype) {
-        case glTFAccessorComponentType::Byte: return int(*(char*)valb);
-        case glTFAccessorComponentType::UnsignedByte:
-            return int(*(unsigned char*)valb);
-        case glTFAccessorComponentType::Short: return int(*(short*)valb);
-        case glTFAccessorComponentType::UnsignedShort:
-            return int(*(unsigned short*)valb);
-        case glTFAccessorComponentType::UnsignedInt:
-            return int(*(unsigned int*)valb);
-        default: assert(false); return 0;
-    }
-}
-
-//
-// element_attay_view implementation
-//
-inline int element_array_view::_ctype_size(
-    glTFAccessorComponentType componentType) {
-    switch (componentType) {
-        case glTFAccessorComponentType::Byte: return 1;
-        case glTFAccessorComponentType::UnsignedByte: return 1;
-        case glTFAccessorComponentType::Short: return 2;
-        case glTFAccessorComponentType::UnsignedShort: return 2;
-        case glTFAccessorComponentType::UnsignedInt: return 4;
-        case glTFAccessorComponentType::Float: assert(false); return 0;
         default: assert(false); return 0;
     }
 }
@@ -2728,14 +2773,51 @@ scene_group* gltf_to_scenes(const glTF* gltf, int scene_idx) {
     for (auto gtxt : gltf->images) {
         auto txt = new texture();
         txt->name = gtxt->name;
-        txt->path = (_startsiwith(gtxt->uri, "data:")) ?
-                        std::string("inlines") :
-                        gtxt->uri;
-        txt->width = gtxt->data.width;
-        txt->height = gtxt->data.height;
-        txt->ncomp = gtxt->data.ncomp;
-        txt->datab = gtxt->data.datab;
-        txt->dataf = gtxt->data.dataf;
+        txt->path = (startsiwith(gtxt->uri, "data:")) ? std::string("inlines") :
+                                                        gtxt->uri;
+        if (!gtxt->data.datab.empty()) {
+            txt->ldr = ym::image4b(gtxt->data.width, gtxt->data.height);
+            for (auto j = 0; j < gtxt->data.height; j++) {
+                for (auto i = 0; i < gtxt->data.width; i++) {
+                    auto v = gtxt->data.datab.data() +
+                             (gtxt->data.width * j + i) * gtxt->data.ncomp;
+                    switch (gtxt->data.ncomp) {
+                        case 1:
+                            txt->ldr.at(i, j) = {v[0], v[0], v[0], 255};
+                            break;
+                        case 2: txt->ldr.at(i, j) = {v[0], v[1], 0, 255}; break;
+                        case 3:
+                            txt->ldr.at(i, j) = {v[0], v[1], v[2], 255};
+                            break;
+                        case 4:
+                            txt->ldr.at(i, j) = {v[0], v[1], v[2], v[3]};
+                            break;
+                        default: assert(false); break;
+                    }
+                }
+            }
+        } else if (!gtxt->data.dataf.empty()) {
+            txt->hdr = ym::image4f(gtxt->data.width, gtxt->data.height);
+            for (auto j = 0; j < gtxt->data.height; j++) {
+                for (auto i = 0; i < gtxt->data.width; i++) {
+                    auto v = gtxt->data.dataf.data() +
+                             (gtxt->data.width * j + i) * gtxt->data.ncomp;
+                    switch (gtxt->data.ncomp) {
+                        case 1:
+                            txt->hdr.at(i, j) = {v[0], v[0], v[0], 1};
+                            break;
+                        case 2: txt->hdr.at(i, j) = {v[0], v[1], 0, 1}; break;
+                        case 3:
+                            txt->hdr.at(i, j) = {v[0], v[1], v[2], 1};
+                            break;
+                        case 4:
+                            txt->hdr.at(i, j) = {v[0], v[1], v[2], v[3]};
+                            break;
+                        default: assert(false); break;
+                    }
+                }
+            }
+        }
         scns->textures.push_back(txt);
     }
 
@@ -2870,39 +2952,43 @@ scene_group* gltf_to_scenes(const glTF* gltf, int scene_idx) {
             // vertex data
             for (auto gattr : gprim->attributes) {
                 auto semantic = gattr.first;
-                auto vals = vec_array_view(gltf, gltf->get(gattr.second));
+                auto vals = accessor_view(gltf, gltf->get(gattr.second));
                 if (semantic == "POSITION") {
                     prim->pos.reserve(vals.size());
                     for (auto i = 0; i < vals.size(); i++)
-                        prim->pos.push_back(vals.get<3>(i));
+                        prim->pos.push_back(vals.getv<3>(i));
                 } else if (semantic == "NORMAL") {
                     prim->norm.reserve(vals.size());
                     for (auto i = 0; i < vals.size(); i++)
-                        prim->norm.push_back(vals.get<3>(i));
+                        prim->norm.push_back(vals.getv<3>(i));
                 } else if (semantic == "TEXCOORD" || semantic == "TEXCOORD_0") {
                     prim->texcoord.reserve(vals.size());
                     for (auto i = 0; i < vals.size(); i++)
-                        prim->texcoord.push_back(vals.get<2>(i));
+                        prim->texcoord.push_back(vals.getv<2>(i));
                 } else if (semantic == "TEXCOORD_1") {
                     prim->texcoord1.reserve(vals.size());
                     for (auto i = 0; i < vals.size(); i++)
-                        prim->texcoord1.push_back(vals.get<2>(i));
+                        prim->texcoord1.push_back(vals.getv<2>(i));
                 } else if (semantic == "COLOR" || semantic == "COLOR_0") {
                     prim->color.reserve(vals.size());
                     for (auto i = 0; i < vals.size(); i++)
-                        prim->color.push_back(vals.get<4>(i, {0, 0, 0, 1}));
+                        prim->color.push_back(vals.getv<4>(i, {0, 0, 0, 1}));
                 } else if (semantic == "TANGENT") {
                     prim->tangsp.reserve(vals.size());
                     for (auto i = 0; i < vals.size(); i++)
-                        prim->tangsp.push_back(vals.get<4>(i));
+                        prim->tangsp.push_back(vals.getv<4>(i));
                 } else if (semantic == "WEIGHTS_0") {
                     prim->skin_weights.reserve(vals.size());
                     for (auto i = 0; i < vals.size(); i++)
-                        prim->skin_weights.push_back(vals.get<4>(i));
+                        prim->skin_weights.push_back(vals.getv<4>(i));
                 } else if (semantic == "JOINTS_0") {
                     prim->skin_joints.reserve(vals.size());
                     for (auto i = 0; i < vals.size(); i++)
-                        prim->skin_joints.push_back(vals.geti<4>(i));
+                        prim->skin_joints.push_back(vals.getiv<4>(i));
+                } else if (semantic == "RADIUS") {
+                    prim->radius.reserve(vals.size());
+                    for (auto i = 0; i < vals.size(); i++)
+                        prim->radius.push_back(vals.get(i, 0));
                 } else {
                     // ignore
                 }
@@ -2957,56 +3043,58 @@ scene_group* gltf_to_scenes(const glTF* gltf, int scene_idx) {
                     } break;
                 }
             } else {
-                auto indices =
-                    element_array_view(gltf, gltf->get(gprim->indices));
+                auto indices = accessor_view(gltf, gltf->get(gprim->indices));
                 switch (gprim->mode) {
                     case glTFMeshPrimitiveMode::Triangles: {
                         prim->triangles.reserve(indices.size());
                         for (auto i = 0; i < indices.size() / 3; i++) {
-                            prim->triangles.push_back({indices[i * 3 + 0],
-                                indices[i * 3 + 1], indices[i * 3 + 2]});
+                            prim->triangles.push_back({indices.geti(i * 3 + 0),
+                                indices.geti(i * 3 + 1),
+                                indices.geti(i * 3 + 2)});
                         }
                     } break;
                     case glTFMeshPrimitiveMode::TriangleFan: {
                         prim->triangles.reserve(indices.size() - 2);
                         for (auto i = 2; i < indices.size(); i++) {
-                            prim->triangles.push_back(
-                                {indices[0], indices[i - 1], indices[i]});
+                            prim->triangles.push_back({indices.geti(0),
+                                indices.geti(i - 1), indices.geti(i)});
                         }
                     } break;
                     case glTFMeshPrimitiveMode::TriangleStrip: {
                         prim->triangles.reserve(indices.size() - 2);
                         for (auto i = 2; i < indices.size(); i++) {
-                            prim->triangles.push_back(
-                                {indices[i - 2], indices[i - 1], indices[i]});
+                            prim->triangles.push_back({indices.geti(i - 2),
+                                indices.geti(i - 1), indices.geti(i)});
                         }
                     } break;
                     case glTFMeshPrimitiveMode::Lines: {
                         prim->lines.reserve(indices.size() / 2);
                         for (auto i = 0; i < indices.size() / 2; i++) {
-                            prim->lines.push_back(
-                                {indices[i * 2 + 0], indices[i * 2 + 1]});
+                            prim->lines.push_back({indices.geti(i * 2 + 0),
+                                indices.geti(i * 2 + 1)});
                         }
                     } break;
                     case glTFMeshPrimitiveMode::LineLoop: {
                         prim->lines.reserve(indices.size());
                         for (auto i = 1; i < indices.size(); i++) {
-                            prim->lines.push_back({indices[i - 1], indices[i]});
+                            prim->lines.push_back(
+                                {indices.geti(i - 1), indices.geti(i)});
                         }
                         prim->lines.back() = {
-                            indices[indices.size() - 1], indices[0]};
+                            indices.geti(indices.size() - 1), indices.geti(0)};
                     } break;
                     case glTFMeshPrimitiveMode::LineStrip: {
                         prim->lines.reserve(indices.size() - 1);
                         for (auto i = 1; i < indices.size(); i++) {
-                            prim->lines.push_back({indices[i - 1], indices[i]});
+                            prim->lines.push_back(
+                                {indices.geti(i - 1), indices.geti(i)});
                         }
                     } break;
                     case glTFMeshPrimitiveMode::NotSet:
                     case glTFMeshPrimitiveMode::Points: {
                         prim->points.reserve(indices.size());
                         for (auto i = 0; i < indices.size(); i++) {
-                            prim->points.push_back(indices[i]);
+                            prim->points.push_back(indices.geti(i));
                         }
                     } break;
                 }
@@ -3018,19 +3106,19 @@ scene_group* gltf_to_scenes(const glTF* gltf, int scene_idx) {
                 auto target = new shape_morph();
                 for (auto gattr : gtarget) {
                     auto semantic = gattr.first;
-                    auto vals = vec_array_view(gltf, gltf->get(gattr.second));
+                    auto vals = accessor_view(gltf, gltf->get(gattr.second));
                     if (semantic == "POSITION") {
                         target->pos.reserve(vals.size());
                         for (auto i = 0; i < vals.size(); i++)
-                            target->pos.push_back(vals.get<3>(i));
+                            target->pos.push_back(vals.getv<3>(i));
                     } else if (semantic == "NORMAL") {
                         target->norm.reserve(vals.size());
                         for (auto i = 0; i < vals.size(); i++)
-                            target->norm.push_back(vals.get<3>(i));
+                            target->norm.push_back(vals.getv<3>(i));
                     } else if (semantic == "TANGENT") {
                         target->tangsp.reserve(vals.size());
                         for (auto i = 0; i < vals.size(); i++)
-                            target->tangsp.push_back(vals.get<3>(i));
+                            target->tangsp.push_back(vals.getv<3>(i));
                     } else {
                         // ignore
                     }
@@ -3071,7 +3159,6 @@ scene_group* gltf_to_scenes(const glTF* gltf, int scene_idx) {
     for (auto gnode : gltf->nodes) {
         auto node = new ygltf::node();
         node->name = gnode->name;
-        node->local_xform = node_transform(gnode);
         node->cam =
             (!gnode->camera) ? nullptr : scns->cameras[(int)gnode->camera];
         node->msh = (!gnode->mesh) ? nullptr : scns->meshes[(int)gnode->mesh];
@@ -3114,31 +3201,31 @@ scene_group* gltf_to_scenes(const glTF* gltf, int scene_idx) {
                 auto gsampler = ganim->get(gchannel->sampler);
                 auto keyframes = new animation();
                 auto input_view =
-                    vec_array_view(gltf, gltf->get(gsampler->input));
+                    accessor_view(gltf, gltf->get(gsampler->input));
                 keyframes->time.resize(input_view.size());
                 for (auto i = 0; i < input_view.size(); i++)
-                    keyframes->time[i] = input_view.get<1>(i)[0];
+                    keyframes->time[i] = input_view.get(i);
                 keyframes->interp =
                     (animation_interpolation)gsampler->interpolation;
                 auto output_view =
-                    vec_array_view(gltf, gltf->get(gsampler->output));
+                    accessor_view(gltf, gltf->get(gsampler->output));
                 switch (gchannel->target->path) {
                     case glTFAnimationChannelTargetPath::Translation: {
                         keyframes->translation.reserve(output_view.size());
                         for (auto i = 0; i < output_view.size(); i++)
                             keyframes->translation.push_back(
-                                output_view.get<3>(i));
+                                output_view.getv<3>(i));
                     } break;
                     case glTFAnimationChannelTargetPath::Rotation: {
                         keyframes->rotation.reserve(output_view.size());
                         for (auto i = 0; i < output_view.size(); i++)
                             keyframes->rotation.push_back(
-                                (ym::quat4f)output_view.get<4>(i));
+                                (ym::quat4f)output_view.getv<4>(i));
                     } break;
                     case glTFAnimationChannelTargetPath::Scale: {
                         keyframes->scale.reserve(output_view.size());
                         for (auto i = 0; i < output_view.size(); i++)
-                            keyframes->scale.push_back(output_view.get<3>(i));
+                            keyframes->scale.push_back(output_view.getv<3>(i));
                     } break;
                     case glTFAnimationChannelTargetPath::Weights: {
                         // get a node that it refers to
@@ -3155,7 +3242,7 @@ scene_group* gltf_to_scenes(const glTF* gltf, int scene_idx) {
                             auto values = std::vector<float>();
                             values.reserve(output_view.size());
                             for (auto i = 0; i < output_view.size(); i++)
-                                values.push_back(output_view.get(i, 0));
+                                values.push_back(output_view.get(i));
                             keyframes->morph_weights.resize(
                                 values.size() / ncomp);
                             for (auto i = 0;
@@ -3193,12 +3280,12 @@ scene_group* gltf_to_scenes(const glTF* gltf, int scene_idx) {
             skin->pose_matrices.assign(skin->joints.size(), ym::identity_mat4f);
         } else {
             auto pose_matrix_view =
-                vec_array_view(gltf, gltf->get(gskin->inverseBindMatrices));
+                accessor_view(gltf, gltf->get(gskin->inverseBindMatrices));
             skin->pose_matrices.resize(skin->joints.size());
             assert(pose_matrix_view.size() == skin->joints.size());
             assert(pose_matrix_view.ncomp() == 16);
             for (auto i = 0; i < pose_matrix_view.size(); i++) {
-                skin->pose_matrices[i] = pose_matrix_view.get<4, 4>(i);
+                skin->pose_matrices[i] = pose_matrix_view.getm<4, 4>(i);
             }
         }
         scns->skins.push_back(skin);
@@ -3238,7 +3325,8 @@ static inline int index(const std::vector<T*>& vec, T* val) {
 //
 // Unflattnes gltf
 //
-glTF* scenes_to_gltf(const scene_group* scns, const std::string& buffer_uri) {
+glTF* scenes_to_gltf(const scene_group* scns, const std::string& buffer_uri,
+    bool separate_buffers) {
     auto gltf = std::unique_ptr<glTF>(new glTF());
 
     // add asset info
@@ -3274,11 +3362,22 @@ glTF* scenes_to_gltf(const scene_group* scns, const std::string& buffer_uri) {
     for (auto txt : scns->textures) {
         auto gimg = new glTFImage();
         gimg->uri = txt->path;
-        gimg->data.width = txt->width;
-        gimg->data.height = txt->height;
-        gimg->data.ncomp = txt->ncomp;
-        gimg->data.datab = txt->datab;
-        gimg->data.dataf = txt->dataf;
+        if (txt->hdr) {
+            gimg->data.width = txt->ldr.width();
+            gimg->data.height = txt->ldr.height();
+            gimg->data.ncomp = 4;
+            gimg->data.datab.assign((uint8_t*)txt->ldr.data(),
+                (uint8_t*)txt->ldr.data() +
+                    txt->ldr.width() * txt->ldr.height() * 4);
+        }
+        if (txt->ldr) {
+            gimg->data.width = txt->hdr.width();
+            gimg->data.height = txt->hdr.height();
+            gimg->data.ncomp = 4;
+            gimg->data.dataf.assign((uint8_t*)txt->hdr.data(),
+                (uint8_t*)txt->hdr.data() +
+                    txt->hdr.width() * txt->hdr.height() * 4);
+        }
         gltf->images.push_back(gimg);
     }
 
@@ -3324,7 +3423,7 @@ glTF* scenes_to_gltf(const scene_group* scns, const std::string& buffer_uri) {
             gsmp->wrapT = wrap_t_map.at(info->wrap_t);
             gsmp->minFilter = texture_min_map.at(info->filter_min);
             gsmp->magFilter = texture_mag_map.at(info->filter_mag);
-            gtxt->sampler = glTFid<glTFSampler>(gltf->samplers.size());
+            gtxt->sampler = glTFid<glTFSampler>((int)gltf->samplers.size());
             gltf->samplers.push_back(gsmp);
         }
         gltf->textures.push_back(gtxt);
@@ -3399,19 +3498,36 @@ glTF* scenes_to_gltf(const scene_group* scns, const std::string& buffer_uri) {
         gltf->materials.push_back(gmat);
     }
 
+    // add buffer
+    auto add_buffer = [&gltf](const std::string& buffer_uri) {
+        auto gbuffer = new glTFBuffer();
+        gltf->buffers.push_back(gbuffer);
+        gbuffer->uri = buffer_uri;
+        return gbuffer;
+    };
+
     // init buffers
-    auto gbuffer = new glTFBuffer();
-    gltf->buffers.push_back(gbuffer);
-    gbuffer->uri = buffer_uri;
+    auto gbuffer_global = add_buffer(buffer_uri);
+
+    // add an optional buffer
+    auto add_opt_buffer = [&gbuffer_global, buffer_uri, &add_buffer,
+                              separate_buffers](const std::string& uri) {
+        if (separate_buffers && uri != "") {
+            return add_buffer(uri);
+        } else {
+            if (!gbuffer_global) gbuffer_global = add_buffer(buffer_uri);
+            return gbuffer_global;
+        }
+    };
 
     // attribute handling
-    auto add_accessor = [&gltf, gbuffer](const std::string& name,
+    auto add_accessor = [&gltf](glTFBuffer* gbuffer, const std::string& name,
                             glTFAccessorType type,
                             glTFAccessorComponentType ctype, int count,
                             int csize, const void* data, bool save_min_max) {
         gltf->bufferViews.push_back(new glTFBufferView());
         auto bufferView = gltf->bufferViews.back();
-        bufferView->buffer = glTFid<glTFBuffer>(0);
+        bufferView->buffer = glTFid<glTFBuffer>(index(gltf->buffers, gbuffer));
         bufferView->byteOffset = (int)gbuffer->data.size();
         bufferView->byteStride = 0;
         bufferView->byteLength = count * csize;
@@ -3461,47 +3577,46 @@ glTF* scenes_to_gltf(const scene_group* scns, const std::string& buffer_uri) {
     };
 
     // convert meshes
-    for (auto i = 0; i < scns->meshes.size(); i++) {
-        auto msh = scns->meshes[i];
-        auto gid = "mesh" + std::to_string(i);
+    for (auto msh : scns->meshes) {
+        auto gbuffer = add_opt_buffer(msh->path);
         auto gmesh = new glTFMesh();
         gmesh->name = msh->name;
         for (auto j = 0; j < msh->shapes.size(); j++) {
             auto gprim = msh->shapes[j];
-            auto pid = std::to_string(j);
+            auto pid = msh->name + "_" + std::to_string(j);
             auto prim = new glTFMeshPrimitive();
             prim->material =
                 glTFid<glTFMaterial>(index(scns->materials, gprim->mat));
             if (!gprim->pos.empty())
-                prim->attributes["POSITION"] = add_accessor(gid + pid + "_pos",
-                    glTFAccessorType::Vec3, glTFAccessorComponentType::Float,
-                    (int)gprim->pos.size(), sizeof(ym::vec3f),
-                    gprim->pos.data(), true);
+                prim->attributes["POSITION"] = add_accessor(gbuffer,
+                    pid + "_pos", glTFAccessorType::Vec3,
+                    glTFAccessorComponentType::Float, (int)gprim->pos.size(),
+                    sizeof(ym::vec3f), gprim->pos.data(), true);
             if (!gprim->norm.empty())
-                prim->attributes["NORMAL"] = add_accessor(gid + pid + "_norm",
-                    glTFAccessorType::Vec3, glTFAccessorComponentType::Float,
-                    (int)gprim->norm.size(), sizeof(ym::vec3f),
-                    gprim->norm.data(), false);
+                prim->attributes["NORMAL"] = add_accessor(gbuffer,
+                    pid + "_norm", glTFAccessorType::Vec3,
+                    glTFAccessorComponentType::Float, (int)gprim->norm.size(),
+                    sizeof(ym::vec3f), gprim->norm.data(), false);
             if (!gprim->texcoord.empty())
-                prim->attributes["TEXCOORD_0"] = add_accessor(
-                    gid + pid + "_texcoord", glTFAccessorType::Vec2,
+                prim->attributes["TEXCOORD_0"] = add_accessor(gbuffer,
+                    pid + "_texcoord", glTFAccessorType::Vec2,
                     glTFAccessorComponentType::Float,
                     (int)gprim->texcoord.size(), sizeof(ym::vec2f),
                     gprim->texcoord.data(), false);
             if (!gprim->texcoord1.empty())
-                prim->attributes["TEXCOORD_1"] = add_accessor(
-                    gid + pid + "_texcoord1", glTFAccessorType::Vec2,
+                prim->attributes["TEXCOORD_1"] = add_accessor(gbuffer,
+                    pid + "_texcoord1", glTFAccessorType::Vec2,
                     glTFAccessorComponentType::Float,
                     (int)gprim->texcoord1.size(), sizeof(ym::vec2f),
                     gprim->texcoord1.data(), false);
             if (!gprim->color.empty())
-                prim->attributes["COLOR_0"] = add_accessor(gid + pid + "_color",
-                    glTFAccessorType::Vec4, glTFAccessorComponentType::Float,
-                    (int)gprim->color.size(), sizeof(ym::vec4f),
-                    gprim->color.data(), false);
+                prim->attributes["COLOR_0"] = add_accessor(gbuffer,
+                    pid + "_color", glTFAccessorType::Vec4,
+                    glTFAccessorComponentType::Float, (int)gprim->color.size(),
+                    sizeof(ym::vec4f), gprim->color.data(), false);
             if (!gprim->skin_weights.empty())
-                prim->attributes["WEIGHTS_0"] = add_accessor(
-                    gid + pid + "_skin_weights", glTFAccessorType::Vec4,
+                prim->attributes["WEIGHTS_0"] = add_accessor(gbuffer,
+                    pid + "_skin_weights", glTFAccessorType::Vec4,
                     glTFAccessorComponentType::Float,
                     (int)gprim->skin_weights.size(), sizeof(ym::vec4f),
                     gprim->skin_weights.data(), false);
@@ -3512,30 +3627,35 @@ glTF* scenes_to_gltf(const scene_group* scns, const std::string& buffer_uri) {
                 for (auto&& j : gprim->skin_joints)
                     joints_short.push_back(
                         {(ushort)j.x, (ushort)j.y, (ushort)j.z, (ushort)j.w});
-                prim->attributes["JOINTS_0"] = add_accessor(
-                    gid + pid + "_skin_joints", glTFAccessorType::Vec4,
+                prim->attributes["JOINTS_0"] = add_accessor(gbuffer,
+                    pid + "_skin_joints", glTFAccessorType::Vec4,
                     glTFAccessorComponentType::UnsignedShort,
                     (int)joints_short.size(), sizeof(ushort) * 4,
                     joints_short.data(), false);
             }
+            if (!gprim->radius.empty())
+                prim->attributes["RADIUS"] = add_accessor(gbuffer,
+                    pid + "_radius", glTFAccessorType::Scalar,
+                    glTFAccessorComponentType::Float, (int)gprim->radius.size(),
+                    sizeof(float), gprim->radius.data(), false);
             // auto elem_as_uint = gprim->pos.size() >
             // std::numeric_limits<unsigned short>::max();
             if (!gprim->points.empty()) {
-                prim->indices = add_accessor(gid + pid + "_points",
+                prim->indices = add_accessor(gbuffer, pid + "_points",
                     glTFAccessorType::Scalar,
                     glTFAccessorComponentType::UnsignedInt,
                     (int)gprim->points.size(), sizeof(int),
                     (int*)gprim->points.data(), false);
                 prim->mode = glTFMeshPrimitiveMode::Points;
             } else if (!gprim->lines.empty()) {
-                prim->indices =
-                    add_accessor(gid + pid + "_lines", glTFAccessorType::Scalar,
-                        glTFAccessorComponentType::UnsignedInt,
-                        (int)gprim->lines.size() * 2, sizeof(int),
-                        (int*)gprim->lines.data(), false);
+                prim->indices = add_accessor(gbuffer, pid + "_lines",
+                    glTFAccessorType::Scalar,
+                    glTFAccessorComponentType::UnsignedInt,
+                    (int)gprim->lines.size() * 2, sizeof(int),
+                    (int*)gprim->lines.data(), false);
                 prim->mode = glTFMeshPrimitiveMode::Lines;
             } else if (!gprim->triangles.empty()) {
-                prim->indices = add_accessor(gid + pid + "_triangles",
+                prim->indices = add_accessor(gbuffer, pid + "_triangles",
                     glTFAccessorType::Scalar,
                     glTFAccessorComponentType::UnsignedInt,
                     (int)gprim->triangles.size() * 3, sizeof(int),
@@ -3546,23 +3666,23 @@ glTF* scenes_to_gltf(const scene_group* scns, const std::string& buffer_uri) {
             }
             auto target_index = 0;
             for (auto target : gprim->morph_targets) {
-                auto mid = std::to_string(target_index++);
+                auto tid = std::to_string(target_index++);
                 prim->targets.push_back({});
                 if (!target->pos.empty()) {
-                    prim->targets.back()["POSITION"] = add_accessor(
-                        gid + pid + "_" + mid + "_pos", glTFAccessorType::Vec3,
+                    prim->targets.back()["POSITION"] = add_accessor(gbuffer,
+                        pid + "_" + tid + "_pos", glTFAccessorType::Vec3,
                         glTFAccessorComponentType::Float,
                         (int)target->pos.size(), sizeof(ym::vec3f),
                         target->pos.data(), true);
                 } else if (!target->norm.empty()) {
-                    prim->targets.back()["NORMAL"] = add_accessor(
-                        gid + pid + "_" + mid + "_norm", glTFAccessorType::Vec3,
+                    prim->targets.back()["NORMAL"] = add_accessor(gbuffer,
+                        pid + "_" + tid + "_norm", glTFAccessorType::Vec3,
                         glTFAccessorComponentType::Float,
                         (int)target->norm.size(), sizeof(ym::vec3f),
                         target->norm.data(), true);
                 } else if (!target->tangsp.empty()) {
-                    prim->targets.back()["TANGENT"] = add_accessor(
-                        gid + pid + "_" + mid + "_tang", glTFAccessorType::Vec3,
+                    prim->targets.back()["TANGENT"] = add_accessor(gbuffer,
+                        pid + "_" + tid + "_tang", glTFAccessorType::Vec3,
                         glTFAccessorComponentType::Float,
                         (int)target->tangsp.size(), sizeof(ym::vec3f),
                         target->tangsp.data(), true);
@@ -3601,13 +3721,14 @@ glTF* scenes_to_gltf(const scene_group* scns, const std::string& buffer_uri) {
     // skins
     for (auto sk : scns->skins) {
         auto gsk = new glTFSkin();
+        auto gbuffer = add_opt_buffer(sk->path);
         gsk->name = sk->name;
         gsk->skeleton = glTFid<glTFNode>(index(scns->nodes, sk->root));
         for (auto joint : sk->joints) {
             gsk->joints.push_back(glTFid<glTFNode>(index(scns->nodes, joint)));
         }
         if (!sk->pose_matrices.empty()) {
-            gsk->inverseBindMatrices = add_accessor(sk->name + "_pose",
+            gsk->inverseBindMatrices = add_accessor(gbuffer, sk->name + "_pose",
                 glTFAccessorType::Mat4, glTFAccessorComponentType::Float,
                 (int)sk->pose_matrices.size(), sizeof(ym::mat4f),
                 sk->pose_matrices.data(), false);
@@ -3641,28 +3762,30 @@ glTF* scenes_to_gltf(const scene_group* scns, const std::string& buffer_uri) {
     for (auto anims : scns->animations) {
         auto ganim = new glTFAnimation();
         ganim->name = anims->name;
+        auto gbuffer = add_opt_buffer(anims->path);
         auto count = 0;
         for (auto anim : anims->animations) {
-            auto aid = ganim->name + std::to_string(count++);
+            auto aid = ganim->name + "_" + std::to_string(count++);
             auto gsmp = new glTFAnimationSampler();
-            gsmp->input = add_accessor(aid + "_time", glTFAccessorType::Scalar,
-                glTFAccessorComponentType::Float, (int)anim->time.size(),
-                sizeof(float), anim->time.data(), false);
+            gsmp->input =
+                add_accessor(gbuffer, aid + "_time", glTFAccessorType::Scalar,
+                    glTFAccessorComponentType::Float, (int)anim->time.size(),
+                    sizeof(float), anim->time.data(), false);
             auto path = glTFAnimationChannelTargetPath::NotSet;
             if (!anim->translation.empty()) {
-                gsmp->output = add_accessor(aid + "_translation",
+                gsmp->output = add_accessor(gbuffer, aid + "_translation",
                     glTFAccessorType::Vec3, glTFAccessorComponentType::Float,
                     (int)anim->translation.size(), sizeof(ym::vec3f),
                     anim->translation.data(), false);
                 path = glTFAnimationChannelTargetPath::Translation;
             } else if (!anim->rotation.empty()) {
-                gsmp->output = add_accessor(aid + "_rotation",
+                gsmp->output = add_accessor(gbuffer, aid + "_rotation",
                     glTFAccessorType::Vec4, glTFAccessorComponentType::Float,
                     (int)anim->rotation.size(), sizeof(ym::vec4f),
                     anim->rotation.data(), false);
                 path = glTFAnimationChannelTargetPath::Rotation;
             } else if (!anim->scale.empty()) {
-                gsmp->output = add_accessor(aid + "_scale",
+                gsmp->output = add_accessor(gbuffer, aid + "_scale",
                     glTFAccessorType::Vec3, glTFAccessorComponentType::Float,
                     (int)anim->scale.size(), sizeof(ym::vec3f),
                     anim->scale.data(), false);
@@ -3675,7 +3798,7 @@ glTF* scenes_to_gltf(const scene_group* scns, const std::string& buffer_uri) {
                     values.insert(values.end(), anim->morph_weights[i].begin(),
                         anim->morph_weights[i].end());
                 }
-                gsmp->output = add_accessor(aid + "_weights",
+                gsmp->output = add_accessor(gbuffer, aid + "_weights",
                     glTFAccessorType::Scalar, glTFAccessorComponentType::Float,
                     (int)values.size(), sizeof(float), values.data(), false);
                 path = glTFAnimationChannelTargetPath::Weights;
@@ -3725,28 +3848,30 @@ std::vector<std::pair<std::string, std::string>> validate_gltf(
 //
 // Load scene
 //
-scene_group* load_scenes(
-    const std::string& filename, bool load_textures, bool skip_missing) {
+scene_group* load_scenes(const std::string& filename, bool load_textures,
+    bool skip_missing, std::string* err) {
     auto ext = _get_extension(filename);
     auto gltf = std::unique_ptr<glTF>();
     if (ext != ".glb") {
         gltf = std::unique_ptr<glTF>(
-            load_gltf(filename, true, load_textures, skip_missing));
+            load_gltf(filename, true, load_textures, skip_missing, err));
     } else {
         gltf = std::unique_ptr<glTF>(
-            load_binary_gltf(filename, true, load_textures, skip_missing));
+            load_binary_gltf(filename, true, load_textures, skip_missing, err));
     }
+    if (!gltf) return nullptr;
     return gltf_to_scenes(gltf.get());
 }
 
 ///
 /// Save scene
 ///
-void save_scenes(
-    const std::string& filename, const scene_group* scn, bool save_textures) {
-    auto buffer_uri = _get_basename(filename) + ".bin";
-    auto gltf = std::unique_ptr<glTF>(scenes_to_gltf(scn, buffer_uri));
-    save_gltf(filename, gltf.get(), true, save_textures);
+bool save_scenes(const std::string& filename, const std::string& buffer_uri,
+    const scene_group* scn, bool save_textures, bool separate_buffers,
+    std::string* err) {
+    auto gltf = std::unique_ptr<glTF>(
+        scenes_to_gltf(scn, buffer_uri, separate_buffers));
+    return save_gltf(filename, gltf.get(), true, save_textures, err);
 }
 
 #ifndef YOBJ_NO_SHAPE
@@ -3767,8 +3892,8 @@ ym::bbox3f compute_scene_bounds(const scene_group* scn) {
     if (!scn->nodes.empty()) {
         for (auto ist : scn->nodes) {
             if (ist->msh)
-                bbox += ym::transform_bbox(
-                    ym::mat4f(ist->xform), bbox_meshes.at(ist->msh));
+                bbox +=
+                    ym::transform_bbox(ist->xform(), bbox_meshes.at(ist->msh));
         }
     } else {
         for (auto mesh : scn->meshes) bbox += bbox_meshes[mesh];
@@ -3801,6 +3926,7 @@ void add_normals(scene_group* scn) {
 void add_tangent_space(scene_group* scn) {
     for (auto msh : scn->meshes) {
         for (auto shp : msh->shapes) {
+            if (!shp->mat) continue;
             if (shp->triangles.empty()) continue;
             if (!shp->tangsp.empty() || shp->texcoord.empty() ||
                 !shp->mat->normal_txt)
@@ -3830,12 +3956,9 @@ void add_radius(scene_group* scn, float radius) {
 //
 void add_texture_data(scene_group* scn) {
     for (auto txt : scn->textures) {
-        if (txt->dataf.empty() && txt->datab.empty()) {
+        if (!txt->hdr && !txt->ldr) {
             printf("unable to load texture %s\n", txt->path.c_str());
-            txt->width = 1;
-            txt->height = 1;
-            txt->ncomp = 4;
-            txt->datab = {{255, 255, 255, 255}};
+            txt->ldr = ym::image4b(1, 1, {255, 255, 255, 255});
         }
     }
 }
@@ -3875,6 +3998,13 @@ void add_names(scene_group* scn) {
         if (cam->name.empty())
             cam->name = "<camera " + std::to_string(cid) + ">";
         cid++;
+    }
+
+    auto tid = 0;
+    for (auto texture : scn->textures) {
+        if (texture->name.empty())
+            texture->name = "<texture " + std::to_string(tid) + ">";
+        tid++;
     }
 
     auto mid = 0;
@@ -3951,14 +4081,24 @@ void add_default_cameras(scene_group* scns) {
 #endif
 
 //
+// Update node hierarchy
+//
+void update_node_hierarchy(scene_group* scns) {
+    for (auto node : scns->nodes) node->parent = nullptr;
+    for (auto node : scns->nodes) {
+        for (auto child : node->children) child->parent = node;
+    }
+}
+
+//
 // Update node trasforms
 //
 void update_transforms(node* ist) {
-    ist->local_xform = node_transform(ist);
+    ist->_local_xform = node_transform(ist);
     if (ist->parent) {
-        ist->xform = ist->parent->xform * ist->local_xform;
+        ist->_xform = ist->parent->_xform * ist->_local_xform;
     } else {
-        ist->xform = ist->local_xform;
+        ist->_xform = ist->_local_xform;
     }
     for (auto child : ist->children) update_transforms(child);
 }
@@ -3967,10 +4107,7 @@ void update_transforms(node* ist) {
 // Update node trasforms
 //
 void update_transforms(scene_group* scns) {
-    for (auto node : scns->nodes) node->parent = nullptr;
-    for (auto node : scns->nodes) {
-        for (auto child : node->children) child->parent = node;
-    }
+    update_node_hierarchy(scns);
     for (auto node : scns->nodes) { update_transforms(node); }
 }
 
@@ -3986,8 +4123,8 @@ void update_animated_node_transforms(const animation* anim, float time) {
     if (time <= anim->time.front()) {
         interp = animation_interpolation::step;
     } else if (time >= anim->time.back()) {
-        i1 = anim->time.size() - 1;
-        i2 = anim->time.size() - 2;
+        i1 = (int)anim->time.size() - 1;
+        i2 = (int)anim->time.size() - 2;
         interp = animation_interpolation::step;
     } else {
         for (i2 = 0; i2 < anim->time.size() && anim->time[i2] < time; i2++)
@@ -4020,12 +4157,7 @@ void update_animated_node_transforms(const animation* anim, float time) {
                 rot = anim->rotation[i1];
             } break;
             case animation_interpolation::linear: {
-                // rot = ym::slerp(anim->rotation[i1], anim->rotation[i2], t);
-                auto rot_ = (ym::quat4f)normalize(
-                    ((ym::vec4f)anim->rotation[i1]) * (1 - t) +
-                    ((ym::vec4f)anim->rotation[i2]) * t);
-                rot = ym::quat4f{rot_.x, rot_.y, rot_.z, rot_.w};
-
+                rot = ym::slerp(anim->rotation[i1], anim->rotation[i2], t);
             } break;
             case animation_interpolation::catmull_rom: {
             } break;
@@ -4085,8 +4217,8 @@ void update_animated_transforms(scene_group* scns, float time) {
 // Update skin trasforms
 //
 void update_skin_transforms(node* ist, node* parent) {
-    ist->skin_xform = node_transform(ist);
-    if (parent) ist->skin_xform = parent->skin_xform * ist->skin_xform;
+    ist->_skin_xform = node_transform(ist);
+    if (parent) ist->_skin_xform = parent->_skin_xform * ist->_skin_xform;
     for (auto child : ist->children) update_skin_transforms(child, ist);
 }
 
@@ -4100,9 +4232,9 @@ std::vector<ym::mat4f> get_skin_transforms(
     auto inv_root = ym::inverse(xform);
     for (auto i = 0; i < sk->joints.size(); i++) {
         if (!sk->pose_matrices.empty()) {
-            ret[i] = inv_root * sk->joints[i]->xform * sk->pose_matrices[i];
+            ret[i] = inv_root * sk->joints[i]->_xform * sk->pose_matrices[i];
         } else {
-            ret[i] = inv_root * sk->joints[i]->xform;
+            ret[i] = inv_root * sk->joints[i]->_xform;
         }
     }
     return ret;
@@ -4192,107 +4324,100 @@ std::vector<node*> get_camera_nodes(const scene* scn) {
 }
 
 //
-// Support for buffer sections. Skip refcount on purpose.
+// Set unique path names for outputting separate buffers
 //
-static bool operator==(const buffer_section& a, const buffer_section& b) {
-    return a.start == b.start && a.size == b.size && a.stride == b.stride &&
-           a.count == b.count && a.type == b.type && a.ctype == b.ctype &&
-           a.ncomp == b.ncomp && a.csize == b.csize;
+void add_unique_path_names(scene_group* scns, const std::string& buffer_uri) {
+    auto mid = 0;
+    for (auto msh : scns->meshes) {
+        msh->path = buffer_uri + "mesh_" + std::to_string(mid++) + "_" +
+                    msh->name + ".bin";
+    }
+    auto aid = 0;
+    for (auto anm : scns->animations) {
+        anm->path = buffer_uri + "anim_" + std::to_string(aid++) + "_" +
+                    anm->name + ".bin";
+    }
+    auto sid = 0;
+    for (auto skn : scns->meshes) {
+        skn->path = buffer_uri + "skin_" + std::to_string(sid++) + "_" +
+                    skn->name + ".bin";
+    }
 }
 
 //
-// Generate buffer descriptions.
+// Convert materials to spec gloss
 //
-std::vector<buffer_descr*> gen_buffer_descriptors(const glTF* gltf) {
-    std::vector<buffer_descr*> descriptors;
-
-    auto bid = 0;
-    for (auto buffer : gltf->buffers) {
-        descriptors.push_back(new buffer_descr());
-        auto descr = descriptors.back();
-        descr->buffer = bid++;
-        if (buffer->uri.substr(0, 5) == "data:") {
-            descr->uri = "data:";
+void add_spec_gloss(scene_group* scns) {
+    auto txts = std::map<std::pair<texture*, texture*>,
+        std::pair<texture*, texture*>>();
+    for (auto mat : scns->materials) {
+        if (mat->specular_glossiness) continue;
+        if (!mat->metallic_roughness) continue;
+        mat->specular_glossiness = new material_specular_glossiness();
+        auto mr = mat->metallic_roughness;
+        auto sg = mat->specular_glossiness;
+        if (mr->base_txt || mr->metallic_txt) {
+            sg->diffuse = {1, 1, 1};
+            sg->opacity = 1;
+            sg->specular = {1, 1, 1};
+            sg->glossiness = 1;
+            auto mr_txt =
+                std::pair<texture*, texture*>{mr->base_txt, mr->metallic_txt};
+            if (txts.find(mr_txt) == txts.end()) {
+                auto w = 0, h = 0;
+                if (mr->base_txt) {
+                    w = ym::max(w, mr->base_txt->width());
+                    h = ym::max(h, mr->base_txt->height());
+                }
+                if (mr->metallic_txt) {
+                    w = ym::max(w, mr->metallic_txt->width());
+                    h = ym::max(h, mr->metallic_txt->height());
+                }
+                auto diff = new texture();
+                diff->ldr.resize(w, h);
+                auto spec = new texture();
+                spec->ldr.resize(w, h);
+                for (auto j = 0; j < h; j++) {
+                    for (auto i = 0; i < w; i++) {
+                        auto u = i / (float)w, v = j / (float)h;
+                        auto base = ym::vec4b{255, 255, 255, 255};
+                        auto metallic = ym::vec4b{255, 255, 255, 255};
+                        if (mr->base_txt) {
+                            auto ii = (int)(u * mr->base_txt->ldr.width());
+                            auto jj = (int)(v * mr->base_txt->ldr.height());
+                            base = mr->base_txt->ldr[{ii, jj}];
+                        } else {
+                            base = ym::linear_to_srgb(
+                                ym::vec4f(mr->base, mr->opacity));
+                        }
+                        if (mr->metallic_txt) {
+                            auto ii = (int)(u * mr->metallic_txt->ldr.width());
+                            auto jj = (int)(v * mr->metallic_txt->ldr.height());
+                            metallic = mr->metallic_txt->ldr[{ii, jj}];
+                        } else {
+                            metallic = ym::linear_to_srgb(
+                                ym::vec4f(1, mr->roughness, mr->metallic, 1));
+                        }
+                        auto kb = ym::srgb_to_linear(base);
+                        auto km = ym::srgb_to_linear(metallic);
+                        diff->ldr[{i, j}] =
+                            ym::linear_to_srgb({kb.xyz() * (1 - km.z), kb.w});
+                        spec->ldr[{i, j}] = ym::linear_to_srgb(
+                            {kb.xyz() * km.z + (1 - km.z) * 0.04f, 1 - km.y});
+                    }
+                }
+                txts[mr_txt] = {diff, spec};
+                scns->textures.push_back(diff);
+                scns->textures.push_back(spec);
+            }
+            std::tie(sg->diffuse_txt, sg->specular_txt) = txts[mr_txt];
         } else {
-            descr->uri = buffer->uri;
-        }
-        descr->size = buffer->byteLength;
-        descr->name = buffer->name;
-    }
-
-    static const auto csize_map = std::map<glTFAccessorComponentType, int>{
-        {glTFAccessorComponentType::NotSet, 0},
-        {glTFAccessorComponentType::Byte, 1},
-        {glTFAccessorComponentType::UnsignedByte, 1},
-        {glTFAccessorComponentType::Short, 2},
-        {glTFAccessorComponentType::UnsignedShort, 2},
-        {glTFAccessorComponentType::UnsignedInt, 4},
-        {glTFAccessorComponentType::Float, 4}};
-
-    static const auto ncomp_map = std::map<glTFAccessorType, int>{
-        {glTFAccessorType::NotSet, 0}, {glTFAccessorType::Scalar, 1},
-        {glTFAccessorType::Vec2, 2}, {glTFAccessorType::Vec3, 3},
-        {glTFAccessorType::Vec4, 4}, {glTFAccessorType::Mat2, 4},
-        {glTFAccessorType::Mat3, 9}, {glTFAccessorType::Mat4, 16},
-    };
-
-    auto add_section = [gltf, &descriptors](glTFAccessor* accessor) {
-        if (!accessor) return;
-        auto bufferView = gltf->get(accessor->bufferView);
-        if (!bufferView) return;
-        auto buffer = gltf->get(bufferView->buffer);
-        if (!buffer) return;
-        auto descr = descriptors.at((int)bufferView->buffer);
-        auto sect = buffer_section();
-        sect.refcount = 1;
-        sect.start = accessor->byteOffset + bufferView->byteOffset;
-        sect.size = bufferView->byteLength - accessor->byteOffset;
-        sect.stride = bufferView->byteStride;
-        sect.count = accessor->count;
-        sect.type = accessor->type;
-        sect.ctype = accessor->componentType;
-        sect.ncomp = ncomp_map.at(accessor->type);
-        sect.csize = csize_map.at(accessor->componentType);
-        auto found = false;
-        for (auto dsect : descr->sections) {
-            if (*dsect == sect) {
-                dsect->refcount++;
-                found = true;
-                break;
-            }
-        }
-        if (!found) descr->sections.push_back(new buffer_section(sect));
-    };
-
-    for (auto mesh : gltf->meshes) {
-        for (auto prim : mesh->primitives) {
-            for (auto attr : prim->attributes) {
-                add_section(gltf->get(attr.second));
-            }
-            add_section(gltf->get(prim->indices));
+            sg->diffuse = mr->base * (1 - mr->metallic);
+            sg->specular = mr->base * mr->metallic + (1 - mr->metallic) * 0.04f;
+            sg->opacity = mr->opacity;
+            sg->glossiness = 1 - mr->roughness;
         }
     }
-
-    for (auto skin : gltf->skins) {
-        add_section(gltf->get(skin->inverseBindMatrices));
-    }
-
-    for (auto anim : gltf->animations) {
-        for (auto smp : anim->samplers) {
-            add_section(gltf->get(smp->input));
-            add_section(gltf->get(smp->output));
-        }
-    }
-
-    for (auto descr : descriptors) {
-        std::sort(descr->sections.data(),
-            descr->sections.data() + descr->sections.size(),
-            [](ygltf::buffer_section* a, ygltf::buffer_section* b) {
-                return a->start < b->start;
-            });
-    }
-
-    return descriptors;
 }
 
 }  // namespace ygltf

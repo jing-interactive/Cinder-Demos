@@ -37,8 +37,11 @@
 /// acceleration structure with Yocto/Bvh or with user supplied intersection
 /// routines for custom intersection.
 ///
-/// This library depends in yocto_math.h. Optionally depend on yocto_bvh.h/.cpp
-/// for internal acceleration. Disable this by setting YTRACE_NO_BVH.
+/// This library depends in yocto_math.h and yocto_utils.h/.cpp for concurrency.
+/// Eventually the concurrency calls will be move to std functions when
+/// more readily available.
+/// Optionally depend on yocto_bvh.h/.cpp for internal acceleration.
+/// Disable this by setting YTRACE_NO_BVH.
 ///
 ///
 /// ## Usage for Scene Creation
@@ -58,12 +61,35 @@
 ///   `set_intersection_callbacks()`
 /// 2. if desired, add logging with `set_logging_callbacks()`
 /// 3. prepare lights for rendering `init_lights()`
-/// 4. define rendering params with the `render_params` structure
-/// 5. render blocks of samples with `trace_block()` or the whole image with
-///     `trace_image()`
+/// 4. define rendering params with the `trace_params` structure
+/// 5. render blocks of samples with `trace_block()`
+///
+/// ## Usage for Progressive Rendering
+///
+/// 1. either build the ray-tracing acceleration structure with
+///   `init_intersection()` or supply your own with
+///   `set_intersection_callbacks()`
+/// 2. if desired, add logging with `set_logging_callbacks()`
+/// 3. prepare lights for rendering `init_lights()`
+/// 4. define rendering params with the `trace_params` structure
+/// 5. initoialize the prograssive rendering state with `init_state()`
+/// 6. either render sames successively with `trace_next_samples()`
+///    or starts an asynchronousn renderer
+/// 7. get the rendered image with `get_traced_image()`
+///
 ///
 /// ## History
 ///
+/// - v 0.27: debug renderers
+/// - v 0.26: thin glass material
+/// - v 0.25: added refraction (still buggy in some cases)
+/// - v 0.24: corrected transaprency bug
+/// - v 0.23: simpler logging
+/// - v 0.22: added additional buffers
+/// - v 0.21: added filters
+/// - v 0.20: state-based api
+/// - v 0.19: explicit material models
+/// - v 0.18: simpler texture creation functions
 /// - v 0.17: move to rgba per-vertex color
 /// - v 0.16: use yocto_math in the interface and remove inline compilation
 /// - v 0.15: move to add api
@@ -146,7 +172,7 @@ scene* make_scene();
 ///
 /// Free scene.
 ///
-void free_scene(scene* scn);
+void free_scene(scene*& scn);
 
 ///
 /// Adds a camera in the scene.
@@ -187,13 +213,11 @@ void set_camera(scene* scn, int cid, const ym::frame3f& frame, float yfov,
 ///     - tid: texture id
 ///     - width: width
 ///     - height: height
-///     - ncomp: number of components (1-4)
 ///     - hdr: hdr pixels
-///     - ldr: ldr pixels (sRGB)
 /// - Returns:
 ///     - texture id
 ///
-int add_texture(scene* scn, int width, int height, int ncomp, const float* hdr);
+int add_texture(scene* scn, int width, int height, const ym::vec4f* hdr);
 
 ///
 /// Sets a texture in the scene.
@@ -203,92 +227,117 @@ int add_texture(scene* scn, int width, int height, int ncomp, const float* hdr);
 ///     - tid: texture id
 ///     - width: width
 ///     - height: height
-///     - ncomp: number of components (1-4)
-///     - hdr: hdr pixels
 ///     - ldr: ldr pixels (sRGB)
 /// - Returns:
 ///     - texture id
 ///
-int add_texture(scene* scn, int width, int height, int ncomp, const byte* ldr);
+int add_texture(scene* scn, int width, int height, const ym::vec4b* ldr);
 
 ///
-/// Sets a material in the scene. [DEPRECATED]
+/// Adds a texture in the scene.
 ///
 /// - Parameters:
 ///     - scn: scene
-///     - ke: emission, term
-///     - kd: diffuse term
-///     - ks: specular term
-///     - rs: specular roughness
-///     - ke_txt, kd_txt, ks_txt, rs_txt, norm_txt: texture indices (-1 for
-///     none) - use_phong: whether to use phong
+///     - hdr: hdr image
+/// - Returns:
+///     - texture id
+///
+inline int add_texture(scene* scn, const ym::image4f* img) {
+    return add_texture(scn, img->width(), img->height(), img->data());
+}
+
+///
+/// Sets a texture in the scene.
+///
+/// - Parameters:
+///     - scn: scene
+///     - ldr: ldr image (sRGB)
+/// - Returns:
+///     - texture id
+///
+inline int add_texture(scene* scn, const ym::image4b* img) {
+    return add_texture(scn, img->width(), img->height(), img->data());
+}
+
+///
+/// Adds a black material to the scene. Use set_material_XXX() functions to
+/// customize it.
+///
+/// - Parameters:
+///     - scn: scene
 /// - Returns:
 ///     - material id
 ///
-int add_material(scene* scn, const ym::vec3f& ke, const ym::vec3f& kd,
-    const ym::vec3f& ks, const ym::vec3f& kt, float rs = 0.1, int ke_txt = -1,
-    int kd_txt = -1, int ks_txt = -1, int kt_txt = -1, int rs_txt = -1,
-    int norm_txt = -1, bool use_phong = false);
+int add_material(scene* scn);
 
 ///
-/// Sets a material in the scene with the most customization possible.
+/// Sets the material emission.
 ///
 /// - Parameters:
 ///     - scn: scene
+///     - mid: material id
 ///     - ke: emission, term
-///     - kd: diffuse term
-///     - ks: specular term
-///     - rs: specular roughness
-///     - ke_txt, kd_txt, ks_txt, rs_txt, norm_txt: texture indices (-1 for
-///     none) - use_phong: whether to use phong
-/// - Returns:
-///     - material id
+///     - ke_txt: emission texture (-1 for none)
 ///
-int add_material_generic(scene* scn, const ym::vec3f& ke, const ym::vec3f& kd,
-    const ym::vec3f& ks, const ym::vec3f& kt, float rs, float op, int ke_txt,
-    int kd_txt, int ks_txt, int kt_txt, int rs_txt, int op_txt, int norm_txt,
-    int occ_txt, bool use_phong = false);
+void set_material_emission(
+    scene* scn, int mid, const ym::vec3f& ke, int ke_txt);
 
 ///
-/// Sets a gltf metallic roughness material.
+/// Sets the material normal map.
 ///
 /// - Parameters:
 ///     - scn: scene
-///     - ke: emission, term
+///     - mid: material id
+///     - norm_txt: normal map (-1 for none)
+///     - scale: normal scale
+///
+void set_material_normal(scene* scn, int mid, int norm_txt, float scale = 1);
+
+///
+/// Sets the material normal map.
+///
+/// - Parameters:
+///     - scn: scene
+///     - mid: material id
+///     - occ_txt: occlusion map (-1 for none)
+///     - scale: occlusion scale
+///
+void set_material_occlusion(scene* scn, int mid, int occ_txt, float scale = 1);
+
+///
+/// Sets a material reflectance as a microfacet model in the scene.
+///
+/// - Parameters:
+///     - scn: scene
+///     - mid: material id
 ///     - kd: diffuse term
 ///     - ks: specular term
+///     - kt: transmission term
 ///     - rs: specular roughness
-///     - ke_txt, kd_txt, ks_txt, rs_txt, norm_txt: texture indices (-1 for
+///     - kd_txt, ks_txt, kt_txt, rs_txt: texture indices (-1 for
 ///     none)
 ///     - use_phong: whether to use phong
-/// - Returns:
-///     - material id
 ///
-int add_material_gltf_metallic_roughness(scene* scn, const ym::vec3f& ke,
-    const ym::vec3f& kd, float ks, float rs, float op, int ke_txt, int kd_txt,
-    int ks_txt, int norm_txt, int occ_txt, bool use_phong = false);
+void set_material_microfacet(scene* scn, int mid, const ym::vec3f& kd,
+    const ym::vec3f& ks, const ym::vec3f& kt, float rs, float op, int kd_txt,
+    int ks_txt, int kt_txt, int rs_txt, int op_txt, bool use_phong = false);
 
 ///
-/// Sets a gltf metallic specular glossiness.
+/// Sets a gltf metallic roughness material reflectance.
 ///
 /// - Parameters:
 ///     - scn: scene
-///     - ke: emission, term
-///     - kd: diffuse term
-///     - ks: specular term
+///     - mid: material id
+///     - kb: base color term
+///     - km: metallic term
 ///     - rs: specular roughness
-///     - ke_txt, kd_txt, ks_txt, rs_txt, norm_txt: texture indices (-1 for
-///     none)
-///    - use_phong: whether to use phong
-/// - Returns:
-///     - material id
+///     - kd_txt, km_txt: texture indices (-1 for none)
 ///
-int add_material_gltf_specular_glossiness(scene* scn, const ym::vec3f& ke,
-    const ym::vec3f& kd, const ym::vec3f& ks, float rs, float op, int ke_txt,
-    int kd_txt, int ks_txt, int norm_txt, int occ_txt, bool use_phong = false);
+void set_material_gltf_metallic_roughness(scene* scn, int mid,
+    const ym::vec3f& kb, float km, float rs, float op, int kd_txt, int km_txt);
 
 ///
-/// Sets a gltf emission only material.
+/// Sets a gltf metallic specular glossiness reflectance.
 ///
 /// - Parameters:
 ///     - scn: scene
@@ -296,15 +345,37 @@ int add_material_gltf_specular_glossiness(scene* scn, const ym::vec3f& ke,
 ///     - ke: emission, term
 ///     - kd: diffuse term
 ///     - ks: specular term
-///     - rs: specular roughness
-///     - ke_txt, kd_txt, ks_txt, rs_txt, norm_txt: texture indices (-1 for
+///     - rs: specular glossiness
+///     - kd_txt, ks_txt: texture indices (-1 for
 ///     none)
-///     - use_phong: whether to use phong
-/// - Returns:
-///     - material id
 ///
-int add_material_emission_only(
-    scene* scn, const ym::vec3f& ke, int ke_txt, int norm_txt, int occ_txt);
+void set_material_gltf_specular_glossiness(scene* scn, int mid,
+    const ym::vec3f& kd, const ym::vec3f& ks, float rs, float op, int kd_txt,
+    int ks_txt);
+
+///
+/// Sets a thin glass material
+///
+/// - Parameters:
+///     - scn: scene
+///     - mid: material id
+///     - ks: reflection
+///     - kt: transmission
+///     - ks_txt, kt_txt: texture indices (-1 for
+///     none)
+///
+void set_material_thin_glass(scene* scn, int mid, const ym::vec3f& ks,
+    const ym::vec3f& kt, int ks_txt, int kt_txt);
+
+///
+/// Sets the material emission.
+///
+/// - Parameters:
+///     - scn: scene
+///     - mid: material id
+///     - double_sided: whether the material is double sided
+///
+void set_material_double_sided(scene* scn, int mid, bool double_sided);
 
 ///
 /// Sets an environment in the scene.
@@ -405,20 +476,6 @@ int add_line_shape(scene* scn, int nlines, const ym::vec2i* lines, int nverts,
 int add_instance(scene* scn, const ym::frame3f& frame, int sid, int mid);
 
 ///
-/// Sets per-vertex material properties.
-///
-/// - Parameters:
-///     - scn: scene
-///     - sid: shape id
-///     - ke: per-vertex emission
-///     - kd: per-vertex diffuse
-///     - ks: per-vertex specular
-///     - rs: per-vertex roughness
-///
-void set_vert_material(scene* scn, int sid, const ym::vec3f* ke,
-    const ym::vec3f* kd, const ym::vec3f* ks, const float* rs);
-
-///
 /// Convert a Phong exponent to GGX/Phong roughness
 ///
 float specular_exponent_to_roughness(float n);
@@ -452,23 +509,21 @@ struct intersect_point {
 /// Ray-scene closest intersection callback.
 ///
 /// - Parameters:
-///     - ctx: context
 ///     - ray: ray
 /// - Return:
 ///     - intersection point
 ///
-using intersect_first_cb = intersect_point (*)(void* ctx, const ym::ray3f& ray);
+using intersect_first_cb = std::function<intersect_point(const ym::ray3f& ray)>;
 
 ///
 /// Ray-scene intersection callback
 ///
 /// - Parameters:
-///     - ctx: context
 ///     - ray: ray
 /// - Return:
 ///     - whether we intersect or not
 ///
-using intersect_any_cb = bool (*)(void* ctx, const ym::ray3f& o);
+using intersect_any_cb = std::function<bool(const ym::ray3f& ray)>;
 
 ///
 /// Sets the intersection callbacks
@@ -485,15 +540,15 @@ void set_intersection_callbacks(scene* scn, void* ctx,
 void init_intersection(scene* scn);
 
 ///
-/// Logger callback
+/// Logging callback
 ///
-using logging_msg_cb = void (*)(
-    int level, const char* name, const char* msg, va_list args);
+using logging_cb = std::function<void(const char*)>;
 
 ///
 /// Logger
 ///
-void set_logging_callbacks(scene* scn, void* ctx, logging_msg_cb log);
+void set_logging_callbacks(
+    scene* scn, logging_cb log_info, logging_cb log_error);
 
 ///
 /// Initialize lighting.
@@ -513,8 +568,12 @@ enum struct shader_type {
     eyelight,
     /// direct illumination
     direct,
-    /// direct illumination with ambient occlusion
-    direct_ao,
+    /// debug normal
+    debug_normal,
+    /// debug albedo
+    debug_albedo,
+    /// debug texcoord
+    debug_texcoord,
 };
 
 ///
@@ -530,19 +589,41 @@ enum struct rng_type {
 };
 
 ///
+/// Filter type
+///
+enum struct filter_type {
+    /// box filter
+    box = 1,
+    /// hat filter
+    triangle = 2,
+    /// cubic spline
+    cubic = 3,
+    /// Catmull-Rom spline
+    catmull_rom = 4,
+    /// Mitchell-Netrevalli
+    mitchell = 5
+};
+
+///
 /// Rendering params
 ///
-struct render_params {
+struct trace_params {
     /// camera id
     int camera_id = 0;
+    /// width
+    int width = 0;
+    /// height
+    int height = 0;
     /// number of samples
     int nsamples = 256;
-    /// progressive rendering
-    bool progressive = true;
     /// sampler type
     shader_type stype = shader_type::pathtrace;
     /// random number generation type
     rng_type rtype = rng_type::stratified;
+    /// filter type
+    filter_type ftype = filter_type::box;
+    /// compute auxiliary buffers
+    bool aux_buffers = false;
     /// ambient lighting
     ym::vec3f amb = {0, 0, 0};
     /// view environment map
@@ -555,12 +636,14 @@ struct render_params {
     float pixel_clamp = 10;
     /// ray intersection epsilon
     float ray_eps = 1e-4f;
+    /// parallel execution
+    bool parallel = true;
 };
 
 ///
 /// Renders a block of sample
 ///
-/// Notes: It is safe to call the function in parallel one different blocks.
+/// Notes: It is safe to call the function in parallel on different blocks.
 /// But two threads should not access the same pixels at the same time.
 /// Also blocks with different samples should be called sequentially if
 /// accumulate is true.
@@ -568,24 +651,80 @@ struct render_params {
 /// - Parameters:
 ///     - scn: trace scene
 ///     - cid: camera id
-///     - width: image width
-///     - height: image height
-///     - img: pixel data in RGBA format
+///     - img: pixel data in RGBA format (width/height in params)
 ///     - nsamples: number of samples
 ///     - block_x, block_y: block corner
 ///     - block_width, block_height: block width and height
 ///     - samples_min, samples_max: sample block to render
 ///       [sample_min, sample_max]; max values are excluded
 ///
-void trace_block(const scene* scn, int width, int height, ym::vec4f* img,
-    int block_x, int block_y, int block_width, int block_height,
-    int samples_min, int samples_max, const render_params& params);
+void trace_block(const scene* scn, ym::vec4f* img, int block_x, int block_y,
+    int block_width, int block_height, int samples_min, int samples_max,
+    const trace_params& params);
 
 ///
-/// Convenience function to call trace_block() with all samples at once.
+/// State for progressive rendering and denoising
 ///
-void trace_image(const scene* scn, const int width, int height, ym::vec4f* img,
-    const render_params& params);
+struct trace_state;
+
+///
+/// Creates state
+///
+trace_state* make_state();
+
+///
+/// Initialize state
+///
+void init_state(
+    trace_state* state, const scene* scn, const trace_params& params);
+
+///
+/// Clear state
+///
+void free_state(trace_state*& state);
+
+///
+/// Grabs a reference to the image from the state
+///
+ym::image4f& get_traced_image(trace_state* state);
+
+///
+/// Grabs the image from the state
+///
+void get_aux_buffers(const trace_state* state, ym::image4f& norm,
+    ym::image4f& albedo, ym::image4f& depth);
+
+///
+/// Gets the current sample number
+///
+int get_cur_sample(const trace_state* state);
+
+///
+/// Trace the next nsamples samples.
+///
+bool trace_next_samples(trace_state* state, int nsamples);
+
+///
+/// Trace the whole image
+///
+inline ym::image4f trace_image(const scene* scn, const trace_params& params) {
+    auto state = make_state();
+    init_state(state, scn, params);
+    trace_next_samples(state, params.nsamples);
+    auto img = get_traced_image(state);
+    free_state(state);
+    return img;
+}
+
+///
+/// Starts an anyncrhounous renderer with a maximum of 256 samples.
+///
+void trace_async_start(trace_state* state);
+
+///
+/// Stop the asynchronous renderer.
+///
+void trace_async_stop(trace_state* state);
 
 }  // namespace ytrace
 

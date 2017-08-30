@@ -97,10 +97,9 @@ struct collision {
     rigid_body *bdy1 = nullptr, *bdy2 = nullptr;  // bodies
     ym::frame3f frame = ym::identity_frame3f;     // collision frame
     ym::vec3f impulse = ym::zero3f, local_impulse = ym::zero3f;  // impulses
-    ym::vec3f vel_before = ym::zero3f,
-              vel_after = ym::zero3f;  // velocities (for viz)
-    ym::vec3f meff_inv = ym::zero3f;   // effective mass
-    float depth = 0;                   // penetration depth
+    ym::vec3f meff_inv = ym::zero3f;  // effective mass
+    float depth = 0;                  // penetration depth
+    ym::vec3f r1 = ym::zero3f, r2 = ym::zero3f;
 };
 
 //
@@ -114,10 +113,8 @@ struct scene {
 
     // overlap callbacks -----------------------
     float overlap_max_radius = 0.25;  // maximum vertex overlap distance
-    void* overlap_ctx = nullptr;      // overlap context
     overlap_shapes_cb overlap_shapes = nullptr;  // overlap callbacks
     overlap_shape_cb overlap_shape = nullptr;    // overlap callbacks
-    overlap_verts_cb overlap_verts = nullptr;    // overlap callbacks
     overlap_refit_cb overlap_refit = nullptr;    // overlap callbacks
 #ifndef YSYM_NO_BVH
     ybvh::scene* overlap_bvh = nullptr;  // overlapoverlap internal bvh
@@ -127,7 +124,17 @@ struct scene {
     std::vector<collision> __collisions;
 
     // destructor
-    ~scene();
+    ~scene() {
+        for (auto shp : shapes)
+            if (shp) delete shp;
+        for (auto bdy : bodies)
+            if (bdy) delete bdy;
+        for (auto mat : materials)
+            if (mat) delete mat;
+#ifndef YTRACE_NO_BVH
+        if (overlap_bvh) ybvh::free_scene(overlap_bvh);
+#endif
+    }
 };
 
 //
@@ -141,23 +148,9 @@ scene* make_scene() {
 //
 // Public API.
 //
-void free_scene(scene* scn) {
+void free_scene(scene*& scn) {
     if (scn) delete scn;
-}
-
-//
-// Destructor
-//
-scene::~scene() {
-    for (auto shp : shapes)
-        if (shp) delete shp;
-    for (auto bdy : bodies)
-        if (bdy) delete bdy;
-    for (auto mat : materials)
-        if (mat) delete mat;
-#ifndef YTRACE_NO_BVH
-    if (overlap_bvh) ybvh::free_scene(overlap_bvh);
-#endif
+    scn = nullptr;
 }
 
 //
@@ -235,57 +228,12 @@ void set_rigid_body_velocity(
 //
 // Public API.
 //
-void set_overlap_callbacks(scene* scn, void* ctx,
-    overlap_shapes_cb overlap_shapes, overlap_shape_cb overlap_shape,
-    overlap_verts_cb overlap_verts, overlap_refit_cb overlap_refit) {
-    scn->overlap_ctx = ctx;
+void set_overlap_callbacks(scene* scn, overlap_shapes_cb overlap_shapes,
+    overlap_shape_cb overlap_shape, overlap_refit_cb overlap_refit) {
     scn->overlap_shapes = overlap_shapes;
     scn->overlap_shape = overlap_shape;
-    scn->overlap_verts = overlap_verts;
     scn->overlap_refit = overlap_refit;
 }
-
-#ifndef YSYM_NO_BVH
-//
-// internal overlap adapter
-//
-static inline void _internal_overlap_shapes(
-    void* ctx, std::vector<ym::vec2i>* overlaps) {
-    auto scene_bvh = (ybvh::scene*)ctx;
-    ybvh::overlap_instance_bounds(
-        scene_bvh, scene_bvh, false, true, true, overlaps);
-}
-
-//
-// internal overlap adapter
-//
-static inline ysym::overlap_point _internal_overlap_shape(
-    void* ctx, int iid, const ym::vec3f& pt, float max_dist) {
-    auto scene_bvh = (ybvh::scene*)ctx;
-    auto overlap = ybvh::overlap_instance(scene_bvh, iid, pt, max_dist, false);
-    ysym::overlap_point opt;
-    opt.dist = overlap.dist;
-    opt.iid = overlap.iid;
-    opt.sid = overlap.sid;
-    opt.eid = overlap.eid;
-    opt.euv = overlap.euv;
-    return opt;
-}
-
-//
-// internal overlap adapter
-//
-static inline void _internal_overlap_refit(
-    void* ctx, const scene* scn, int nshapes) {
-    auto scene_bvh = (ybvh::scene*)ctx;
-    for (auto iid = 0; iid < nshapes; iid++) {
-        ybvh::set_instance_frame(
-            scene_bvh, iid, get_rigid_body_frame(scn, iid));
-    }
-    ybvh::refit_scene_bvh(scene_bvh, false);
-}
-
-#endif
 
 //
 // Initialize overlap functions using internal structures.
@@ -308,8 +256,29 @@ void init_overlap(scene* scn) {
             scn->overlap_bvh, bdy->frame, shape_map.at(bdy->shp));
     }
     ybvh::build_scene_bvh(scn->overlap_bvh);
-    set_overlap_callbacks(scn, scn->overlap_bvh, _internal_overlap_shapes,
-        _internal_overlap_shape, nullptr, _internal_overlap_refit);
+    set_overlap_callbacks(scn,
+        [scn](std::vector<ym::vec2i>* overlaps) {
+            ybvh::overlap_instance_bounds(
+                scn->overlap_bvh, scn->overlap_bvh, true, true, overlaps);
+        },
+        [scn](int iid, const ym::vec3f& pt, float max_dist) {
+            auto overlap = ybvh::overlap_instance(
+                scn->overlap_bvh, iid, pt, max_dist, false);
+            ysym::overlap_point opt;
+            opt.dist = overlap.dist;
+            opt.iid = overlap.iid;
+            opt.sid = overlap.sid;
+            opt.eid = overlap.eid;
+            opt.euv = overlap.euv;
+            return opt;
+        },
+        [scn](const scene* scn, int nshapes) {
+            for (auto iid = 0; iid < nshapes; iid++) {
+                ybvh::set_instance_frame(
+                    scn->overlap_bvh, iid, get_rigid_body_frame(scn, iid));
+            }
+            ybvh::refit_scene_bvh(scn->overlap_bvh, false);
+        });
 #endif
 }
 
@@ -354,9 +323,9 @@ static ym::mat3f _compute_tetra_inertia(const ym::vec3f& v0,
             6 * volume / 120;
     }
     // setup inertia
-    return {{diag[1] + diag[2], -offd[2], -offd[1]},
-        {-offd[2], diag[0] + diag[2], -offd[0]},
-        {-offd[1], -offd[0], diag[0] + diag[1]}};
+    return {{diag.y + diag.z, -offd.z, -offd.y},
+        {-offd.z, diag.x + diag.z, -offd.x},
+        {-offd.y, -offd.x, diag.x + diag.y}};
 }
 
 //
@@ -370,10 +339,10 @@ std::tuple<float, ym::vec3f, ym::mat3f> _compute_moments(int ntriangles,
     for (auto i = 0; i < ntriangles; i++) {
         auto t = triangles[i];
         auto tvolume =
-            ym::tetrahedron_volume(ym::zero3f, pos[t[0]], pos[t[1]], pos[t[2]]);
+            ym::tetrahedron_volume(ym::zero3f, pos[t.x], pos[t.y], pos[t.z]);
         volume += tvolume;
         center +=
-            tvolume * (ym::zero3f + pos[t[0]] + pos[t[1]] + pos[t[2]]) / 4.0f;
+            tvolume * (ym::zero3f + pos[t.x] + pos[t.y] + pos[t.z]) / 4.0f;
     }
     center /= volume;
     // inertia
@@ -381,7 +350,7 @@ std::tuple<float, ym::vec3f, ym::mat3f> _compute_moments(int ntriangles,
     for (auto i = 0; i < ntriangles; i++) {
         auto t = triangles[i];
         inertia += _compute_tetra_inertia(
-            ym::zero3f, pos[t[0]], pos[t[1]], pos[t[2]], center);
+            ym::zero3f, pos[t.x], pos[t.y], pos[t.z], center);
     }
     inertia /= volume;
     return std::make_tuple(volume, center, inertia);
@@ -398,10 +367,9 @@ std::tuple<float, ym::vec3f, ym::mat3f> _compute_moments(
     for (auto i = 0; i < ntetra; i++) {
         auto t = tetra[i];
         auto tvolume =
-            ym::tetrahedron_volume(pos[t[0]], pos[t[1]], pos[t[2]], pos[t[3]]);
+            ym::tetrahedron_volume(pos[t.x], pos[t.y], pos[t.z], pos[t[3]]);
         volume += tvolume;
-        center +=
-            tvolume * (pos[t[0]] + pos[t[1]] + pos[t[2]] + pos[t[3]]) / 4.0f;
+        center += tvolume * (pos[t.x] + pos[t.y] + pos[t.z] + pos[t[3]]) / 4.0f;
     }
     center /= volume;
     // inertia
@@ -409,7 +377,7 @@ std::tuple<float, ym::vec3f, ym::mat3f> _compute_moments(
     for (auto i = 0; i < ntetra; i++) {
         auto t = tetra[i];
         inertia += _compute_tetra_inertia(
-            pos[t[0]], pos[t[1]], pos[t[2]], pos[t[3]], center);
+            pos[t.x], pos[t.y], pos[t.z], pos[t[3]], center);
     }
     inertia /= volume;
     return std::make_tuple(volume, center, inertia);
@@ -436,84 +404,52 @@ std::tuple<float, ym::vec3f, ym::mat3f> compute_moments(
 //
 // Compute collisions.
 //
-#if 0
-static void _compute_collision(const scene* scn, const ym::vec2i& sids,
+static void compute_collision(const scene* scn, const ym::vec2i& sids,
     std::vector<collision>* collisions) {
-    std::vector<std::pair<overlap_point, ym::vec2i>> overlaps;
-    scn->overlap_verts(
-        scn->overlap_ctx, sids[0], sids[1], scn->overlap_max_radius, &overlaps);
-    if (overlaps.empty()) return;
-    auto shape1 = scn->shapes[sids[0]];
-    auto shape2 = scn->shapes[sids[1]];
-    for (auto& overlap : overlaps) {
-        auto p = transform_point(shape2->frame, shape2->pos[overlap.second[1]]);
-        auto triangle = shape1->triangles[overlap.first.eid];
-        auto v0 = shape1->pos[triangle[0]], v1 = shape1->pos[triangle[1]],
-             v2 = shape1->pos[triangle[2]];
-        auto tp = transform_point(
-            shape1->frame, ym::blerp(v0, v1, v2, overlap.first.euv));
-        auto n =
-            transform_direction(shape1->frame, ym::triangle_normal(v0, v1, v2));
-        const auto eps = -0.01f;
-        auto ptp = ym::normalize(p - tp);
-        if (ym::dot(n, ptp) > eps) continue;
-        auto col = collision();
-        col.shapes = sids;
-        col.depth = overlap.first.dist;
-        col.frame = ym::make_frame3_fromz(p, n);
-        collisions->push_back(col);
-    }
-}
-#else
-static void _compute_collision(const scene* scn, const ym::vec2i& sids,
-    std::vector<collision>* collisions) {
-    auto bdy1 = scn->bodies[sids[0]];
-    auto bdy2 = scn->bodies[sids[1]];
+    auto bdy1 = scn->bodies[sids.x];
+    auto bdy2 = scn->bodies[sids.y];
     for (auto vid = 0; vid < bdy2->shp->nverts; vid++) {
-        auto& p2 = bdy2->shp->pos[vid];
-        auto p = transform_point(bdy2->frame, p2);
-        auto overlap = scn->overlap_shape(
-            scn->overlap_ctx, sids[0], p, scn->overlap_max_radius);
+        auto p2 = transform_point(bdy2->frame, bdy2->shp->pos[vid]);
+        auto overlap = scn->overlap_shape(sids.x, p2, scn->overlap_max_radius);
         if (!overlap) continue;
         auto triangle = bdy1->shp->triangles[overlap.eid];
-        auto v0 = bdy1->shp->pos[triangle[0]], v1 = bdy1->shp->pos[triangle[1]],
-             v2 = bdy1->shp->pos[triangle[2]];
-        auto tp = transform_point(bdy1->frame, blerp(v0, v1, v2, overlap.euv));
-        auto n = transform_direction(bdy1->frame, triangle_normal(v0, v1, v2));
-        const auto eps = -0.01f;
-        auto ptp = normalize(p - tp);
-        if (dot(n, ptp) > eps) continue;
+        auto v0 = bdy1->shp->pos[triangle.x], v1 = bdy1->shp->pos[triangle.y],
+             v2 = bdy1->shp->pos[triangle.z];
+        auto p1 = transform_point(bdy1->frame, blerp(v0, v1, v2, overlap.euv));
+        auto n1 = transform_direction(bdy1->frame, triangle_normal(v0, v1, v2));
+        auto in = dot(n1, normalize(p2 - p1));
+        if (in > -0.01f) continue;
+        // if (dot(n1, normalize(p2 - p1)) > -0.01f) continue;
         auto col = collision();
         col.bdy1 = bdy1;
         col.bdy2 = bdy2;
         col.depth = overlap.dist;
-        col.frame = ym::make_frame3_fromz(p, n);
+        col.frame = ym::make_frame3_fromz(p2, n1);
         collisions->push_back(col);
     }
 }
 
-static void _compute_collisions(
+static void compute_collisions(
     scene* scene, std::vector<collision>* collisions) {
     // check which shapes might overlap
     auto body_collisions = std::vector<ym::vec2i>();
-    scene->overlap_shapes(scene->overlap_ctx, &body_collisions);
+    scene->overlap_shapes(&body_collisions);
     // test all pair-wise objects
     collisions->clear();
     for (auto& sc : body_collisions) {
-        auto bd1 = scene->bodies[sc[0]], bd2 = scene->bodies[sc[1]];
+        auto bd1 = scene->bodies[sc.x], bd2 = scene->bodies[sc.y];
         if (!bd1->simulated && !bd2->simulated) continue;
         if (!bd1->shp->triangles) continue;
         if (!bd2->shp->triangles) continue;
-        _compute_collision(scene, sc, collisions);
-        _compute_collision(scene, {sc[1], sc[0]}, collisions);
+        compute_collision(scene, sc, collisions);
+        compute_collision(scene, {sc.y, sc.x}, collisions);
     }
 }
-#endif
 
 //
 // Apply an impulse where the position is relative to the center of mass.
 //
-static inline void _apply_rel_impulse(
+static inline void apply_rel_impulse(
     rigid_body* bdy, const ym::vec3f impulse, const ym::vec3f rel_pos) {
     if (!bdy->simulated) return;
     bdy->lin_vel += impulse * bdy->_mass_inv;
@@ -521,95 +457,64 @@ static inline void _apply_rel_impulse(
 }
 
 //
-// Shortcut math function.
-//
-static inline float _muldot(const ym::vec3f& v, const ym::mat3f& m) {
-    return ym::dot(v, m * v);
-}
-
-//
 // Solve constraints with PGS.
 //
-void _solve_constraints(scene* scn, std::vector<collision>& collisions,
+void solve_constraints(scene* scn, std::vector<collision>& collisions,
     const simulation_params& params) {
     // initialize computation
     for (auto& col : collisions) {
         col.local_impulse = ym::zero3f;
         col.impulse = ym::zero3f;
-        auto r1 = ym::pos(col.frame) - col.bdy1->_centroid_world,
-             r2 = ym::pos(col.frame) - col.bdy2->_centroid_world;
-        col.meff_inv = {1 / (col.bdy1->_mass_inv + col.bdy2->_mass_inv +
-                                _muldot(ym::cross(r1, col.frame[0]),
-                                    col.bdy1->_inertia_inv_world) +
-                                _muldot(ym::cross(r2, col.frame[0]),
-                                    col.bdy2->_inertia_inv_world)),
-            1 / (col.bdy1->_mass_inv + col.bdy2->_mass_inv +
-                    _muldot(ym::cross(r1, col.frame[1]),
-                        col.bdy1->_inertia_inv_world) +
-                    _muldot(ym::cross(r2, col.frame[1]),
-                        col.bdy2->_inertia_inv_world)),
-            1 / (col.bdy1->_mass_inv + col.bdy2->_mass_inv +
-                    _muldot(ym::cross(r1, col.frame[2]),
-                        col.bdy1->_inertia_inv_world) +
-                    _muldot(ym::cross(r2, col.frame[2]),
-                        col.bdy2->_inertia_inv_world))};
-    }
-
-    // compute relative velocity for visualization
-    for (auto& col : collisions) {
-        auto r1 = ym::pos(col.frame) - col.bdy1->_centroid_world,
-             r2 = ym::pos(col.frame) - col.bdy2->_centroid_world;
-        auto v1 = col.bdy1->lin_vel + ym::cross(col.bdy1->ang_vel, r1),
-             v2 = col.bdy2->lin_vel + ym::cross(col.bdy2->ang_vel, r2);
-        col.vel_before = v2 - v1;
+        col.r1 = col.frame.o - col.bdy1->_centroid_world,
+        col.r2 = col.frame.o - col.bdy2->_centroid_world;
+        col.meff_inv.z =
+            1 /
+            (col.bdy1->_mass_inv + col.bdy2->_mass_inv +
+                dot(cross(col.r1, col.frame.z),
+                    col.bdy1->_inertia_inv_world * cross(col.r1, col.frame.z)) +
+                dot(cross(col.r2, col.frame.z),
+                    col.bdy2->_inertia_inv_world * cross(col.r2, col.frame.z)));
+        col.meff_inv.x =
+            1 /
+            (col.bdy1->_mass_inv + col.bdy2->_mass_inv +
+                dot(cross(col.r1, col.frame.x),
+                    col.bdy1->_inertia_inv_world * cross(col.r1, col.frame.x)) +
+                dot(cross(col.r2, col.frame.x),
+                    col.bdy2->_inertia_inv_world * cross(col.r2, col.frame.x)));
+        col.meff_inv.y =
+            1 /
+            (col.bdy1->_mass_inv + col.bdy2->_mass_inv +
+                dot(cross(col.r1, col.frame.y),
+                    col.bdy1->_inertia_inv_world * cross(col.r1, col.frame.y)) +
+                dot(cross(col.r2, col.frame.y),
+                    col.bdy2->_inertia_inv_world * cross(col.r2, col.frame.y)));
     }
 
     // solve constraints
     for (int i = 0; i < params.solver_iterations; i++) {
         for (auto& col : collisions) {
-            auto r1 = ym::pos(col.frame) - col.bdy1->_centroid_world,
-                 r2 = ym::pos(col.frame) - col.bdy2->_centroid_world;
-            auto v1 = col.bdy1->lin_vel + ym::cross(col.bdy1->ang_vel, r1),
-                 v2 = col.bdy2->lin_vel + ym::cross(col.bdy2->ang_vel, r2);
+            auto v1 = col.bdy1->lin_vel + cross(col.bdy1->ang_vel, col.r1),
+                 v2 = col.bdy2->lin_vel + cross(col.bdy2->ang_vel, col.r2);
             auto vr = v2 - v1;
-            _apply_rel_impulse(col.bdy1, col.impulse, r1);
-            _apply_rel_impulse(col.bdy2, -col.impulse, r2);
-            // float offset = col.depth*0.8f/dt;
+            apply_rel_impulse(col.bdy1, col.impulse, col.r1);
+            apply_rel_impulse(col.bdy2, -col.impulse, col.r2);
+            // auto offset = col.depth * 0.8f / params.dt;
             auto offset = 0.0f;
-            ym::vec3f local_impulse =
-                col.meff_inv * ym::vec3f{-ym::dot(col.frame[0], vr),
-                                   -ym::dot(col.frame[1], vr),
-                                   -ym::dot(col.frame[2], vr) + offset};
+            auto local_impulse =
+                col.meff_inv * transform_vector_inverse(
+                                   col.frame, {-vr.x, -vr.y, -vr.z + offset});
             col.local_impulse += local_impulse;
-            col.local_impulse[2] = ym::clamp(
-                col.local_impulse[2], 0.0f, std::numeric_limits<float>::max());
-            col.local_impulse[0] = ym::clamp(col.local_impulse[0],
-                -col.local_impulse[2] * 0.6f, col.local_impulse[2] * 0.6f);
-            col.local_impulse[1] =
-                ym::clamp(col.local_impulse[1], -col.local_impulse[2] * 0.6f,
-                    col.local_impulse[2] - offset * 0.6f);
-            col.impulse = col.local_impulse[2] * col.frame[2] +
-                          col.local_impulse[0] * col.frame[0] +
-                          col.local_impulse[1] * col.frame[1];
-            _apply_rel_impulse(col.bdy1, -col.impulse, r1);
-            _apply_rel_impulse(col.bdy2, col.impulse, r2);
+            col.local_impulse.z = ym::clamp(
+                col.local_impulse.z, 0.0f, std::numeric_limits<float>::max());
+            col.local_impulse.x = ym::clamp(col.local_impulse.x,
+                -col.local_impulse.z * 0.6f, col.local_impulse.z * 0.6f);
+            col.local_impulse.y =
+                ym::clamp(col.local_impulse.y, -col.local_impulse.z * 0.6f,
+                    col.local_impulse.z - offset * 0.6f);
+            col.impulse = transform_vector(col.frame, col.local_impulse);
+            apply_rel_impulse(col.bdy1, -col.impulse, col.r1);
+            apply_rel_impulse(col.bdy2, col.impulse, col.r2);
         }
-    }
-
-    // compute relative velocity for visualization
-    for (auto& col : collisions) {
-        auto r1 = ym::pos(col.frame) - col.bdy1->_centroid_world,
-             r2 = ym::pos(col.frame) - col.bdy2->_centroid_world;
-        auto v1 = col.bdy1->lin_vel + ym::cross(col.bdy1->ang_vel, r1),
-             v2 = col.bdy2->lin_vel + ym::cross(col.bdy2->ang_vel, r2);
-        col.vel_after = v2 - v1;
-    }
-
-    // recompute total impulse and velocity for visualization
-    for (auto& col : collisions) {
-        col.impulse = col.local_impulse[2] * col.frame[2] +
-                      col.local_impulse[0] * col.frame[0] +
-                      col.local_impulse[1] * col.frame[1];
     }
 }
 
@@ -619,7 +524,7 @@ void _solve_constraints(scene* scn, std::vector<collision>& collisions,
 void init_simulation(scene* scn) {
     for (auto shp : scn->shapes) {
         std::tie(shp->_volume, shp->_centroid_local, shp->_inertia_local) =
-            ysym::_compute_moments(
+            ysym::compute_moments(
                 shp->nelems, shp->triangles, shp->nverts, shp->pos);
         shp->_inertia_inv_local = ym::inverse(shp->_inertia_local);
     }
@@ -640,8 +545,8 @@ void init_simulation(scene* scn) {
 //
 // Check function for numerical problems
 //
-inline bool _isfinite(const ym::vec3f& v) {
-    return std::isfinite(v[0]) && std::isfinite(v[1]) && std::isfinite(v[2]);
+inline bool isfinite(const ym::vec3f& v) {
+    return std::isfinite(v.x) && std::isfinite(v.y) && std::isfinite(v.z);
 }
 
 //
@@ -660,7 +565,7 @@ void advance_simulation(scene* scn, const simulation_params& params) {
 
     // compute collisions
     auto collisions = std::vector<collision>();
-    _compute_collisions(scn, &collisions);
+    compute_collisions(scn, &collisions);
 
     // apply external forces
     ym::vec3f gravity_impulse = ym::vec3f(params.gravity) * params.dt;
@@ -670,7 +575,7 @@ void advance_simulation(scene* scn, const simulation_params& params) {
     }
 
     // solve constraints
-    _solve_constraints(scn, collisions, params);
+    solve_constraints(scn, collisions, params);
 
     // copy for visualization
     scn->__collisions = collisions;
@@ -687,9 +592,9 @@ void advance_simulation(scene* scn, const simulation_params& params) {
         if (!bdy->simulated) continue;
 
         // check for nans
-        if (!_isfinite(ym::pos(bdy->frame))) printf("nan detected\n");
-        if (!_isfinite(bdy->lin_vel)) printf("nan detected\n");
-        if (!_isfinite(bdy->ang_vel)) printf("nan detected\n");
+        if (!isfinite(ym::pos(bdy->frame))) printf("nan detected\n");
+        if (!isfinite(bdy->lin_vel)) printf("nan detected\n");
+        if (!isfinite(bdy->ang_vel)) printf("nan detected\n");
 
         // translate the frame to the centroid
         auto centroid = ym::rot(bdy->frame) * bdy->shp->_centroid_local +
@@ -709,7 +614,7 @@ void advance_simulation(scene* scn, const simulation_params& params) {
     }
 
     // update acceleartion for collisions
-    scn->overlap_refit(scn->overlap_ctx, scn, (int)scn->shapes.size());
+    scn->overlap_refit(scn, (int)scn->shapes.size());
 }
 
 }  // namespace ysym
