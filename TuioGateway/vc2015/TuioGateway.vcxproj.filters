@@ -1,0 +1,133 @@
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
+    </Filter>
+    <Filter Include="Blocks">
+      <UniqueIdentifier>{EDF1DCDB-910C-4BDF-9187-8F684DC8CE90}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Blocks\vnm">
+      <UniqueIdentifier>{F396FBFD-B34B-4025-9679-2087EE3A8650}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Blocks\vnm\src">
+      <UniqueIdentifier>{10F07C16-87BE-40C3-B35F-F1E8F5858E5A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Blocks\vnm\include">
+      <UniqueIdentifier>{7E1B53FA-FECC-4E60-A9FF-94C236890ADE}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Blocks\OSC">
+      <UniqueIdentifier>{DAC0554C-69D6-40A8-B80E-F12167D86BC2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Blocks\OSC\src">
+      <UniqueIdentifier>{5BF43033-7673-42E2-88E4-BAE9C316F143}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Blocks\OSC\src\cinder">
+      <UniqueIdentifier>{3F3EE224-99AE-4302-9071-15E1ED6CB3DF}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Blocks\OSC\src\cinder\osc">
+      <UniqueIdentifier>{CAA23509-1184-4E7E-8B2B-C6F70DCC438E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Blocks\TUIO">
+      <UniqueIdentifier>{C3DFD7B9-F148-4BF2-B052-1FDFE12DFDA4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Blocks\TUIO\src">
+      <UniqueIdentifier>{AA0E8FB5-2701-4B85-B8F0-0A629E868DF4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Blocks\TUIO\src\cinder">
+      <UniqueIdentifier>{C946C6F0-D32F-437A-8F82-8F7FF308DEBB}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Blocks\TUIO\src\cinder\tuio">
+      <UniqueIdentifier>{DE850E66-CCB0-4629-9C9C-439B5DFD99C9}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\TuioGatewayApp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TuioGatewayApp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClInclude Include="..\include\Resources.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\..\Cinder\blocks\Cinder-VNM\src\AssetManager.cpp">
+      <Filter>Blocks\vnm\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Cinder\blocks\Cinder-VNM\src\MiniConfig.cpp">
+      <Filter>Blocks\vnm\src</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\AnsiToUtf.h">
+      <Filter>Blocks\vnm\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\AssetManager.h">
+      <Filter>Blocks\vnm\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\CaptureHelper.h">
+      <Filter>Blocks\vnm\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\FontHelper.h">
+      <Filter>Blocks\vnm\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\GlslParamsBuilder.h">
+      <Filter>Blocks\vnm\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\GlslParamsBuilderImgui.h">
+      <Filter>Blocks\vnm\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\MiniConfig.h">
+      <Filter>Blocks\vnm\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\MiniConfigImgui.h">
+      <Filter>Blocks\vnm\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\MotionHelper.h">
+      <Filter>Blocks\vnm\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\NvOptimusEnablement.h">
+      <Filter>Blocks\vnm\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\OscHelper.h">
+      <Filter>Blocks\vnm\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\StateMachine.h">
+      <Filter>Blocks\vnm\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\TextureHelper.h">
+      <Filter>Blocks\vnm\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\TuioHelper.h">
+      <Filter>Blocks\vnm\include</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\..\Cinder\blocks\OSC\src\cinder\osc\Osc.cpp">
+      <Filter>Blocks\OSC\src\cinder\osc</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\..\Cinder\blocks\OSC\src\cinder\osc\Osc.h">
+      <Filter>Blocks\OSC\src\cinder\osc</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\..\Cinder\blocks\TUIO\src\cinder\tuio\Tuio.cpp">
+      <Filter>Blocks\TUIO\src\cinder\tuio</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\..\Cinder\blocks\TUIO\src\cinder\tuio\Tuio.h">
+      <Filter>Blocks\TUIO\src\cinder\tuio</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\include\Resources.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resources.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>

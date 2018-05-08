@@ -16,21 +16,32 @@
 		00B784B60FF439BC000DE1D7 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 00B784B20FF439BC000DE1D7 /* CoreAudio.framework */; };
 		00B9955A1B128DF400A5C623 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 00B995581B128DF400A5C623 /* IOKit.framework */; };
 		00B9955B1B128DF400A5C623 /* IOSurface.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 00B995591B128DF400A5C623 /* IOSurface.framework */; };
-		3BCD77F6B7444B35B5B9D8EC /* CinderImGui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98E0E675D82943DBA9760CF0 /* CinderImGui.cpp */; };
-		4F59FFDBAB21425E914FB0C1 /* Osc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9AD4C7E8DD004D20B5D44E36 /* Osc.cpp */; };
 		5323E6B20EAFCA74003A9687 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5323E6B10EAFCA74003A9687 /* CoreVideo.framework */; };
-		5A003E542D914FF395750DA0 /* Tuio.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB70E3EB474296BBF6BDF4 /* Tuio.cpp */; };
-		64A2D1506D9F402BA84079DF /* TuioGatewayApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0D506D5CF9A54A9FA2EB5F08 /* TuioGatewayApp.cpp */; };
-		74100FE41E1BE2AB003F6C48 /* ImGuizmo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 74100FE01E1BE2AB003F6C48 /* ImGuizmo.cpp */; };
-		74100FE51E1BE2AB003F6C48 /* LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = 74100FE21E1BE2AB003F6C48 /* LICENSE */; };
-		74100FE61E1BE2AB003F6C48 /* README.md in Sources */ = {isa = PBXBuildFile; fileRef = 74100FE31E1BE2AB003F6C48 /* README.md */; };
-		74930BBE1E1AA84D0070176F /* AssetManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 74930BBC1E1AA84D0070176F /* AssetManager.cpp */; };
-		74930BBF1E1AA84D0070176F /* MiniConfig.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 74930BBD1E1AA84D0070176F /* MiniConfig.cpp */; };
-		84B85C5240B5422F9B0460D5 /* imgui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3A1530CBBBB7405FA8EA4FC8 /* imgui.cpp */; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
-		901A335CCAF44AAAA6164ABF /* imgui_draw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 97ADDB34C75341828853CF70 /* imgui_draw.cpp */; };
-		936266E109864C06AA529077 /* imgui_demo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E76B56AAAE9C4C338ADFF060 /* imgui_demo.cpp */; };
-		F3ADF49E5C614B81B4418C23 /* CinderApp.icns in Resources */ = {isa = PBXBuildFile; fileRef = 64B4D51005DB442F928E4F65 /* CinderApp.icns */; };
+		68A82BD2BF454EA89BF10946 /* Tuio.h in Headers */ = {isa = PBXBuildFile; fileRef = 1963EF3F19404A9BAAE50261 /* Tuio.h */; };
+		E36D7D30E84F44C0BBCF38FD /* Tuio.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6E256B771D1440E39F8B12AE /* Tuio.cpp */; };
+		9792BE5D6D394F45AA1F1131 /* Osc.h in Headers */ = {isa = PBXBuildFile; fileRef = D4F595C29A114A319B2DA4D9 /* Osc.h */; };
+		6772CC6020EC43139722C0E3 /* Osc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 555484404B4C467C9DA97456 /* Osc.cpp */; };
+		52C906873A8A459B9583D5F4 /* TuioHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = B019127E340040E187BEDF98 /* TuioHelper.h */; };
+		361449F149014CC6BD9A90C3 /* TextureHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = D49633C1FE9343188C5AE933 /* TextureHelper.h */; };
+		9543F9E1C2C3447787A95A04 /* StateMachine.h in Headers */ = {isa = PBXBuildFile; fileRef = 39CB8D697D214D73874A05CA /* StateMachine.h */; };
+		32B56393F7AB4DAEA37384B2 /* OscHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 4D1C599C789F4B958A88E6EC /* OscHelper.h */; };
+		01510857855C488C81465992 /* NvOptimusEnablement.h in Headers */ = {isa = PBXBuildFile; fileRef = AFA394542F0E47118B19FE37 /* NvOptimusEnablement.h */; };
+		33BCA555F18D4877BF70ADB5 /* MotionHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = D1041301CFF848B7A4CF4157 /* MotionHelper.h */; };
+		277E069401AE4E979E43CC37 /* MiniConfigImgui.h in Headers */ = {isa = PBXBuildFile; fileRef = A278F98EC3F34D9F9A5BCA76 /* MiniConfigImgui.h */; };
+		6DBB754815204AE995C5EEF8 /* MiniConfig.h in Headers */ = {isa = PBXBuildFile; fileRef = 5C277D01E6D043289F0F4D4A /* MiniConfig.h */; };
+		603FF7D9FDEA45A1AF1104E0 /* GlslParamsBuilderImgui.h in Headers */ = {isa = PBXBuildFile; fileRef = 8A3F87B7C943432BA886C09D /* GlslParamsBuilderImgui.h */; };
+		CEC861D4C2DD482DBD7D98AB /* GlslParamsBuilder.h in Headers */ = {isa = PBXBuildFile; fileRef = 110216AB915E43A5A64056E6 /* GlslParamsBuilder.h */; };
+		3D430D5F977C42669BFCE7B1 /* FontHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = D1B30BF698AE4C31BF051509 /* FontHelper.h */; };
+		09932B71CA8B4890951BB06F /* CaptureHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 3D17876782CB4E4AB8AD731D /* CaptureHelper.h */; };
+		C50A0782834743D198D6A9EC /* AssetManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 13B65F1E474542A1B7ADB1B0 /* AssetManager.h */; };
+		67A5346201854213A259F298 /* AnsiToUtf.h in Headers */ = {isa = PBXBuildFile; fileRef = EE09BA441B9B4C20BA072105 /* AnsiToUtf.h */; };
+		1E1A8A9535F047B2B36BBC89 /* MiniConfig.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0CAD44A6CCFC4CC297A68E4C /* MiniConfig.cpp */; };
+		0B10965F5EF545BF9633817B /* AssetManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A11C06FA039743948D74177E /* AssetManager.cpp */; };
+		9CC8F6A3B4544A1D9343A42B /* TuioGateway_Prefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = 58D310EF55F24E15B5C50AE7 /* TuioGateway_Prefix.pch */; };
+		8EB0B6C472CC412EA9919233 /* CinderApp.icns in Resources */ = {isa = PBXBuildFile; fileRef = 236838974480465BA8EC383F /* CinderApp.icns */; };
+		86C82E8605B44EAF8DD21D55 /* Resources.h in Headers */ = {isa = PBXBuildFile; fileRef = 038E382DC59D468394C85C1F /* Resources.h */; };
+		4D1FE8CFA8DD4430B12DACDD /* TuioGatewayApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F34A8F08E02846CFADE464C0 /* TuioGatewayApp.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -43,45 +54,36 @@
 		00B784B20FF439BC000DE1D7 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
 		00B995581B128DF400A5C623 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
 		00B995591B128DF400A5C623 /* IOSurface.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOSurface.framework; path = System/Library/Frameworks/IOSurface.framework; sourceTree = SDKROOT; };
-		08FB70E3EB474296BBF6BDF4 /* Tuio.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.cpp; name = Tuio.cpp; path = ../../Cinder/blocks/TUIO/src/cinder/tuio/Tuio.cpp; sourceTree = "<group>"; };
-		0D506D5CF9A54A9FA2EB5F08 /* TuioGatewayApp.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.cpp; name = TuioGatewayApp.cpp; path = ../src/TuioGatewayApp.cpp; sourceTree = "<group>"; };
 		1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
-		159E347B125C4221968CBA4D /* item.def */ = {isa = PBXFileReference; lastKnownFileType = "\"\""; name = item.def; path = ../include/item.def; sourceTree = "<group>"; };
-		21121FDDA9A84F90BDDF2731 /* CinderImGui.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CinderImGui.h; path = "../../Cinder/blocks/Cinder-ImGui/include/CinderImGui.h"; sourceTree = "<group>"; };
 		29B97324FDCFA39411CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
-		2C0A0B5653F9435C9ACCDAF0 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		3A1530CBBBB7405FA8EA4FC8 /* imgui.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.cpp; name = imgui.cpp; path = "../../Cinder/blocks/Cinder-ImGui/lib/imgui/imgui.cpp"; sourceTree = "<group>"; };
-		41D57F5363064489926F1BDC /* imconfig.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = imconfig.h; path = "../../Cinder/blocks/Cinder-ImGui/lib/imgui/imconfig.h"; sourceTree = "<group>"; };
 		5323E6B10EAFCA74003A9687 /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = /System/Library/Frameworks/CoreVideo.framework; sourceTree = "<absolute>"; };
-		5C8DD5C6C33F4836AAABB1D8 /* Osc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Osc.h; path = ../../Cinder/blocks/OSC/src/cinder/osc/Osc.h; sourceTree = "<group>"; };
-		64B4D51005DB442F928E4F65 /* CinderApp.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = CinderApp.icns; path = ../resources/CinderApp.icns; sourceTree = "<group>"; };
-		74100FE01E1BE2AB003F6C48 /* ImGuizmo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ImGuizmo.cpp; sourceTree = "<group>"; };
-		74100FE11E1BE2AB003F6C48 /* ImGuizmo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ImGuizmo.h; sourceTree = "<group>"; };
-		74100FE21E1BE2AB003F6C48 /* LICENSE */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
-		74100FE31E1BE2AB003F6C48 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
-		74930BB11E1AA84D0070176F /* AssetManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AssetManager.h; sourceTree = "<group>"; };
-		74930BB21E1AA84D0070176F /* CaptureHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CaptureHelper.h; sourceTree = "<group>"; };
-		74930BB31E1AA84D0070176F /* FontHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FontHelper.h; sourceTree = "<group>"; };
-		74930BB41E1AA84D0070176F /* GlslParamsBuilder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GlslParamsBuilder.h; sourceTree = "<group>"; };
-		74930BB51E1AA84D0070176F /* GlslParamsBuilderImgui.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GlslParamsBuilderImgui.h; sourceTree = "<group>"; };
-		74930BB61E1AA84D0070176F /* MiniConfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MiniConfig.h; sourceTree = "<group>"; };
-		74930BB71E1AA84D0070176F /* MiniConfigImgui.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MiniConfigImgui.h; sourceTree = "<group>"; };
-		74930BB81E1AA84D0070176F /* MotionHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotionHelper.h; sourceTree = "<group>"; };
-		74930BB91E1AA84D0070176F /* StateMachine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StateMachine.h; sourceTree = "<group>"; };
-		74930BBA1E1AA84D0070176F /* TextureHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TextureHelper.h; sourceTree = "<group>"; };
-		74930BBC1E1AA84D0070176F /* AssetManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AssetManager.cpp; sourceTree = "<group>"; };
-		74930BBD1E1AA84D0070176F /* MiniConfig.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MiniConfig.cpp; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* TuioGateway.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TuioGateway.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		9761BBB886E1492BB4AC73D6 /* imgui.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = imgui.h; path = "../../Cinder/blocks/Cinder-ImGui/lib/imgui/imgui.h"; sourceTree = "<group>"; };
-		97ADDB34C75341828853CF70 /* imgui_draw.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.cpp; name = imgui_draw.cpp; path = "../../Cinder/blocks/Cinder-ImGui/lib/imgui/imgui_draw.cpp"; sourceTree = "<group>"; };
-		98E0E675D82943DBA9760CF0 /* CinderImGui.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.cpp; name = CinderImGui.cpp; path = "../../Cinder/blocks/Cinder-ImGui/src/CinderImGui.cpp"; sourceTree = "<group>"; };
-		9AD4C7E8DD004D20B5D44E36 /* Osc.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.cpp; name = Osc.cpp; path = ../../Cinder/blocks/OSC/src/cinder/osc/Osc.cpp; sourceTree = "<group>"; };
-		A636AE4B3D8343DFBAF506BC /* TuioGateway_Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = "\"\""; path = TuioGateway_Prefix.pch; sourceTree = "<group>"; };
-		E41B34BF03D2425882B36DB1 /* Resources.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Resources.h; path = ../include/Resources.h; sourceTree = "<group>"; };
-		E76B56AAAE9C4C338ADFF060 /* imgui_demo.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.cpp; name = imgui_demo.cpp; path = "../../Cinder/blocks/Cinder-ImGui/lib/imgui/imgui_demo.cpp"; sourceTree = "<group>"; };
-		F0B43DB43464469885F3E483 /* Tuio.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Tuio.h; path = ../../Cinder/blocks/TUIO/src/cinder/tuio/Tuio.h; sourceTree = "<group>"; };
-		F1AD342FDEB7458ABAD96284 /* imgui_internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = imgui_internal.h; path = "../../Cinder/blocks/Cinder-ImGui/lib/imgui/imgui_internal.h"; sourceTree = "<group>"; };
+		F34A8F08E02846CFADE464C0 /* TuioGatewayApp.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.cpp; path = ../src/TuioGatewayApp.cpp; sourceTree = "<group>"; name = TuioGatewayApp.cpp; };
+		038E382DC59D468394C85C1F /* Resources.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ../include/Resources.h; sourceTree = "<group>"; name = Resources.h; };
+		236838974480465BA8EC383F /* CinderApp.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = ../resources/CinderApp.icns; sourceTree = "<group>"; name = CinderApp.icns; };
+		827280B88D3E4FF7BE3915C4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; name = Info.plist; };
+		58D310EF55F24E15B5C50AE7 /* TuioGateway_Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = "\"\""; path = TuioGateway_Prefix.pch; sourceTree = "<group>"; name = TuioGateway_Prefix.pch; };
+		A11C06FA039743948D74177E /* AssetManager.cpp */ = {isa = PBXFileReference; path = "../../../Cinder/blocks/Cinder-VNM/src/AssetManager.cpp"; sourceTree = "<group>"; explicitFileType = "\"\""; name = AssetManager.cpp; };
+		0CAD44A6CCFC4CC297A68E4C /* MiniConfig.cpp */ = {isa = PBXFileReference; path = "../../../Cinder/blocks/Cinder-VNM/src/MiniConfig.cpp"; sourceTree = "<group>"; explicitFileType = "\"\""; name = MiniConfig.cpp; };
+		EE09BA441B9B4C20BA072105 /* AnsiToUtf.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "../../../Cinder/blocks/Cinder-VNM/include/AnsiToUtf.h"; sourceTree = "<group>"; name = AnsiToUtf.h; };
+		13B65F1E474542A1B7ADB1B0 /* AssetManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "../../../Cinder/blocks/Cinder-VNM/include/AssetManager.h"; sourceTree = "<group>"; name = AssetManager.h; };
+		3D17876782CB4E4AB8AD731D /* CaptureHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "../../../Cinder/blocks/Cinder-VNM/include/CaptureHelper.h"; sourceTree = "<group>"; name = CaptureHelper.h; };
+		D1B30BF698AE4C31BF051509 /* FontHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "../../../Cinder/blocks/Cinder-VNM/include/FontHelper.h"; sourceTree = "<group>"; name = FontHelper.h; };
+		110216AB915E43A5A64056E6 /* GlslParamsBuilder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "../../../Cinder/blocks/Cinder-VNM/include/GlslParamsBuilder.h"; sourceTree = "<group>"; name = GlslParamsBuilder.h; };
+		8A3F87B7C943432BA886C09D /* GlslParamsBuilderImgui.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "../../../Cinder/blocks/Cinder-VNM/include/GlslParamsBuilderImgui.h"; sourceTree = "<group>"; name = GlslParamsBuilderImgui.h; };
+		5C277D01E6D043289F0F4D4A /* MiniConfig.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "../../../Cinder/blocks/Cinder-VNM/include/MiniConfig.h"; sourceTree = "<group>"; name = MiniConfig.h; };
+		A278F98EC3F34D9F9A5BCA76 /* MiniConfigImgui.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "../../../Cinder/blocks/Cinder-VNM/include/MiniConfigImgui.h"; sourceTree = "<group>"; name = MiniConfigImgui.h; };
+		D1041301CFF848B7A4CF4157 /* MotionHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "../../../Cinder/blocks/Cinder-VNM/include/MotionHelper.h"; sourceTree = "<group>"; name = MotionHelper.h; };
+		AFA394542F0E47118B19FE37 /* NvOptimusEnablement.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "../../../Cinder/blocks/Cinder-VNM/include/NvOptimusEnablement.h"; sourceTree = "<group>"; name = NvOptimusEnablement.h; };
+		4D1C599C789F4B958A88E6EC /* OscHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "../../../Cinder/blocks/Cinder-VNM/include/OscHelper.h"; sourceTree = "<group>"; name = OscHelper.h; };
+		39CB8D697D214D73874A05CA /* StateMachine.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "../../../Cinder/blocks/Cinder-VNM/include/StateMachine.h"; sourceTree = "<group>"; name = StateMachine.h; };
+		D49633C1FE9343188C5AE933 /* TextureHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "../../../Cinder/blocks/Cinder-VNM/include/TextureHelper.h"; sourceTree = "<group>"; name = TextureHelper.h; };
+		B019127E340040E187BEDF98 /* TuioHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "../../../Cinder/blocks/Cinder-VNM/include/TuioHelper.h"; sourceTree = "<group>"; name = TuioHelper.h; };
+		555484404B4C467C9DA97456 /* Osc.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.cpp; path = ../../../Cinder/blocks/OSC/src/cinder/osc/Osc.cpp; sourceTree = "<group>"; name = Osc.cpp; };
+		D4F595C29A114A319B2DA4D9 /* Osc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ../../../Cinder/blocks/OSC/src/cinder/osc/Osc.h; sourceTree = "<group>"; name = Osc.h; };
+		6E256B771D1440E39F8B12AE /* Tuio.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.cpp; path = ../../../Cinder/blocks/TUIO/src/cinder/tuio/Tuio.cpp; sourceTree = "<group>"; name = Tuio.cpp; };
+		1963EF3F19404A9BAAE50261 /* Tuio.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ../../../Cinder/blocks/TUIO/src/cinder/tuio/Tuio.h; sourceTree = "<group>"; name = Tuio.h; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -106,21 +108,10 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		01B97315FEAEA392516A2CEA /* Blocks */ = {
-			isa = PBXGroup;
-			children = (
-				BD89E11D85D64369B8C146E9 /* ImGui */,
-				70B3675E1F4043F5869A6778 /* vnm */,
-				2E34DE2992474B6E987F19F7 /* OSC */,
-				FB88F3248C2D4962B800DFF2 /* TUIO */,
-			);
-			name = Blocks;
-			sourceTree = "<group>";
-		};
 		080E96DDFE201D6D7F000001 /* Source */ = {
 			isa = PBXGroup;
 			children = (
-				0D506D5CF9A54A9FA2EB5F08 /* TuioGatewayApp.cpp */,
+				F34A8F08E02846CFADE464C0 /* TuioGatewayApp.cpp */,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -152,33 +143,12 @@
 			name = "Other Frameworks";
 			sourceTree = "<group>";
 		};
-		107F0AEA6CC94315AE00D470 /* imgui */ = {
-			isa = PBXGroup;
-			children = (
-				41D57F5363064489926F1BDC /* imconfig.h */,
-				9761BBB886E1492BB4AC73D6 /* imgui.h */,
-				F1AD342FDEB7458ABAD96284 /* imgui_internal.h */,
-				3A1530CBBBB7405FA8EA4FC8 /* imgui.cpp */,
-				97ADDB34C75341828853CF70 /* imgui_draw.cpp */,
-				E76B56AAAE9C4C338ADFF060 /* imgui_demo.cpp */,
-			);
-			name = imgui;
-			sourceTree = "<group>";
-		};
 		19C28FACFE9D520D11CA2CBB /* Products */ = {
 			isa = PBXGroup;
 			children = (
 				8D1107320486CEB800E47090 /* TuioGateway.app */,
 			);
 			name = Products;
-			sourceTree = "<group>";
-		};
-		1BD8C8CCB18441EDA6D770E9 /* cinder */ = {
-			isa = PBXGroup;
-			children = (
-				2A0A60A5FA674868979C60C4 /* tuio */,
-			);
-			name = cinder;
 			sourceTree = "<group>";
 		};
 		29B97314FDCFA39411CA2CEA /* TuioGateway */ = {
@@ -194,12 +164,126 @@
 			name = TuioGateway;
 			sourceTree = "<group>";
 		};
+		1D828F8705544A36A8190DC3 /* src */ = {
+			isa = PBXGroup;
+			children = (
+				A11C06FA039743948D74177E /* AssetManager.cpp */,
+				0CAD44A6CCFC4CC297A68E4C /* MiniConfig.cpp */,
+			);
+			name = src;
+			sourceTree = "<group>";
+		};
+		1F4812CD9C054161AB038518 /* include */ = {
+			isa = PBXGroup;
+			children = (
+				EE09BA441B9B4C20BA072105 /* AnsiToUtf.h */,
+				13B65F1E474542A1B7ADB1B0 /* AssetManager.h */,
+				3D17876782CB4E4AB8AD731D /* CaptureHelper.h */,
+				D1B30BF698AE4C31BF051509 /* FontHelper.h */,
+				110216AB915E43A5A64056E6 /* GlslParamsBuilder.h */,
+				8A3F87B7C943432BA886C09D /* GlslParamsBuilderImgui.h */,
+				5C277D01E6D043289F0F4D4A /* MiniConfig.h */,
+				A278F98EC3F34D9F9A5BCA76 /* MiniConfigImgui.h */,
+				D1041301CFF848B7A4CF4157 /* MotionHelper.h */,
+				AFA394542F0E47118B19FE37 /* NvOptimusEnablement.h */,
+				4D1C599C789F4B958A88E6EC /* OscHelper.h */,
+				39CB8D697D214D73874A05CA /* StateMachine.h */,
+				D49633C1FE9343188C5AE933 /* TextureHelper.h */,
+				B019127E340040E187BEDF98 /* TuioHelper.h */,
+			);
+			name = include;
+			sourceTree = "<group>";
+		};
+		810380603C154570974D05EA /* vnm */ = {
+			isa = PBXGroup;
+			children = (
+				1D828F8705544A36A8190DC3 /* src */,
+				1F4812CD9C054161AB038518 /* include */,
+			);
+			name = vnm;
+			sourceTree = "<group>";
+		};
+		7F1A66FDCBC24DBDA77D9D1E /* osc */ = {
+			isa = PBXGroup;
+			children = (
+				555484404B4C467C9DA97456 /* Osc.cpp */,
+				D4F595C29A114A319B2DA4D9 /* Osc.h */,
+			);
+			name = osc;
+			sourceTree = "<group>";
+		};
+		A94012ACD60D4632A2B6FFE0 /* cinder */ = {
+			isa = PBXGroup;
+			children = (
+				7F1A66FDCBC24DBDA77D9D1E /* osc */,
+			);
+			name = cinder;
+			sourceTree = "<group>";
+		};
+		BCAB040A2C8A4F1CA99E33D8 /* src */ = {
+			isa = PBXGroup;
+			children = (
+				A94012ACD60D4632A2B6FFE0 /* cinder */,
+			);
+			name = src;
+			sourceTree = "<group>";
+		};
+		EE3F1D2340A04BBAB3B6ECF9 /* OSC */ = {
+			isa = PBXGroup;
+			children = (
+				BCAB040A2C8A4F1CA99E33D8 /* src */,
+			);
+			name = OSC;
+			sourceTree = "<group>";
+		};
+		2BE00A85697342EAB5EA990E /* tuio */ = {
+			isa = PBXGroup;
+			children = (
+				6E256B771D1440E39F8B12AE /* Tuio.cpp */,
+				1963EF3F19404A9BAAE50261 /* Tuio.h */,
+			);
+			name = tuio;
+			sourceTree = "<group>";
+		};
+		2E97ED16A93546C183911C33 /* cinder */ = {
+			isa = PBXGroup;
+			children = (
+				2BE00A85697342EAB5EA990E /* tuio */,
+			);
+			name = cinder;
+			sourceTree = "<group>";
+		};
+		0078FE192FEA4CA899C72AE2 /* src */ = {
+			isa = PBXGroup;
+			children = (
+				2E97ED16A93546C183911C33 /* cinder */,
+			);
+			name = src;
+			sourceTree = "<group>";
+		};
+		07DA83519B314FBD89BDAE75 /* TUIO */ = {
+			isa = PBXGroup;
+			children = (
+				0078FE192FEA4CA899C72AE2 /* src */,
+			);
+			name = TUIO;
+			sourceTree = "<group>";
+		};
+		01B97315FEAEA392516A2CEA /* Blocks */ = {
+			isa = PBXGroup;
+			children = (
+				810380603C154570974D05EA /* vnm */,
+				EE3F1D2340A04BBAB3B6ECF9 /* OSC */,
+				07DA83519B314FBD89BDAE75 /* TUIO */,
+			);
+			name = Blocks;
+			sourceTree = "<group>";
+		};
 		29B97315FDCFA39411CA2CEA /* Headers */ = {
 			isa = PBXGroup;
 			children = (
-				E41B34BF03D2425882B36DB1 /* Resources.h */,
-				A636AE4B3D8343DFBAF506BC /* TuioGateway_Prefix.pch */,
-				159E347B125C4221968CBA4D /* item.def */,
+				038E382DC59D468394C85C1F /* Resources.h */,
+				58D310EF55F24E15B5C50AE7 /* TuioGateway_Prefix.pch */,
 			);
 			name = Headers;
 			sourceTree = "<group>";
@@ -207,8 +291,8 @@
 		29B97317FDCFA39411CA2CEA /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				64B4D51005DB442F928E4F65 /* CinderApp.icns */,
-				2C0A0B5653F9435C9ACCDAF0 /* Info.plist */,
+				236838974480465BA8EC383F /* CinderApp.icns */,
+				827280B88D3E4FF7BE3915C4 /* Info.plist */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -220,148 +304,6 @@
 				1058C7A2FEA54F0111CA2CBB /* Other Frameworks */,
 			);
 			name = Frameworks;
-			sourceTree = "<group>";
-		};
-		2A0A60A5FA674868979C60C4 /* tuio */ = {
-			isa = PBXGroup;
-			children = (
-				08FB70E3EB474296BBF6BDF4 /* Tuio.cpp */,
-				F0B43DB43464469885F3E483 /* Tuio.h */,
-			);
-			name = tuio;
-			sourceTree = "<group>";
-		};
-		2CCDB085B6E949929EC8A82E /* cinder */ = {
-			isa = PBXGroup;
-			children = (
-				DBE836ACA0BF424F9903E537 /* osc */,
-			);
-			name = cinder;
-			sourceTree = "<group>";
-		};
-		2D6576187DAF4AE1BC902F79 /* lib */ = {
-			isa = PBXGroup;
-			children = (
-				74100FDF1E1BE2AB003F6C48 /* ImGuizmo */,
-				107F0AEA6CC94315AE00D470 /* imgui */,
-			);
-			name = lib;
-			sourceTree = "<group>";
-		};
-		2E34DE2992474B6E987F19F7 /* OSC */ = {
-			isa = PBXGroup;
-			children = (
-				AEE0C1585C3C47109940D33D /* src */,
-			);
-			name = OSC;
-			sourceTree = "<group>";
-		};
-		70B3675E1F4043F5869A6778 /* vnm */ = {
-			isa = PBXGroup;
-			children = (
-				74930BB01E1AA84D0070176F /* include */,
-				74930BBB1E1AA84D0070176F /* src */,
-			);
-			name = vnm;
-			sourceTree = "<group>";
-		};
-		74100FDF1E1BE2AB003F6C48 /* ImGuizmo */ = {
-			isa = PBXGroup;
-			children = (
-				74100FE01E1BE2AB003F6C48 /* ImGuizmo.cpp */,
-				74100FE11E1BE2AB003F6C48 /* ImGuizmo.h */,
-				74100FE21E1BE2AB003F6C48 /* LICENSE */,
-				74100FE31E1BE2AB003F6C48 /* README.md */,
-			);
-			name = ImGuizmo;
-			path = "../../Cinder/blocks/Cinder-ImGui/lib/ImGuizmo";
-			sourceTree = "<group>";
-		};
-		74930BB01E1AA84D0070176F /* include */ = {
-			isa = PBXGroup;
-			children = (
-				74930BB11E1AA84D0070176F /* AssetManager.h */,
-				74930BB21E1AA84D0070176F /* CaptureHelper.h */,
-				74930BB31E1AA84D0070176F /* FontHelper.h */,
-				74930BB41E1AA84D0070176F /* GlslParamsBuilder.h */,
-				74930BB51E1AA84D0070176F /* GlslParamsBuilderImgui.h */,
-				74930BB61E1AA84D0070176F /* MiniConfig.h */,
-				74930BB71E1AA84D0070176F /* MiniConfigImgui.h */,
-				74930BB81E1AA84D0070176F /* MotionHelper.h */,
-				74930BB91E1AA84D0070176F /* StateMachine.h */,
-				74930BBA1E1AA84D0070176F /* TextureHelper.h */,
-			);
-			name = include;
-			path = "../../Cinder/blocks/Cinder-VNM/include";
-			sourceTree = "<group>";
-		};
-		74930BBB1E1AA84D0070176F /* src */ = {
-			isa = PBXGroup;
-			children = (
-				74930BBC1E1AA84D0070176F /* AssetManager.cpp */,
-				74930BBD1E1AA84D0070176F /* MiniConfig.cpp */,
-			);
-			name = src;
-			path = "../../Cinder/blocks/Cinder-VNM/src";
-			sourceTree = "<group>";
-		};
-		793544BFCB3D407DA5193709 /* src */ = {
-			isa = PBXGroup;
-			children = (
-				98E0E675D82943DBA9760CF0 /* CinderImGui.cpp */,
-			);
-			name = src;
-			sourceTree = "<group>";
-		};
-		7FBAC5036FD641C697407A30 /* include */ = {
-			isa = PBXGroup;
-			children = (
-				21121FDDA9A84F90BDDF2731 /* CinderImGui.h */,
-			);
-			name = include;
-			sourceTree = "<group>";
-		};
-		AEE0C1585C3C47109940D33D /* src */ = {
-			isa = PBXGroup;
-			children = (
-				2CCDB085B6E949929EC8A82E /* cinder */,
-			);
-			name = src;
-			sourceTree = "<group>";
-		};
-		BC1D0D9039894D618E158EC0 /* src */ = {
-			isa = PBXGroup;
-			children = (
-				1BD8C8CCB18441EDA6D770E9 /* cinder */,
-			);
-			name = src;
-			sourceTree = "<group>";
-		};
-		BD89E11D85D64369B8C146E9 /* ImGui */ = {
-			isa = PBXGroup;
-			children = (
-				7FBAC5036FD641C697407A30 /* include */,
-				2D6576187DAF4AE1BC902F79 /* lib */,
-				793544BFCB3D407DA5193709 /* src */,
-			);
-			name = ImGui;
-			sourceTree = "<group>";
-		};
-		DBE836ACA0BF424F9903E537 /* osc */ = {
-			isa = PBXGroup;
-			children = (
-				9AD4C7E8DD004D20B5D44E36 /* Osc.cpp */,
-				5C8DD5C6C33F4836AAABB1D8 /* Osc.h */,
-			);
-			name = osc;
-			sourceTree = "<group>";
-		};
-		FB88F3248C2D4962B800DFF2 /* TUIO */ = {
-			isa = PBXGroup;
-			children = (
-				BC1D0D9039894D618E158EC0 /* src */,
-			);
-			name = TUIO;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -390,8 +332,6 @@
 /* Begin PBXProject section */
 		29B97313FDCFA39411CA2CEA /* Project object */ = {
 			isa = PBXProject;
-			attributes = {
-			};
 			buildConfigurationList = C01FCF4E08A954540054247B /* Build configuration list for PBXProject "TuioGateway" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
@@ -416,8 +356,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				74100FE51E1BE2AB003F6C48 /* LICENSE in Resources */,
-				F3ADF49E5C614B81B4418C23 /* CinderApp.icns in Resources */,
+				8EB0B6C472CC412EA9919233 /* CinderApp.icns in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -428,17 +367,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				74100FE41E1BE2AB003F6C48 /* ImGuizmo.cpp in Sources */,
-				74930BBF1E1AA84D0070176F /* MiniConfig.cpp in Sources */,
-				64A2D1506D9F402BA84079DF /* TuioGatewayApp.cpp in Sources */,
-				3BCD77F6B7444B35B5B9D8EC /* CinderImGui.cpp in Sources */,
-				84B85C5240B5422F9B0460D5 /* imgui.cpp in Sources */,
-				901A335CCAF44AAAA6164ABF /* imgui_draw.cpp in Sources */,
-				74930BBE1E1AA84D0070176F /* AssetManager.cpp in Sources */,
-				936266E109864C06AA529077 /* imgui_demo.cpp in Sources */,
-				4F59FFDBAB21425E914FB0C1 /* Osc.cpp in Sources */,
-				74100FE61E1BE2AB003F6C48 /* README.md in Sources */,
-				5A003E542D914FF395750DA0 /* Tuio.cpp in Sources */,
+				4D1FE8CFA8DD4430B12DACDD /* TuioGatewayApp.cpp in Sources */,
+				0B10965F5EF545BF9633817B /* AssetManager.cpp in Sources */,
+				1E1A8A9535F047B2B36BBC89 /* MiniConfig.cpp in Sources */,
+				6772CC6020EC43139722C0E3 /* Osc.cpp in Sources */,
+				E36D7D30E84F44C0BBCF38FD /* Tuio.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -449,17 +382,17 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
-				COPY_PHASE_STRIP = NO;
 				DEAD_CODE_STRIPPING = YES;
+				COPY_PHASE_STRIP = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_INLINES_ARE_PRIVATE_EXTERN = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = TuioGateway_Prefix.pch;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",
 				);
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = TuioGateway_Prefix.pch;
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Applications";
@@ -467,7 +400,6 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "org.libcinder.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = TuioGateway;
 				SYMROOT = ./build;
-				USER_HEADER_SEARCH_PATHS = "\"$(CINDER_PATH)/include\" ../include ../../Cinder/blocks ../../Cinder/blocks/OSC/src ../../Cinder/blocks/TUIO/src";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -482,12 +414,12 @@
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				GCC_INLINES_ARE_PRIVATE_EXTERN = YES;
 				GCC_OPTIMIZATION_LEVEL = 3;
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = TuioGateway_Prefix.pch;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"NDEBUG=1",
 					"$(inherited)",
 				);
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = TuioGateway_Prefix.pch;
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Applications";
@@ -496,7 +428,6 @@
 				PRODUCT_NAME = TuioGateway;
 				STRIP_INSTALLED_PRODUCT = YES;
 				SYMROOT = ./build;
-				USER_HEADER_SEARCH_PATHS = "\"$(CINDER_PATH)/include\" ../include ../../Cinder/blocks ../../Cinder/blocks/OSC/src ../../Cinder/blocks/TUIO/src";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;
@@ -505,7 +436,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				CINDER_PATH = ../../Cinder;
+				CINDER_PATH = "../../../Cinder";
 				CLANG_CXX_LANGUAGE_STANDARD = "c++11";
 				CLANG_CXX_LIBRARY = "libc++";
 				ENABLE_TESTABILITY = YES;
@@ -515,7 +446,13 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
-				USER_HEADER_SEARCH_PATHS = "\"$(CINDER_PATH)/include\" ../include \"../../Cinder/blocks/Cinder-ImGui/lib/imgui\" \"../../Cinder/blocks/Cinder-ImGui/include\" ../blocks/vnm/include ../../Cinder/blocks/OSC/src ../../Cinder/blocks/TUIO/src";
+				USER_HEADER_SEARCH_PATHS = (
+					"\"$(CINDER_PATH)/include\" ../include",
+					"\"../../../Cinder/blocks/Cinder-VNM/include\"",
+					../../../Cinder/blocks,
+					../../../Cinder/blocks/OSC/src,
+					../../../Cinder/blocks/TUIO/src,
+				);
 			};
 			name = Debug;
 		};
@@ -523,7 +460,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				CINDER_PATH = ../../Cinder;
+				CINDER_PATH = "../../../Cinder";
 				CLANG_CXX_LANGUAGE_STANDARD = "c++11";
 				CLANG_CXX_LIBRARY = "libc++";
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
@@ -531,7 +468,13 @@
 				HEADER_SEARCH_PATHS = "\"$(CINDER_PATH)/include\"";
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				SDKROOT = macosx;
-				USER_HEADER_SEARCH_PATHS = "\"$(CINDER_PATH)/include\" ../include \"../../Cinder/blocks/Cinder-ImGui/lib/imgui\" \"../../Cinder/blocks/Cinder-ImGui/include\" ../blocks/vnm/include ../../Cinder/blocks/OSC/src ../../Cinder/blocks/TUIO/src";
+				USER_HEADER_SEARCH_PATHS = (
+					"\"$(CINDER_PATH)/include\" ../include",
+					"\"../../../Cinder/blocks/Cinder-VNM/include\"",
+					../../../Cinder/blocks,
+					../../../Cinder/blocks/OSC/src,
+					../../../Cinder/blocks/TUIO/src,
+				);
 			};
 			name = Release;
 		};
