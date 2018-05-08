@@ -1,31 +1,30 @@
 ///
-/// YOCTO_IMAGE: utilities for loading/saving images, mostly to avoid linking
-/// problems and code duplication across other yocto libraries.
+/// # Yocto/Img
+///
+/// Utilities for loading/saving images, mostly to avoid linking
+/// problems and code duplication across other yocto libraries. Functions as
+/// a wrapper to other libraries.
+///
+/// This library depends in yocto_math.h, stb_image.h, stb_image_write.h
+/// stb_image_resize.h.
 ///
 ///
-/// USAGE:
+/// ## Usage
 ///
-/// 1. load images with load_image()
-/// 2. save images with save_image()
-///
-/// Notes: Images own their own memory and are cleaned up automatically when
-/// destroyed. If you want to get the buffer without copying use release_hdr()
-/// and release_ldr().
+/// 1. load images with `load_image()`
+/// 2. save images with `save_image()`
+/// 3. resize images with `resize_image()`
 ///
 ///
-/// COMPILATION:
+/// ## History
 ///
-/// To use the library include the .h and compile the .cpp. To use this library
-/// as a header-only library, define YIMG_INLINE before including this file.
-///
-/// Image loading and savuing depends on stb libraries. If not desired, disabled
-/// by definining YIMG_NO_STBIMAGE before compiling the .cpp file.
-///
-///
-/// HISTORY:
+/// - v 0.5: exr support in some io functions
+/// - v 0.4: new filtering methods
+/// - v 0.3: use reference interface for images
+/// - v 0.2: added whole image functions
 /// - v 0.1: initial release
 ///
-namespace ycmd {}
+namespace yimg {}
 
 //
 // LICENSE:
@@ -54,169 +53,161 @@ namespace ycmd {}
 #ifndef _YIMG_H_
 #define _YIMG_H_
 
-// compilation options
-#ifdef YIMG_INLINE
-#define YIMG_API inline
-#else
-#define YIMG_API
-#endif
-
 #include <array>
 #include <string>
 #include <vector>
+
+#include "yocto_math.h"
 
 // -----------------------------------------------------------------------------
 // INTERFACE
 // -----------------------------------------------------------------------------
 
+///
+/// Utilitied for reading and writing images.
+///
 namespace yimg {
 
-///
-/// Typedefs
-///
+// typedefs
 using byte = unsigned char;
-using float3 = std::array<float, 3>;
-using byte3 = std::array<byte, 3>;
-using float4 = std::array<float, 4>;
-using byte4 = std::array<byte, 4>;
 
 ///
-/// Simple image structure to ease the passing of parameters. Memory is not
-/// managed.
+/// Check if an image is HDR based on filename
 ///
-struct simage {
-    /// image width
-    int width = 0;
-
-    //. image height
-    int height = 0;
-
-    /// number of components
-    int ncomp = 0;
-
-    /// float data for hdr images if loaded
-    float* hdr = nullptr;
-
-    /// char data for ldr images if loaded
-    byte* ldr = nullptr;
-
-    /// default constructor
-    simage() {}
-
-    /// allocating constructor
-    simage(int width, int height, int ncomp, bool ishdr)
-        : width(width)
-        , height(height)
-        , ncomp(ncomp)
-        , hdr((ishdr) ? new float[width * height * ncomp] : nullptr)
-        , ldr((ishdr) ? nullptr : new byte[width * height * ncomp]) {}
-
-    /// destructor
-    ~simage() {
-        if (ldr) delete[] ldr;
-        if (hdr) delete[] hdr;
-    }
-};
+bool is_hdr_filename(const std::string& filename);
 
 ///
-/// Initializes an image
+/// Loads an ldr image.
 ///
-YIMG_API simage* make_image(int width, int height, int ncomp, bool hdr);
+ym::image4b load_image4b(const std::string& filename);
 
 ///
-/// Removes the hdr buffer from the image.
+/// Loads an hdr image.
 ///
-YIMG_API float* release_hdr(simage* img);
+ym::image4f load_image4f(const std::string& filename);
 
 ///
-/// Removes the ldr buffer from the image.
+/// Saves an ldr image.
 ///
-YIMG_API byte* release_ldr(simage* img);
+bool save_image4b(const std::string& filename, const ym::image4b& img);
 
 ///
-/// Loads an image. Uses extension to determine which format to load.
-/// Suppoted formats are PNG, JPG, HDR.
+/// Saves an hdr image.
 ///
-YIMG_API simage* load_image(const std::string& filename);
+bool save_image4f(const std::string& filename, const ym::image4f& img);
 
 ///
-/// Loads an image. Unwrap params compared to previous one.
+/// Loads an ldr image.
 ///
-YIMG_API void load_image(const std::string& filename, int& w, int& h,
-    int& ncomp, float*& hdr, byte*& ldr);
+std::vector<byte> load_image(
+    const std::string& filename, int& w, int& h, int& ncomp);
 
 ///
-/// Loads an image flipping Y.
+/// Loads an hdr image.
 ///
-YIMG_API simage* load_image_flipy(const std::string& filename);
+std::vector<float> load_imagef(
+    const std::string& filename, int& w, int& h, int& ncomp);
+
+///
+/// Saves an ldr image. Uses extension to determine which format to load.
+/// Suppoted formats are PNG.
+///
+bool save_image(const std::string& filename, int width, int height, int ncomp,
+    const byte* ldr);
+
+///
+/// Saves an hdr image. Uses extension to determine which format to load.
+/// Suppoted formats are HDR.
+///
+bool save_imagef(const std::string& filename, int width, int height, int ncomp,
+    const float* hdr);
 
 ///
 /// Loads an image from memory.
 ///
-YIMG_API simage* load_image_from_memory(
-    const std::string& fmt, byte* data, int length);
+std::vector<byte> load_image_from_memory(const std::string& filename,
+    const byte* data, int length, int& w, int& h, int& ncomp);
 
 ///
-/// Saves an image. Uses extension and image content to determine
-/// which format to save to. Suppoted formats are PNG, HDR.
+/// Loads an image from memory.
 ///
-YIMG_API void save_image(const std::string& filename, const simage* img);
+std::vector<float> load_imagef_from_memory(const std::string& filename,
+    const byte* data, int length, int& w, int& h, int& ncomp);
 
 ///
-/// Saves an image. Unwrap params compared to previous one.
+/// Resize image.
 ///
-YIMG_API void save_image(const std::string& filename, int width, int height,
-    int ncomp, const float* hdr, const byte* ldr);
-
-//
-// Resize an image. If width or height are less than 0, they are set
-// automatically to maintain aspect ratio.
-//
-YIMG_API simage* resize_image(const simage* img, int res_width, int res_height);
-
-//
-// Resize image. Unwrap params compared to previous one.
-//
-YIMG_API void resize_image(int width, int height, int ncomp, const float* hdr,
-    const byte* ldr, int& res_width, int& res_height, float*& res_hdr,
-    byte*& res_ldr);
-
-//
-// Tone mapping configurations
-//
-enum struct tonemap_type { def = 0, linear, srgb, gamma, filmic };
+void resize_image(int width, int height, int ncomp, const float* img,
+    int res_width, int res_height, float* res_img);
 
 ///
-/// Apply tone mapping operator to a pixel.
+/// Resize image.
 ///
-YIMG_API byte3 tonemap_pixel(
-    const float3& hdr, float exposure, tonemap_type tm, float gamma);
+void resize_image(int width, int height, int ncomp, const byte* img,
+    int res_width, int res_height, byte* res_img);
 
 ///
-/// Apply tone mapping operator to a pixel.
+/// Resize image.
 ///
-YIMG_API byte4 tonemap_pixel(
-    const float4& hdr, float exposure, tonemap_type tm, float gamma);
+void resize_image(int width, int height, int ncomp,
+    const std::vector<float>& img, int res_width, int res_height,
+    std::vector<float>& res_img);
 
 ///
-/// Tone mapping HDR to LDR images.
+/// Resize image.
 ///
-YIMG_API simage* tonemap_image(
-    simage* img, float exposure, tonemap_type tm, float gamma);
+void resize_image(int width, int height, int ncomp,
+    const std::vector<byte>& img, int res_width, int res_height,
+    std::vector<byte>& res_img);
 
 ///
-/// Tone mapping HDR to LDR images.
+/// Filter for resizing
 ///
-YIMG_API void tonemap_image(int width, int height, int ncomp, const float* hdr,
-    byte* ldr, float exposure, tonemap_type tm, float gamma);
-}  // namespace
+enum struct resize_filter {
+    /// default
+    def = 0,
+    /// box filter
+    box = 1,
+    /// triangle filter
+    triangle = 2,
+    /// cubic spline
+    cubic_spline = 3,
+    /// Catmull-Rom interpolating sline
+    catmull_rom = 4,
+    /// Mitchel-Netrevalli filter with B=1/3, C=1/3
+    mitchell = 5
+};
 
-// -----------------------------------------------------------------------------
-// INCLUDE FOR HEADER-ONLY MODE
-// -----------------------------------------------------------------------------
+///
+/// Edge mode for resizing
+///
+enum struct resize_edge {
+    /// default
+    def = 0,
+    /// clamp
+    clamp = 1,
+    /// reflect
+    reflect = 2,
+    /// wrap
+    wrap = 3,
+    /// zero
+    zero = 4
+};
 
-#ifdef YIMG_INLINE
-#include "yocto_img.cpp"
-#endif
+///
+/// Resize image.
+///
+void resize_image(const ym::image4f& img, ym::image4f& res_img,
+    resize_filter filer = resize_filter::def,
+    resize_edge edge = resize_edge::def, bool premultiplied_alpha = true);
+
+///
+/// Resize image.
+///
+void resize_image(const ym::image4b& img, ym::image4b& res_img,
+    resize_filter filer = resize_filter::def,
+    resize_edge edge = resize_edge::def, bool premultiplied_alpha = true);
+
+}  // namespace yimg
 
 #endif

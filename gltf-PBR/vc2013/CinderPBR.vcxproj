@@ -83,7 +83,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\include;"..\..\..\Cinder\include";..\..\..\Cinder\blocks\Cinder-ImGui\lib\imgui;..\..\..\Cinder\blocks\Cinder-ImGui\include;..\..\..\Cinder\blocks\Cinder-VNM\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\include;"..\..\..\Cinder\include";..\..\..\Cinder\blocks\Cinder-ImGui\lib\imgui;..\..\..\Cinder\blocks\Cinder-ImGui\include;..\..\..\Cinder\blocks\Cinder-VNM\include;..\..\..\Cinder\blocks;</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>YGL_NO_STBIMAGE;WIN32;_WIN32_WINNT=0x0601;_WINDOWS;NOMINMAX;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -110,7 +110,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\include;"..\..\..\Cinder\include";..\..\..\Cinder\blocks\Cinder-ImGui\lib\imgui;..\..\..\Cinder\blocks\Cinder-ImGui\include;..\..\..\Cinder\blocks\Cinder-VNM\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\include;"..\..\..\Cinder\include";..\..\..\Cinder\blocks\Cinder-ImGui\lib\imgui;..\..\..\Cinder\blocks\Cinder-ImGui\include;..\..\..\Cinder\blocks\Cinder-VNM\include;..\..\..\Cinder\blocks;</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>YGL_NO_STBIMAGE;WIN32;_WIN32_WINNT=0x0601;_WINDOWS;NOMINMAX;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -136,7 +136,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\include;"..\..\..\Cinder\include";..\..\..\Cinder\blocks\Cinder-ImGui\lib\imgui;..\..\..\Cinder\blocks\Cinder-ImGui\include;..\..\..\Cinder\blocks\Cinder-VNM\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\include;"..\..\..\Cinder\include";..\..\..\Cinder\blocks\Cinder-ImGui\lib\imgui;..\..\..\Cinder\blocks\Cinder-ImGui\include;..\..\..\Cinder\blocks\Cinder-VNM\include;..\..\..\Cinder\blocks;</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>YGL_NO_STBIMAGE;WIN32;_WIN32_WINNT=0x0601;_WINDOWS;NOMINMAX;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <PrecompiledHeader />
@@ -165,7 +165,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\include;"..\..\..\Cinder\include";..\..\..\Cinder\blocks\Cinder-ImGui\lib\imgui;..\..\..\Cinder\blocks\Cinder-ImGui\include;..\..\..\Cinder\blocks\Cinder-VNM\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\include;"..\..\..\Cinder\include";..\..\..\Cinder\blocks\Cinder-ImGui\lib\imgui;..\..\..\Cinder\blocks\Cinder-ImGui\include;..\..\..\Cinder\blocks\Cinder-VNM\include;..\..\..\Cinder\blocks;</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>YGL_NO_STBIMAGE;WIN32;_WIN32_WINNT=0x0601;_WINDOWS;NOMINMAX;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <PrecompiledHeader>
@@ -200,10 +200,12 @@
   <ItemGroup />
   <ItemGroup />
   <ItemGroup>
-    <ClInclude Include="..\include\nodes\Node.h" />
-    <ClInclude Include="..\include\nodes\Node2D.h" />
-    <ClInclude Include="..\include\nodes\Node3D.h" />
-    <ClInclude Include="..\include\nodes\NodeGL.h" />
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-Nodes\include\Node.h" />
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-Nodes\include\Node2D.h" />
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-Nodes\include\Node3D.h" />
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-Nodes\include\NodeExt.h" />
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-Nodes\include\NodeGL.h" />
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-Nodes\include\NodeRectangle.h" />
     <ClInclude Include="..\include\Resources.h" />
     <ClInclude Include="..\include\item.def" />
     <ClInclude Include="..\..\..\Cinder\blocks\Cinder-ImGui\include\CinderImGui.h" />
@@ -223,9 +225,10 @@
     <ClInclude Include="..\include\yocto\yocto_gltf.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\include\nodes\Node.cpp" />
-    <ClCompile Include="..\include\nodes\Node2D.cpp" />
-    <ClCompile Include="..\include\nodes\Node3D.cpp" />
+    <ClCompile Include="..\..\..\Cinder\blocks\Cinder-Nodes\src\Node.cpp" />
+    <ClCompile Include="..\..\..\Cinder\blocks\Cinder-Nodes\src\Node2D.cpp" />
+    <ClCompile Include="..\..\..\Cinder\blocks\Cinder-Nodes\src\Node3D.cpp" />
+    <ClCompile Include="..\..\..\Cinder\blocks\Cinder-Nodes\src\NodeRectangle.cpp" />
     <ClCompile Include="..\include\yocto\yocto_gltf.cpp" />
     <ClCompile Include="..\src\CinderPBRApp.cpp" />
     <ClCompile Include="..\..\..\Cinder\blocks\Cinder-ImGui\src\CinderImGui.cpp" />

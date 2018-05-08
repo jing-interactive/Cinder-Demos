@@ -29,12 +29,13 @@
 #include "yocto_img.h"
 
 #include <cmath>
-
-#ifndef YIMG_NO_STBIMAGE
+#include <map>
+#include <memory>
 
 #ifndef _WIN32
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-function"
+#pragma GCC diagnostic ignored "-Wunused-variable"
 #ifndef __clang__
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 #endif
@@ -56,276 +57,203 @@
 #pragma GCC diagnostic pop
 #endif
 
-#endif
+#define TINYEXR_IMPLEMENTATION
+#include "ext/tinyexr.h"
 
 namespace yimg {
-
-//
-// Initializes an image
-//
-YIMG_API simage* make_image(int width, int height, int ncomp, bool hdr) {
-    return new simage(width, height, ncomp, hdr);
-}
-
 //
 // Get extension (including '.').
 //
-static inline std::string _get_extension(const std::string& filename) {
+std::string get_extension(const std::string& filename) {
     auto pos = filename.rfind('.');
     if (pos == std::string::npos) return "";
     return filename.substr(pos);
 }
 
 //
-// Loads an image
+// Check if an image is HDR based on filename
 //
-YIMG_API simage* load_image(const std::string& filename) {
-    auto img = new simage();
-    if (_get_extension(filename) == ".hdr") {
-        img->hdr = stbi_loadf(
-            filename.c_str(), &img->width, &img->height, &img->ncomp, 0);
+bool is_hdr_filename(const std::string& filename) {
+    auto ext = get_extension(filename);
+    return ext == ".hdr" || ext == ".exr";
+}
+
+//
+// Loads an ldr image.
+//
+ym::image4b load_image4b(const std::string& filename) {
+    auto w = 0, h = 0, c = 0;
+    auto pixels =
+        std::unique_ptr<byte>(stbi_load(filename.c_str(), &w, &h, &c, 4));
+    if (!pixels) return {};
+    return ym::image4b(w, h, (ym::vec4b*)pixels.get());
+}
+
+//
+// Loads an hdr image.
+//
+ym::image4f load_image4f(const std::string& filename) {
+    auto ext = get_extension(filename);
+    auto w = 0, h = 0, c = 0;
+    auto pixels = std::unique_ptr<float>(nullptr);
+    if (ext == ".exr") {
+        auto pixels_ = (float*)nullptr;
+        if (!LoadEXR(&pixels_, &w, &h, filename.c_str(), nullptr))
+            pixels = std::unique_ptr<float>(pixels_);
     } else {
-        img->ldr = stbi_load(
-            filename.c_str(), &img->width, &img->height, &img->ncomp, 0);
+        pixels =
+            std::unique_ptr<float>(stbi_loadf(filename.c_str(), &w, &h, &c, 4));
     }
-    if (!img->ldr && !img->hdr) {
-        delete img;
-        throw std::runtime_error("cannot load image " + filename);
+    if (!pixels) return {};
+    return ym::image4f(w, h, (ym::vec4f*)pixels.get());
+}
+
+//
+// Saves an ldr image.
+//
+bool save_image4b(const std::string& filename, const ym::image4b& img) {
+    if (get_extension(filename) == ".png") {
+        return stbi_write_png(filename.c_str(), img.width(), img.height(), 4,
+            (byte*)img.data(), img.width() * 4);
+    } else if (get_extension(filename) == ".jpg") {
+        return stbi_write_jpg(filename.c_str(), img.width(), img.height(), 4,
+            (byte*)img.data(), 75);
+    } else {
+        return false;
     }
-    return img;
+}
+
+//
+// Saves an hdr image.
+//
+bool save_image4f(const std::string& filename, const ym::image4f& img) {
+    if (get_extension(filename) == ".hdr") {
+        return stbi_write_hdr(
+            filename.c_str(), img.width(), img.height(), 4, (float*)img.data());
+    } else if (get_extension(filename) == ".exr") {
+        return !SaveEXR(
+            (float*)img.data(), img.width(), img.height(), 4, filename.c_str());
+    } else {
+        return false;
+    }
 }
 
 //
 // Loads an image
 //
-YIMG_API void load_image(const std::string& filename, int& width, int& height,
-    int& ncomp, float*& hdr, byte*& ldr) {
-    if (_get_extension(filename) == ".hdr") {
-        hdr = stbi_loadf(filename.c_str(), &width, &height, &ncomp, 0);
-    } else {
-        ldr = stbi_load(filename.c_str(), &width, &height, &ncomp, 0);
-    }
-    if (!hdr && !ldr) {
-        throw std::runtime_error("cannot load image " + filename);
-    }
+std::vector<float> load_imagef(
+    const std::string& filename, int& width, int& height, int& ncomp) {
+    auto pixels = stbi_loadf(filename.c_str(), &width, &height, &ncomp, 0);
+    if (!pixels) return {};
+    auto ret = std::vector<float>(pixels, pixels + width * height * ncomp);
+    free(pixels);
+    return ret;
 }
 
 //
-// Loads an image flipping Y.
+// Loads an image
 //
-YIMG_API simage* load_image_flipy(const std::string& filename) {
-    stbi_set_flip_vertically_on_load(true);
-    auto img = load_image(filename);
-    stbi_set_flip_vertically_on_load(false);
-    return img;
+std::vector<byte> load_image(
+    const std::string& filename, int& width, int& height, int& ncomp) {
+    auto pixels = stbi_load(filename.c_str(), &width, &height, &ncomp, 0);
+    if (!pixels) return {};
+    auto ret = std::vector<byte>(pixels, pixels + width * height * ncomp);
+    free(pixels);
+    return ret;
 }
 
 //
 // Loads an image from memory.
 //
-YIMG_API simage* load_image_from_memory(
-    const std::string& fmt, byte* data, int length) {
-    auto img = new simage();
-    if (fmt == "hdr") {
-        img->hdr = stbi_loadf_from_memory(
-            data, length, &img->width, &img->height, &img->ncomp, 0);
+std::vector<float> load_imagef_from_memory(const std::string& filename,
+    const byte* data, int length, int& width, int& height, int& ncomp) {
+    auto pixels =
+        stbi_loadf_from_memory(data, length, &width, &height, &ncomp, 0);
+    if (!pixels) return {};
+    auto ret = std::vector<float>(pixels, pixels + width * height * ncomp);
+    free(pixels);
+    return ret;
+}
+
+//
+// Loads an image from memory.
+//
+std::vector<byte> load_image_from_memory(const std::string& filename,
+    const byte* data, int length, int& width, int& height, int& ncomp) {
+    auto pixels =
+        stbi_load_from_memory(data, length, &width, &height, &ncomp, 0);
+    if (!pixels) return {};
+    auto ret = std::vector<byte>(pixels, pixels + width * height * ncomp);
+    free(pixels);
+    return ret;
+}
+
+//
+// Saves an image
+//
+bool save_imagef(const std::string& filename, int width, int height, int ncomp,
+    const float* hdr) {
+    if (get_extension(filename) == ".hdr") {
+        return stbi_write_hdr(filename.c_str(), width, height, ncomp, hdr);
     } else {
-        img->ldr = stbi_load_from_memory(
-            data, length, &img->width, &img->height, &img->ncomp, 0);
+        return false;
     }
-    if (!img->ldr && !img->hdr) {
-        delete img;
-        throw std::runtime_error(
-            "cannot load image from memory with format " + fmt);
-    }
-    return img;
 }
 
 //
 // Saves an image
 //
-YIMG_API void save_image(const std::string& filename, const simage* img) {
-    save_image(
-        filename, img->width, img->height, img->ncomp, img->hdr, img->ldr);
-}
-
-//
-// Saves an image
-//
-YIMG_API void save_image(const std::string& filename, int width, int height,
-    int ncomp, const float* hdr, const byte* ldr) {
-    if (_get_extension(filename) == ".hdr") {
-        if (!hdr) throw std::invalid_argument("hdr data required");
-        stbi_write_hdr(filename.c_str(), width, height, ncomp, hdr);
-    } else if (_get_extension(filename) == ".png") {
-        if (!ldr) throw std::invalid_argument("ldr data required");
-        stbi_write_png(
+bool save_image(const std::string& filename, int width, int height, int ncomp,
+    const byte* ldr) {
+    if (get_extension(filename) == ".png") {
+        return stbi_write_png(
             filename.c_str(), width, height, ncomp, ldr, width * ncomp);
+    } else if (get_extension(filename) == ".jpg") {
+        return stbi_write_jpg(filename.c_str(), width, height, ncomp, ldr, 75);
     } else {
-        throw std::invalid_argument("unsupported output extension " + filename);
+        return false;
     }
 }
 
-//
-// Removes the hdr buffer from the image.
-//
-YIMG_API float* release_hdr(simage* img) {
-    auto ptr = img->hdr;
-    img->hdr = nullptr;
-    return ptr;
+static const auto filter_map = std::map<resize_filter, stbir_filter>{
+    {resize_filter::def, STBIR_FILTER_DEFAULT},
+    {resize_filter::box, STBIR_FILTER_BOX},
+    {resize_filter::triangle, STBIR_FILTER_TRIANGLE},
+    {resize_filter::cubic_spline, STBIR_FILTER_CUBICBSPLINE},
+    {resize_filter::catmull_rom, STBIR_FILTER_CATMULLROM},
+    {resize_filter::mitchell, STBIR_FILTER_MITCHELL}};
+
+static const auto edge_map = std::map<resize_edge, stbir_edge>{
+    {resize_edge::def, STBIR_EDGE_CLAMP},
+    {resize_edge::clamp, STBIR_EDGE_CLAMP},
+    {resize_edge::reflect, STBIR_EDGE_REFLECT},
+    {resize_edge::wrap, STBIR_EDGE_WRAP}, {resize_edge::zero, STBIR_EDGE_ZERO}};
+
+///
+/// Resize image.
+///
+void resize_image(const ym::image4f& img, ym::image4f& res_img,
+    resize_filter filter, resize_edge edge, bool premultiplied_alpha) {
+    stbir_resize_float_generic((float*)img.data(), img.width(), img.height(),
+        sizeof(ym::vec4f) * img.width(), (float*)res_img.data(),
+        res_img.width(), res_img.height(), sizeof(ym::vec4f) * res_img.width(),
+        4, 3, (premultiplied_alpha) ? STBIR_FLAG_ALPHA_PREMULTIPLIED : 0,
+        edge_map.at(edge), filter_map.at(filter), STBIR_COLORSPACE_LINEAR,
+        nullptr);
 }
 
-//
-// Removes the ldr buffer from the image.
-//
-YIMG_API byte* release_ldr(simage* img) {
-    auto ptr = img->ldr;
-    img->ldr = nullptr;
-    return ptr;
+///
+/// Resize image.
+///
+void resize_image(const ym::image4b& img, ym::image4b& res_img,
+    resize_filter filter, resize_edge edge, bool premultiplied_alpha) {
+    stbir_resize_uint8_generic((unsigned char*)img.data(), img.width(),
+        img.height(), sizeof(ym::vec4b) * img.width(),
+        (unsigned char*)res_img.data(), res_img.width(), res_img.height(),
+        sizeof(ym::vec4b) * res_img.width(), 4, 3,
+        (premultiplied_alpha) ? STBIR_FLAG_ALPHA_PREMULTIPLIED : 0,
+        edge_map.at(edge), filter_map.at(filter), STBIR_COLORSPACE_LINEAR,
+        nullptr);
 }
 
-//
-// Resize image.
-//
-YIMG_API simage* resize_image(
-    const simage* img, int res_width, int res_height) {
-    auto res = new simage();
-    resize_image(img->width, img->height, img->ncomp, img->hdr, img->ldr,
-        res->width, res->height, res->hdr, res->ldr);
-    return res;
-}
-
-//
-// Resize image.
-//
-YIMG_API void resize_image(int width, int height, int ncomp, const float* hdr,
-    const byte* ldr, int& res_width, int& res_height, float*& res_hdr,
-    byte*& res_ldr) {
-    if (res_width < 0 && res_height < 0)
-        throw std::invalid_argument("at least argument should be >0");
-    if (res_width < 0)
-        res_width = (int)std::round(width * (res_height / (float)height));
-    if (res_height < 0)
-        res_height = (int)std::round(height * (res_width / (float)width));
-    if (hdr) {
-        res_hdr = new float[width * height * ncomp];
-        auto img_stride = sizeof(float) * width * ncomp;
-        auto res_stride = sizeof(float) * res_width * ncomp;
-        stbir_resize_float(hdr, width, height, img_stride, res_hdr, res_width,
-            res_height, res_stride, ncomp);
-    } else {
-        res_ldr = new byte[width * height * ncomp];
-        auto img_stride = sizeof(byte) * width * ncomp;
-        auto res_stride = sizeof(byte) * res_width * ncomp;
-        stbir_resize_uint8_srgb(ldr, width, height, img_stride, res_ldr,
-            res_width, res_height, res_stride, ncomp,
-            (ncomp == 4) ? 3 : STBIR_ALPHA_CHANNEL_NONE, 0);
-    }
-}
-
-//
-// Tone mapping HDR to LDR images.
-//
-YIMG_API simage* tonemap_image(
-    simage* hdr, float exposure, tonemap_type tm, float gamma) {
-    if (!hdr->hdr) throw std::invalid_argument("tonemap hdr only");
-    auto ldr = make_image(hdr->width, hdr->height, hdr->ncomp, false);
-    tonemap_image(hdr->width, hdr->height, hdr->ncomp, hdr->hdr, ldr->ldr,
-        exposure, tm, gamma);
-    return ldr;
-}
-
-//
-// float to byte
-//
-static inline byte _float_to_byte(float x) {
-    return std::max(0, std::min(int(x * 256), 255));
-}
-
-#if 1
-//
-// filmic curve
-// https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/
-//
-static inline float _filmic_tonemapping(float x) {
-    // rescaler ange
-    x *= 2.05f;
-    float a = 2.51f;
-    float b = 0.03f;
-    float c = 2.43f;
-    float d = 0.59f;
-    float e = 0.14f;
-    auto y = ((x * (a * x + b)) / (x * (c * x + d) + e));
-    return std::pow(std::min(1.0f, std::max(0.0f, y)), 1 / 2.2f);
-}
-#else
-static inline float _filmic_tonemapping(float x) {
-    auto y =
-        (x * (x * (x * (x * 2708.7142 + 6801.1525) + 1079.5474) + 1.1614649) -
-            0.00004139375) /
-        (x * (x * (x * (x * 983.38937 + 4132.0662) + 2881.6522) + 128.35911) +
-            1.0);
-    return (float)std::max(y, 0.0);
-}
-#endif
-
-//
-// Apply tone mapping operator to a pixel.
-//
-YIMG_API byte3 tonemap_pixel(
-    const float3& hdr, float exposure, tonemap_type tm, float gamma) {
-    auto s = std::pow(2, exposure);
-    switch (tm) {
-        case tonemap_type::linear:
-            return {_float_to_byte(s * hdr[0]), _float_to_byte(s * hdr[1]),
-                _float_to_byte(s * hdr[2])};
-        case tonemap_type::def:
-        case tonemap_type::srgb: {
-            return {_float_to_byte(std::pow(s * hdr[0], 1 / 2.2f)),
-                _float_to_byte(std::pow(s * hdr[1], 1 / 2.2f)),
-                _float_to_byte(std::pow(s * hdr[2], 1 / 2.2f))};
-        } break;
-        case tonemap_type::gamma: {
-            return {_float_to_byte(std::pow(s * hdr[0], 1 / gamma)),
-                _float_to_byte(std::pow(s * hdr[1], 1 / gamma)),
-                _float_to_byte(std::pow(s * hdr[2], 1 / gamma))};
-        } break;
-        case tonemap_type::filmic: {
-            return {_float_to_byte(_filmic_tonemapping(s * hdr[0])),
-                _float_to_byte(_filmic_tonemapping(s * hdr[1])),
-                _float_to_byte(_filmic_tonemapping(s * hdr[2]))};
-        } break;
-    }
-}
-
-//
-// Apply tone mapping operator to a pixel.
-//
-YIMG_API byte4 tonemap_pixel(
-    const float4& hdr, float exposure, tonemap_type tm, float gamma) {
-    auto ldr = byte4();
-    (byte3&)ldr = tonemap_pixel((const float3&)hdr, exposure, tm, gamma);
-    ldr[3] = _float_to_byte(hdr[3]);
-    return ldr;
-}
-
-//
-// Tone mapping HDR to LDR images.
-//
-YIMG_API void tonemap_image(int width, int height, int ncomp, const float* hdr,
-    byte* ldr, float exposure, tonemap_type tm, float gamma) {
-    if (ncomp < 3 || ncomp > 4)
-        throw std::invalid_argument("tonemap supports 3-4 channels only");
-    for (auto j = 0; j < height; j++) {
-        for (auto i = 0; i < width; i++) {
-            auto h = hdr + (j * width + i) * ncomp;
-            auto l = ldr + (j * width + i) * ncomp;
-            if (ncomp == 3)
-                *(byte3*)l = tonemap_pixel(*(float3*)h, exposure, tm, gamma);
-            else
-                *(byte4*)l = tonemap_pixel(*(float4*)h, exposure, tm, gamma);
-        }
-    }
-}
-
-}  // namespace
+}  // namespace yimg
