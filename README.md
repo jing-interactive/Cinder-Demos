@@ -13,7 +13,7 @@ Cinder blocks that I heavily use:
 
 Stand-alone Cinder projects:
 
-* [ShaderComposer](https://github.com/jing-interactive/ShaderComposer) - Make shader-composing fun again!
+* [RenderDog](https://github.com/jing-interactive/RenderDog) - Make shader-composing fun again!
 * [Live4D](https://github.com/jing-interactive/Live4D) - Point cloud streaming system for devices supported by Cinder-DepthSensor.
 * [AirTouch](https://github.com/jing-interactive/AirTouch) - multi touch system for Kinect V1 & V2, Intel RealSense devices and OpenNI-compatible sensors.
 * [FaceVFX](https://github.com/jing-interactive/FaceVFX) - cross-platform face swap application.
