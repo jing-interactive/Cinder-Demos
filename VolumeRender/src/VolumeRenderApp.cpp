@@ -11,6 +11,21 @@ using namespace ci;
 using namespace ci::app;
 using namespace std;
 
+Surface createSolid(int width, int height, Color8u c)
+{
+    Surface result(width, height, false);
+    Surface::Iter it = result.getIter();
+    while (it.line()) {
+        while (it.pixel()) {
+            it.r() = c.r;
+            it.g() = c.g;
+            it.b() = c.b;
+        }
+    }
+
+    return result;
+}
+
 class VolumeRenderApp : public App
 {
   public:
@@ -38,20 +53,38 @@ class VolumeRenderApp : public App
         mGlslProg = am::glslProg(VS_NAME, FS_NAME);
         mGlslProg->uniform("uTex0", 0);
         mGlslProg->uniform("uTex1", 1);
-        mGlslProg->uniform("uTex2", 2);
-        mGlslProg->uniform("uTex3", 3);
+
+        {
+            // GL_TEXTURE_3D
+            mTex3d = gl::Texture3d::create(256, 256, 3);
+            mTex3d->update(createSolid(mTex3d->getWidth(), mTex3d->getHeight(), Color8u(255, 0, 0)), 0);
+            mTex3d->update(createSolid(mTex3d->getWidth(), mTex3d->getHeight(), Color8u(0, 255, 0)), 1);
+            mTex3d->update(createSolid(mTex3d->getWidth(), mTex3d->getHeight(), Color8u(0, 0, 255)), 2);
+            mTex3d->setWrapR(GL_REPEAT);
+
+            mShader3d = gl::GlslProg::create(loadAsset("shader.vert"), loadAsset("shader_3d.frag"));
+            mShader3d->uniform("uTex0", 0);
+
+            // setup batches
+            mTex3dBatch = gl::Batch::create(geom::Rect(Rectf(100, 100, 300, 300)), mShader3d);
+        }
 
         getWindow()->getSignalDraw().connect([&] {
-            gl::setMatrices( mCam );
             gl::clear();
         
-            gl::ScopedTextureBind tex0(am::texture2d(TEX0_NAME), 0);
-            gl::ScopedTextureBind tex1(am::texture2d(TEX1_NAME), 1);
-            gl::ScopedTextureBind tex2(am::texture2d(TEX2_NAME), 2);
-            gl::ScopedTextureBind tex3(am::texture2d(TEX3_NAME), 3);
-            gl::ScopedGlslProg glsl(mGlslProg);
+            if (false)
+            {
+                gl::setMatrices(mCam);
+                gl::ScopedTextureBind tex0(am::texture3d(TEX0_NAME), 0);
+                gl::ScopedTextureBind tex1(am::texture3d(TEX1_NAME), 0);
+                gl::ScopedGlslProg glsl(mGlslProg);
 
-            gl::draw(am::vboMesh(MESH_NAME));
+                gl::draw(am::vboMesh(MESH_NAME));
+            }
+
+            mTex3d->bind();
+            mTex3dBatch->getGlslProg()->uniform("uTexCoord", vec3(0.5, 0.5, getElapsedSeconds() / 2));
+            mTex3dBatch->draw();
         });
     }
     
@@ -59,6 +92,10 @@ private:
     CameraPersp         mCam;
     CameraUi            mCamUi;
     gl::GlslProgRef     mGlslProg;
+
+    gl::Texture3dRef	mTex3d;
+    gl::GlslProgRef		mShader3d;
+    gl::BatchRef		mTex3dBatch;
 };
 
 CINDER_APP( VolumeRenderApp, RendererGl, [](App::Settings* settings) {
