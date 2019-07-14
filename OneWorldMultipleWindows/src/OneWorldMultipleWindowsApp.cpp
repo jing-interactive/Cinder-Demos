@@ -126,8 +126,21 @@ void OneWorldMultipleWindowsApp::keyDown( KeyEvent event )
 		break;
 	default:
 		// Create a new window
-		app::WindowRef newWindow = createWindow( Window::Format().size( 640, 480 ) );
+        auto fmt = Window::Format().size(640, 480);
+#if 0
+        RendererRef renderer(new RendererGl());
+        fmt.renderer(renderer);
+#endif
+		app::WindowRef newWindow = createWindow( fmt );
 		newWindow->setTitle( "OneWorldMultipleWindowsApp" );
+        auto rr = newWindow->getRenderer();
+        auto ctx = gl::context();
+        auto pData = ctx->getPlatformData().get();
+#if defined( CINDER_MSW )
+        auto mswData = (gl::PlatformDataMsw*)(pData);
+        CI_LOG_I("DC: " << mswData->mDc);
+        CI_LOG_I("RC: " << mswData->mGlrc);
+#endif
 		break;
 	}
 }
