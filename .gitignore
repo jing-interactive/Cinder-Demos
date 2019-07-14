@@ -255,3 +255,9 @@ MiniConfig.xml
 *.db
 *.opendb
 imgui.ini
+
+bin/
+Debug/
+Release/
+*.ptx
+*.mp3
