@@ -10,8 +10,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{0BC6EF9D-9F2A-4F96-B4BA-D34D9CCD665F}</ProjectGuid>
-    <RootNamespace>FlightThroughCamera</RootNamespace>
+    <ProjectGuid>{D8BFCCEE-34A7-46BB-83AB-0FC3533429CD}</ProjectGuid>
+    <RootNamespace>CameraFovTest</RootNamespace>
     <Keyword>Win32Proj</Keyword>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
@@ -61,7 +61,7 @@
     </ResourceCompile>
     <Link>
       <AdditionalDependencies>cinder.lib;OpenGL32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>"..\..\..\Cinder\lib\msw\$(PlatformTarget)";"..\..\..\Cinder\lib\msw\$(PlatformTarget)\$(Configuration)\$(PlatformToolset)\"</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>"..\..\..\Cinder\lib\msw\$(PlatformTarget)";"..\..\..\Cinder\lib\msw\$(PlatformTarget)\$(Configuration)\$(PlatformToolset)"</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -88,7 +88,7 @@
     </ResourceCompile>
     <Link>
       <AdditionalDependencies>cinder.lib;OpenGL32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>"..\..\..\Cinder\lib\msw\$(PlatformTarget)\";"..\..\..\Cinder\lib\msw\$(PlatformTarget)\$(Configuration)\$(PlatformToolset)\"</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>"..\..\..\Cinder\lib\msw\$(PlatformTarget)";"..\..\..\Cinder\lib\msw\$(PlatformTarget)\$(Configuration)\$(PlatformToolset)"</AdditionalLibraryDirectories>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <GenerateMapFile>true</GenerateMapFile>
       <SubSystem>Windows</SubSystem>
@@ -106,19 +106,26 @@
   <ItemGroup>
     <ClInclude Include="..\include\Resources.h" />
     <ClInclude Include="..\include\item.def" />
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\AnsiToUtf.h" />
     <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\AssetManager.h" />
     <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\CaptureHelper.h" />
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\CubemapRenderer.h" />
     <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\FontHelper.h" />
     <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\GlslParamsBuilder.h" />
     <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\GlslParamsBuilderImgui.h" />
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\LimitSingleInstance.h" />
     <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\MiniConfig.h" />
     <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\MiniConfigImgui.h" />
     <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\MotionHelper.h" />
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\NvOptimusEnablement.h" />
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\OscHelper.h" />
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\SharedMemory.h" />
     <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\StateMachine.h" />
     <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\TextureHelper.h" />
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\TuioHelper.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\FlightThroughCameraApp.cpp" />
+    <ClCompile Include="..\src\CameraFovTestApp.cpp" />
     <ClCompile Include="..\..\..\Cinder\blocks\Cinder-VNM\src\AssetManager.cpp" />
     <ClCompile Include="..\..\..\Cinder\blocks\Cinder-VNM\src\MiniConfig.cpp" />
   </ItemGroup>
