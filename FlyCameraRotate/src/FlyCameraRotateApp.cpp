@@ -40,20 +40,19 @@ struct FlyCameraRotateApp : public App
 
         getWindow()->getSignalDraw().connect([&] {
 
-            float pitchAmount = std::sin(app::getElapsedSeconds()) * 0.5f;
-            float yawAmount = std::cos(app::getElapsedSeconds() * 0.5f) * 0.5f;
-            float rollAmount = std::cos(app::getElapsedSeconds() * 0.3f) * 0.5f;
-
             quat pitchYawRoll = glm::quat() * glm::angleAxis(toRadians(PITCH), vec3(1.0f, 0.0f, 0.0f))
                 * glm::angleAxis(toRadians(YAW), vec3(0.0f, 1.0f, 0.0f))
                 * glm::angleAxis(toRadians(ROLL), vec3(0.0f, 0.0f, 1.0f));
-            mCam.setOrientation(pitchYawRoll);
 
             gl::setMatrices( mCam );
             gl::clear();
         
             gl::ScopedGlslProg glsl(mGlslProg);
 
+            gl::ScopedModelMatrix scp;
+            auto mat = glm::toMat4(pitchYawRoll);
+            gl::setModelMatrix(mat);
+            gl::drawCoordinateFrame(2);
             gl::draw(am::vboMesh(MESH_NAME));
         });
     }
