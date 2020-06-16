@@ -26,18 +26,12 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\FlyCameraRotateApp.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClInclude Include="..\include\Resources.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\include\item.def">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClCompile Include="..\src\FlyCameraRotateApp.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\Cinder\blocks\Cinder-VNM\src\AssetManager.cpp">
       <Filter>Blocks\vnm\src</Filter>
     </ClCompile>
@@ -98,6 +92,9 @@
     <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\TuioHelper.h">
       <Filter>Blocks\vnm\include</Filter>
     </ClInclude>
+    <ClCompile Include="..\src\EasyHookTestApp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\Resources.h">

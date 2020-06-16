@@ -13,6 +13,7 @@
     <ProjectGuid>{242D2208-0B2E-488C-9EA8-C35682616E5E}</ProjectGuid>
     <RootNamespace>EasyHookTest</RootNamespace>
     <Keyword>Win32Proj</Keyword>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
@@ -42,6 +43,12 @@
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</LinkIncremental>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>$(SolutionDir)..\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(SolutionDir)..\$(Configuration)\</OutDir>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
@@ -60,7 +67,7 @@
     </ResourceCompile>
     <Link>
       <AdditionalDependencies>cinder.lib;OpenGL32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>"..\..\..\Cinder\lib\msw\$(PlatformTarget)";"..\..\..\Cinder\lib\msw\$(PlatformTarget)\$(Configuration)\$(PlatformToolset)"</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>"..\..\..\Cinder\lib\msw\$(PlatformTarget)";"..\..\..\Cinder\lib\msw\$(PlatformTarget)\$(Configuration)\$(PlatformToolset)";$(SolutionDir)..\$(Configuration)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -87,7 +94,7 @@
     </ResourceCompile>
     <Link>
       <AdditionalDependencies>cinder.lib;OpenGL32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>"..\..\..\Cinder\lib\msw\$(PlatformTarget)";"..\..\..\Cinder\lib\msw\$(PlatformTarget)\$(Configuration)\$(PlatformToolset)"</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>"..\..\..\Cinder\lib\msw\$(PlatformTarget)";"..\..\..\Cinder\lib\msw\$(PlatformTarget)\$(Configuration)\$(PlatformToolset)";$(SolutionDir)..\$(Configuration)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <GenerateMapFile>true</GenerateMapFile>
       <SubSystem>Windows</SubSystem>
@@ -100,8 +107,6 @@
   <ItemGroup>
     <ResourceCompile Include="Resources.rc" />
   </ItemGroup>
-  <ItemGroup />
-  <ItemGroup />
   <ItemGroup>
     <ClInclude Include="..\include\Resources.h" />
     <ClInclude Include="..\include\item.def" />
@@ -130,5 +135,15 @@
     <ClCompile Include="..\..\..\Cinder\blocks\Cinder-VNM\src\MiniConfig.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="packages\EasyHookNativePackage.redist.2.7.7097\build\native\EasyHookNativePackage.redist.targets" Condition="Exists('packages\EasyHookNativePackage.redist.2.7.7097\build\native\EasyHookNativePackage.redist.targets')" />
+    <Import Project="packages\EasyHookNativePackage.2.7.7097\build\native\EasyHookNativePackage.targets" Condition="Exists('packages\EasyHookNativePackage.2.7.7097\build\native\EasyHookNativePackage.targets')" />
+  </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('packages\EasyHookNativePackage.redist.2.7.7097\build\native\EasyHookNativePackage.redist.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\EasyHookNativePackage.redist.2.7.7097\build\native\EasyHookNativePackage.redist.targets'))" />
+    <Error Condition="!Exists('packages\EasyHookNativePackage.2.7.7097\build\native\EasyHookNativePackage.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\EasyHookNativePackage.2.7.7097\build\native\EasyHookNativePackage.targets'))" />
+  </Target>
 </Project>
