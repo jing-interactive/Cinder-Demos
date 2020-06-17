@@ -18,7 +18,7 @@ class ShuffleMusicPlayerApp : public App
         log::makeLogger<log::LoggerFile>();
         createConfigUI({200, 200});
 
-        mCurrentVoice = am::voice("dioramaloop.mp3");
+        mCurrentVoice = am::voice(MUSIC_FILE);
         mCurrentVoice->start();
     
         getWindow()->getSignalKeyUp().connect([&](KeyEvent& event) {
@@ -27,6 +27,9 @@ class ShuffleMusicPlayerApp : public App
         
         getWindow()->getSignalDraw().connect([&] {
             gl::clear();
+
+            mCurrentVoice->setPan(PAN);
+            mCurrentVoice->setVolume(VOLUME);
         });
     }
     
