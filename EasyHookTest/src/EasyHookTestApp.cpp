@@ -51,26 +51,27 @@ typedef struct _D3DKMT_SUBMITCOMMAND
     D3DKMT_HANDLE* HistoryBufferArray;
 } D3DKMT_SUBMITCOMMAND;
 
-extern NTSTATUS D3DKMTSubmitCommand(const D3DKMT_SUBMITCOMMAND* Arg1);
-
+using FP = NTSTATUS (*)(const D3DKMT_SUBMITCOMMAND* Arg1);
+FP addr;
 NTSTATUS myD3DKMTSubmitCommand(const D3DKMT_SUBMITCOMMAND* Arg1)
 {
     cout << "\n****All your myD3DKMTSubmitCommand belong to us!\n\n";
-    return D3DKMTSubmitCommand(Arg1);
+    return addr(Arg1);
 }
 
 struct FlyCameraRotateApp : public App
 {
+    HOOK_TRACE_INFO hHook = { NULL }; // keep track of our hook
+
     void tryHook()
     {
-        HOOK_TRACE_INFO hHook = { NULL }; // keep track of our hook
         cout << "\n";
-        auto addr = GetProcAddress(GetModuleHandle(TEXT("gdi32")), "D3DKMTSubmitCommand");
+        addr = (FP)GetProcAddress(GetModuleHandle(TEXT("gdi32")), "D3DKMTSubmitCommand");
 
         // Install the hook
         NTSTATUS result = LhInstallHook(
             addr,
-            myBeepHook,
+            myD3DKMTSubmitCommand,
             NULL,
             &hHook);
         if (FAILED(result))
@@ -95,14 +96,8 @@ struct FlyCameraRotateApp : public App
         cout << "2. Beep after hook enabled.\n";
         Beep(500, 500);
 
-        cout << "Uninstall hook\n";
-        LhUninstallHook(&hHook);
-
         cout << "3. Beep after hook uninstalled\n";
         Beep(500, 500);
-
-        cout << "\n\nRestore ALL entry points of pending removals issued by LhUninstallHook()\n";
-        LhWaitForPendingRemovals();
     }
 
     void setup() override
@@ -124,7 +119,15 @@ struct FlyCameraRotateApp : public App
             mCam.setAspectRatio( getWindowAspectRatio() );
         });
 
-        getSignalCleanup().connect([&] { writeConfig(); });
+        getSignalCleanup().connect([&] { 
+            writeConfig();
+
+            cout << "Uninstall hook\n";
+            LhUninstallHook(&hHook);
+
+            cout << "\n\nRestore ALL entry points of pending removals issued by LhUninstallHook()\n";
+            LhWaitForPendingRemovals();
+        });
 
         getWindow()->getSignalKeyUp().connect([&](KeyEvent& event) {
             if (event.getCode() == KeyEvent::KEY_ESCAPE) quit();
