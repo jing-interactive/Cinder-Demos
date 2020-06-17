@@ -5,7 +5,8 @@
 #include "cinder/Log.h"
 
 #include "AssetManager.h"
-#include "MiniConfig.h"
+#include "MiniConfigImgui.h"
+#include "SceneConfigImgui.h"
 
 using namespace ci;
 using namespace ci::app;
@@ -21,7 +22,8 @@ struct FlyCameraRotateApp : public App
         mCam.lookAt(aabb.getMax() * 2.0f, aabb.getCenter());
         mCamUi = CameraUi( &mCam, getWindow(), -1 );
         
-        createConfigUI({200, 400});
+        createConfigImgui();
+        SCENE_NAMESPACE::createConfigImgui();
         gl::enableDepth();
 
         getWindow()->getSignalResize().connect([&] {
@@ -64,6 +66,8 @@ struct FlyCameraRotateApp : public App
 
 CINDER_APP( FlyCameraRotateApp, RendererGl, [](App::Settings* settings) {
     readConfig();
+    SCENE_NAMESPACE::readConfig();
+
     settings->setWindowSize(APP_WIDTH, APP_HEIGHT);
     settings->setMultiTouchEnabled(false);
 } )
