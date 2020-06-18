@@ -261,3 +261,5 @@ Debug/
 Release/
 *.ptx
 *.mp3
+*.db-shm
+*.db-wal
