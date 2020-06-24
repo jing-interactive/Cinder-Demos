@@ -7,6 +7,7 @@
 #include "AssetManager.h"
 #include "MiniConfig.h"
 
+#include "../../blocks/optick/src/optick.h"
 #include "../../blocks/enkiTS/enkiTS/src/TaskScheduler.h"
 
 using namespace ci;
@@ -54,6 +55,8 @@ struct enkiTSTestApp : public App
         mGlslProg->uniform("uTex3", 3);
 
         getWindow()->getSignalDraw().connect([&] {
+            OPTICK_FRAME("draw");
+
             gl::setMatrices( mCam );
             gl::clear();
         
