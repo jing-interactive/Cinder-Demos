@@ -11,6 +11,9 @@ DerivedData
 
 ###### C+++
 
+!blocks/**/*.lib
+!blocks/**/*.dll
+
 # Compiled Object files
 *.slo
 *.lo
