@@ -46,7 +46,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>..\include;"..\..\..\Cinder\include";..\..\..\Cinder\blocks\Cinder-VNM\include;..\..\..\Cinder\blocks</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_WIN32_WINNT=0x0601;_WINDOWS;NOMINMAX;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>TRACY_ENABLE;WIN32;_WIN32_WINNT=0x0601;_WINDOWS;NOMINMAX;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PrecompiledHeader />
@@ -71,7 +71,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <AdditionalIncludeDirectories>..\include;"..\..\..\Cinder\include";..\..\..\Cinder\blocks\Cinder-VNM\include;..\..\..\Cinder\blocks</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_WIN32_WINNT=0x0601;_WINDOWS;NOMINMAX;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>TRACY_ENABLE;WIN32;_WIN32_WINNT=0x0601;_WINDOWS;NOMINMAX;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <PrecompiledHeader />
       <WarningLevel>Level3</WarningLevel>
@@ -101,25 +101,16 @@
     <ResourceCompile Include="Resources.rc" />
   </ItemGroup>
   <ItemGroup />
-  <ItemGroup />
   <ItemGroup>
     <ClInclude Include="..\..\blocks\enkiTS\enkiTS\src\LockLessMultiReadPipe.h" />
     <ClInclude Include="..\..\blocks\enkiTS\enkiTS\src\TaskScheduler.h" />
-    <ClInclude Include="..\..\blocks\optick\src\optick.config.h" />
-    <ClInclude Include="..\..\blocks\optick\src\optick.h" />
-    <ClInclude Include="..\..\blocks\optick\src\optick_common.h" />
-    <ClInclude Include="..\..\blocks\optick\src\optick_core.freebsd.h" />
-    <ClInclude Include="..\..\blocks\optick\src\optick_core.h" />
-    <ClInclude Include="..\..\blocks\optick\src\optick_core.linux.h" />
-    <ClInclude Include="..\..\blocks\optick\src\optick_core.macos.h" />
-    <ClInclude Include="..\..\blocks\optick\src\optick_core.platform.h" />
-    <ClInclude Include="..\..\blocks\optick\src\optick_core.win.h" />
-    <ClInclude Include="..\..\blocks\optick\src\optick_gpu.h" />
-    <ClInclude Include="..\..\blocks\optick\src\optick_memory.h" />
-    <ClInclude Include="..\..\blocks\optick\src\optick_message.h" />
-    <ClInclude Include="..\..\blocks\optick\src\optick_miniz.h" />
-    <ClInclude Include="..\..\blocks\optick\src\optick_serialization.h" />
-    <ClInclude Include="..\..\blocks\optick\src\optick_server.h" />
+    <ClInclude Include="..\..\blocks\tracy\Tracy.hpp" />
+    <ClInclude Include="..\..\blocks\tracy\TracyC.h" />
+    <ClInclude Include="..\..\blocks\tracy\TracyD3D12.hpp" />
+    <ClInclude Include="..\..\blocks\tracy\TracyLua.hpp" />
+    <ClInclude Include="..\..\blocks\tracy\TracyOpenCL.hpp" />
+    <ClInclude Include="..\..\blocks\tracy\TracyOpenGL.hpp" />
+    <ClInclude Include="..\..\blocks\tracy\TracyVulkan.hpp" />
     <ClInclude Include="..\include\Resources.h" />
     <ClInclude Include="..\include\item.def" />
     <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\AnsiToUtf.h" />
@@ -145,23 +136,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\blocks\enkiTS\enkiTS\src\TaskScheduler.cpp" />
-    <ClCompile Include="..\..\blocks\optick\src\optick_core.cpp" />
-    <ClCompile Include="..\..\blocks\optick\src\optick_gpu.cpp" />
-    <ClCompile Include="..\..\blocks\optick\src\optick_gpu.d3d12.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\blocks\optick\src\optick_gpu.vulkan.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\blocks\optick\src\optick_message.cpp" />
-    <ClCompile Include="..\..\blocks\optick\src\optick_miniz.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\blocks\optick\src\optick_serialization.cpp" />
-    <ClCompile Include="..\..\blocks\optick\src\optick_server.cpp" />
+    <ClCompile Include="..\..\blocks\tracy\TracyClient.cpp" />
     <ClCompile Include="..\src\enkiTSTestApp.cpp" />
     <ClCompile Include="..\..\..\Cinder\blocks\Cinder-VNM\src\AssetManager.cpp" />
     <ClCompile Include="..\..\..\Cinder\blocks\Cinder-VNM\src\MiniConfig.cpp" />

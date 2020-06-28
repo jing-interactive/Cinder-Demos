@@ -27,8 +27,8 @@
     <Filter Include="Blocks\enkiTS">
       <UniqueIdentifier>{cef24e9b-2012-424f-9842-cee05177fb50}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Blocks\optick">
-      <UniqueIdentifier>{db4c6eab-0219-474c-a8cc-d861415f250c}</UniqueIdentifier>
+    <Filter Include="Blocks\tracy">
+      <UniqueIdentifier>{bc48f587-79bd-4300-b2f2-0c0bb9a7af92}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -113,29 +113,8 @@
     <ClCompile Include="..\..\blocks\enkiTS\enkiTS\src\TaskScheduler.cpp">
       <Filter>Blocks\enkiTS</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\blocks\optick\src\optick_core.cpp">
-      <Filter>Blocks\optick</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\blocks\optick\src\optick_gpu.cpp">
-      <Filter>Blocks\optick</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\blocks\optick\src\optick_gpu.d3d12.cpp">
-      <Filter>Blocks\optick</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\blocks\optick\src\optick_gpu.vulkan.cpp">
-      <Filter>Blocks\optick</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\blocks\optick\src\optick_message.cpp">
-      <Filter>Blocks\optick</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\blocks\optick\src\optick_miniz.cpp">
-      <Filter>Blocks\optick</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\blocks\optick\src\optick_serialization.cpp">
-      <Filter>Blocks\optick</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\blocks\optick\src\optick_server.cpp">
-      <Filter>Blocks\optick</Filter>
+    <ClCompile Include="..\..\blocks\tracy\TracyClient.cpp">
+      <Filter>Blocks\tracy</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -148,50 +127,26 @@
     <ClInclude Include="..\..\blocks\enkiTS\enkiTS\src\TaskScheduler.h">
       <Filter>Blocks\enkiTS</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\blocks\optick\src\optick.config.h">
-      <Filter>Blocks\optick</Filter>
+    <ClInclude Include="..\..\blocks\tracy\Tracy.hpp">
+      <Filter>Blocks\tracy</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\blocks\optick\src\optick.h">
-      <Filter>Blocks\optick</Filter>
+    <ClInclude Include="..\..\blocks\tracy\TracyC.h">
+      <Filter>Blocks\tracy</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\blocks\optick\src\optick_common.h">
-      <Filter>Blocks\optick</Filter>
+    <ClInclude Include="..\..\blocks\tracy\TracyD3D12.hpp">
+      <Filter>Blocks\tracy</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\blocks\optick\src\optick_core.freebsd.h">
-      <Filter>Blocks\optick</Filter>
+    <ClInclude Include="..\..\blocks\tracy\TracyLua.hpp">
+      <Filter>Blocks\tracy</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\blocks\optick\src\optick_core.h">
-      <Filter>Blocks\optick</Filter>
+    <ClInclude Include="..\..\blocks\tracy\TracyOpenCL.hpp">
+      <Filter>Blocks\tracy</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\blocks\optick\src\optick_core.linux.h">
-      <Filter>Blocks\optick</Filter>
+    <ClInclude Include="..\..\blocks\tracy\TracyOpenGL.hpp">
+      <Filter>Blocks\tracy</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\blocks\optick\src\optick_core.macos.h">
-      <Filter>Blocks\optick</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\blocks\optick\src\optick_core.platform.h">
-      <Filter>Blocks\optick</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\blocks\optick\src\optick_core.win.h">
-      <Filter>Blocks\optick</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\blocks\optick\src\optick_gpu.h">
-      <Filter>Blocks\optick</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\blocks\optick\src\optick_memory.h">
-      <Filter>Blocks\optick</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\blocks\optick\src\optick_message.h">
-      <Filter>Blocks\optick</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\blocks\optick\src\optick_miniz.h">
-      <Filter>Blocks\optick</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\blocks\optick\src\optick_serialization.h">
-      <Filter>Blocks\optick</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\blocks\optick\src\optick_server.h">
-      <Filter>Blocks\optick</Filter>
+    <ClInclude Include="..\..\blocks\tracy\TracyVulkan.hpp">
+      <Filter>Blocks\tracy</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

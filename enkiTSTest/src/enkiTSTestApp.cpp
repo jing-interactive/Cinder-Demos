@@ -7,8 +7,9 @@
 #include "AssetManager.h"
 #include "MiniConfig.h"
 
-#include "../../blocks/optick/src/optick.h"
 #include "../../blocks/enkiTS/enkiTS/src/TaskScheduler.h"
+#include "../../blocks/tracy/Tracy.hpp"
+#include "../../blocks/tracy/TracyOpenGL.hpp"
 
 using namespace ci;
 using namespace ci::app;
@@ -22,6 +23,8 @@ struct enkiTSTestApp : public App
     {
         log::makeLogger<log::LoggerFileRotating>(fs::path(), "IG.%Y.%m.%d.log");
      
+        TracyGpuContext;
+
         g_TS.Initialize();
 
         enki::TaskSet task(1024, [](enki::TaskSetPartition range, uint32_t threadnum) { printf("Thread %d, start %d, end %d\n", threadnum, range.start, range.end); });
@@ -54,8 +57,12 @@ struct enkiTSTestApp : public App
         mGlslProg->uniform("uTex2", 2);
         mGlslProg->uniform("uTex3", 3);
 
+        getSignalUpdate().connect([&] {
+            TracyGpuCollect;
+        });
         getWindow()->getSignalDraw().connect([&] {
-            OPTICK_FRAME("draw");
+            ZoneScopedN("frame");
+            TracyGpuZone("frame");
 
             gl::setMatrices( mCam );
             gl::clear();
@@ -66,7 +73,13 @@ struct enkiTSTestApp : public App
             gl::ScopedTextureBind tex3(am::texture2d(TEX3_NAME), 3);
             gl::ScopedGlslProg glsl(mGlslProg);
 
-            gl::draw(am::vboMesh(MESH_NAME));
+            {
+                ZoneScopedN("draw");
+                TracyGpuZone("draw");
+                gl::draw(am::vboMesh(MESH_NAME));
+            }
+
+            FrameMark;
         });
     }
     
