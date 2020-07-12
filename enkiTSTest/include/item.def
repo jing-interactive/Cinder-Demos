@@ -1,5 +1,8 @@
 ITEM_DEF(int, APP_WIDTH, 1024)
 ITEM_DEF(int, APP_HEIGHT, 768)
+ITEM_DEF(string, REMOTE_GUI_IP, "127.0.0.1")
+ITEM_DEF(bool, ENABLE_REMOTE_GUI, false)
+ITEM_DEF(bool, ENABLE_LOCAL_GUI, true)
 ITEM_DEF(string, MESH_NAME, "Teapot")
 ITEM_DEF(string, TEX0_NAME, "checkerboard")
 ITEM_DEF(string, TEX1_NAME, "checkerboard")

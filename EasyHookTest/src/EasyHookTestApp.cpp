@@ -7,8 +7,9 @@
 #include "AssetManager.h"
 #include "MiniConfig.h"
 
-#include <easyhook.h>
+#include "easyhook.h"
 #include <Windows.h>
+#include <gl/GL.h>
 
 #pragma comment(lib, "EasyHook64.lib")
 
@@ -20,6 +21,12 @@ BOOL WINAPI myBeepHook(DWORD dwFreq, DWORD dwDuration)
 {
     cout << "\n****All your beeps belong to us!\n\n";
     return Beep(dwFreq + 800, dwDuration);
+}
+
+GLenum APIENTRY myglGetError(void)
+{
+    cout << "\n****All your glGetError belong to us!\n\n";
+    return glGetError();
 }
 
 // d3dukmdt.h
@@ -84,20 +91,11 @@ struct FlyCameraRotateApp : public App
             return;
         }
 
-        cout << "1. Beep after hook installed but not enabled.\n";
-        Beep(500, 500);
-
         cout << "Activating hook for current thread only.\n";
         // If the threadId in the ACL is set to 0, 
         // then internally EasyHook uses GetCurrentThreadId()
         ULONG ACLEntries[1] = { 0 };
         LhSetInclusiveACL(ACLEntries, 1, &hHook);
-
-        cout << "2. Beep after hook enabled.\n";
-        Beep(500, 500);
-
-        cout << "3. Beep after hook uninstalled\n";
-        Beep(500, 500);
     }
 
     void setup() override

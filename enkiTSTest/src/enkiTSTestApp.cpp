@@ -5,7 +5,8 @@
 #include "cinder/Log.h"
 
 #include "AssetManager.h"
-#include "MiniConfig.h"
+#include "MiniConfigImgui.h"
+#include "CinderRemoteImgui.h"
 
 #include "../../blocks/enkiTS/enkiTS/src/TaskScheduler.h"
 #include "../../blocks/tracy/Tracy.hpp"
@@ -36,7 +37,9 @@ struct enkiTSTestApp : public App
         mCam.lookAt(aabb.getMax() * 2.0f, aabb.getCenter());
         mCamUi = CameraUi( &mCam, getWindow(), -1 );
         
-        createConfigUI({200, 200});
+        createConfigImgui(getWindow(), false, false);
+        createRemoteImgui(REMOTE_GUI_IP.c_str());
+
         gl::enableDepth();
 
         getWindow()->getSignalResize().connect([&] {
@@ -59,7 +62,12 @@ struct enkiTSTestApp : public App
 
         getSignalUpdate().connect([&] {
             TracyGpuCollect;
+
+            ImGui_ImplCinder_NewFrameGuard(getWindow());
+            vnm::drawMinicofigImgui(true);
+            updateRemoteImgui(ENABLE_REMOTE_GUI);
         });
+
         getWindow()->getSignalDraw().connect([&] {
             ZoneScopedN("frame");
             TracyGpuZone("frame");
@@ -78,6 +86,8 @@ struct enkiTSTestApp : public App
                 TracyGpuZone("draw");
                 gl::draw(am::vboMesh(MESH_NAME));
             }
+
+            ImGui_ImplCinder_PostDraw(ENABLE_REMOTE_GUI, ENABLE_LOCAL_GUI);
 
             FrameMark;
         });

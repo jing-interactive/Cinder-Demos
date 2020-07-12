@@ -30,6 +30,9 @@
     <Filter Include="Blocks\tracy">
       <UniqueIdentifier>{bc48f587-79bd-4300-b2f2-0c0bb9a7af92}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Blocks\remote">
+      <UniqueIdentifier>{3b479611-52ae-458a-b5a8-15361170de87}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\enkiTSTestApp.cpp">
@@ -116,6 +119,24 @@
     <ClCompile Include="..\..\blocks\tracy\TracyClient.cpp">
       <Filter>Blocks\tracy</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\Cinder\blocks\Cinder-VNM\ui\imgui_remote\lz4\lz4.c">
+      <Filter>Blocks\remote</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Cinder\blocks\Cinder-VNM\ui\imgui_remote\lz4\lz4frame.c">
+      <Filter>Blocks\remote</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Cinder\blocks\Cinder-VNM\ui\imgui_remote\lz4\lz4hc.c">
+      <Filter>Blocks\remote</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Cinder\blocks\Cinder-VNM\ui\imgui_remote\lz4\xxhash.c">
+      <Filter>Blocks\remote</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Cinder\blocks\Cinder-VNM\ui\imgui_remote\webby\webby.c">
+      <Filter>Blocks\remote</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Cinder\blocks\Cinder-VNM\ui\CinderRemoteImgui.cpp">
+      <Filter>Blocks\remote</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\Resources.h">
@@ -147,6 +168,39 @@
     </ClInclude>
     <ClInclude Include="..\..\blocks\tracy\TracyVulkan.hpp">
       <Filter>Blocks\tracy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\ui\imgui_remote\imgui_remote.h">
+      <Filter>Blocks\remote</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\ui\imgui_remote\imgui_remote_webby.h">
+      <Filter>Blocks\remote</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\ui\imgui_remote\lz4\lz4.h">
+      <Filter>Blocks\remote</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\ui\imgui_remote\lz4\lz4frame.h">
+      <Filter>Blocks\remote</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\ui\imgui_remote\lz4\lz4frame_static.h">
+      <Filter>Blocks\remote</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\ui\imgui_remote\lz4\lz4hc.h">
+      <Filter>Blocks\remote</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\ui\imgui_remote\lz4\xxhash.h">
+      <Filter>Blocks\remote</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\ui\imgui_remote\webby\webby.h">
+      <Filter>Blocks\remote</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\ui\imgui_remote\webby\webby_unix.h">
+      <Filter>Blocks\remote</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\ui\imgui_remote\webby\webby_win32.h">
+      <Filter>Blocks\remote</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\CinderRemoteImgui.h">
+      <Filter>Blocks\remote</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
