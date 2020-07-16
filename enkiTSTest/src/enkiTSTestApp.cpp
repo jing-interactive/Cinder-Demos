@@ -63,8 +63,8 @@ struct enkiTSTestApp : public App
         getSignalUpdate().connect([&] {
             TracyGpuCollect;
 
-            ImGui_ImplCinder_NewFrameGuard(getWindow());
             updateRemoteImgui(ENABLE_REMOTE_GUI);
+            ImGui_ImplCinder_NewFrameGuard(getWindow());
             vnm::drawMinicofigImgui(true);
         });
 
