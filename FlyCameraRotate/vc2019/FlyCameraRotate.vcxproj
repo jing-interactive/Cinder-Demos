@@ -100,9 +100,6 @@
   <ItemGroup>
     <ResourceCompile Include="Resources.rc" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="..\include\scene.def" />
-  </ItemGroup>
   <ItemGroup />
   <ItemGroup>
     <ClInclude Include="..\include\Resources.h" />
@@ -125,14 +122,11 @@
     <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\StateMachine.h" />
     <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\TextureHelper.h" />
     <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\TuioHelper.h" />
-    <ClInclude Include="..\src\SceneConfig.h" />
-    <ClInclude Include="..\src\SceneConfigImgui.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\FlyCameraRotateApp.cpp" />
     <ClCompile Include="..\..\..\Cinder\blocks\Cinder-VNM\src\AssetManager.cpp" />
     <ClCompile Include="..\..\..\Cinder\blocks\Cinder-VNM\src\MiniConfig.cpp" />
-    <ClCompile Include="..\src\SceneConfig.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />

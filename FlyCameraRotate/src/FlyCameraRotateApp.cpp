@@ -6,7 +6,6 @@
 
 #include "AssetManager.h"
 #include "MiniConfigImgui.h"
-#include "SceneConfigImgui.h"
 
 using namespace ci;
 using namespace ci::app;
@@ -23,7 +22,6 @@ struct FlyCameraRotateApp : public App
         mCamUi = CameraUi( &mCam, getWindow(), -1 );
         
         createConfigImgui();
-        SCENE_NAMESPACE::createConfigImgui();
         gl::enableDepth();
 
         getWindow()->getSignalResize().connect([&] {
@@ -48,11 +46,14 @@ struct FlyCameraRotateApp : public App
 
             gl::setMatrices( mCam );
             gl::clear();
+
+            gl::drawCoordinateFrame(10, 1, 0.2);
         
             gl::ScopedGlslProg glsl(mGlslProg);
 
             gl::ScopedModelMatrix scp;
-            auto mat = glm::toMat4(pitchYawRoll);
+            auto mat = glm::translate(vec3{X,Y,Z}) * glm::toMat4(pitchYawRoll);
+
             gl::setModelMatrix(mat);
             gl::drawCoordinateFrame(2);
             gl::draw(am::vboMesh(MESH_NAME));
@@ -66,7 +67,6 @@ struct FlyCameraRotateApp : public App
 
 CINDER_APP( FlyCameraRotateApp, RendererGl, [](App::Settings* settings) {
     readConfig();
-    SCENE_NAMESPACE::readConfig();
 
     settings->setWindowSize(APP_WIDTH, APP_HEIGHT);
     settings->setMultiTouchEnabled(false);

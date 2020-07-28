@@ -1,4 +1,0 @@
-ITEM_DEF(string, MESH_NAME, "Teapot")
-ITEM_DEF(float, PITCH, 0)
-ITEM_DEF(float, YAW, 0)
-ITEM_DEF(float, ROLL, 0)
