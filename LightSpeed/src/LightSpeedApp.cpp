@@ -2,7 +2,8 @@
 #include "cinder/app/RendererGl.h"
 #include "cinder/gl/gl.h"
 #include "cinder/Log.h"
-#include "cinder/Json.h"
+#include "../../blocks/rapidjson/rapidjson.h"
+#include "../../blocks/rapidjson/document.h"
 
 #include "AssetManager.h"
 #include "MiniConfigImgui.h"
@@ -11,6 +12,7 @@
 using namespace ci;
 using namespace ci::app;
 using namespace std;
+using namespace rapidjson;
 
 struct Span
 {
@@ -30,21 +32,21 @@ struct MetricSeries
 
     }
 
-    MetricSeries(const JsonTree& stat)
+    MetricSeries(const Document::GenericValue& stat)
     {
-        name = stat["name"].getValue();
-        auto& t_array_json = stat["t"].getChildren();
+        name = stat["name"].GetString();
+        auto& t_array_json = stat["t"].GetArray();
         for (auto& it : t_array_json)
         {
-            auto v = it.getValue<float>();
+            auto v = it.GetFloat();
             if (v > max_t) max_t = v;
             else if (v < min_t) min_t = v;
             t_array.push_back(v);
         }
-        auto& x_array_json = stat["x"].getChildren();
+        auto& x_array_json = stat["x"].GetArray();
         for (auto& it : x_array_json)
         {
-            auto v = it.getValue<float>();
+            auto v = it.GetFloat();
             if (v > max_x) max_x = v;
             else if (v < min_x) min_x = v;
             x_array.push_back(v);
@@ -75,7 +77,6 @@ struct DataStorage
 
 struct LightSpeedApp : public App
 {
-    JsonTree json;
     DataStorage storage;
 
     void setup() override
@@ -84,8 +85,9 @@ struct LightSpeedApp : public App
         createConfigImgui();
 
         {
-            json = JsonTree(loadAsset(DATA_FILENAME));
-            auto& stats_array = json["stats"].getChildren();
+            Document json;
+            json.Parse(am::str(DATA_FILENAME).c_str());
+            auto& stats_array = json["stats"].GetArray();
             for (auto& stat : stats_array)
             {
                 MetricSeries series(stat);
