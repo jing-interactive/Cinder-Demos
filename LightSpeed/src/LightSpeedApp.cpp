@@ -16,13 +16,33 @@ using namespace rapidjson;
 
 struct Span
 {
-
+    string name;
+    float start = 0;
+    float end = 0;
 };
 
 struct SpanSeries
 {
     string name;
     vector<Span> span_array;
+
+    SpanSeries()
+    {
+    }
+
+    SpanSeries(const Document::GenericValue& stat)
+    {
+        name = stat["name"].GetString();
+        auto pid = stat["pid"].GetInt();
+        auto& ph = stat["ph"];
+        if (ph == "X")
+        {
+            auto tid = stat["tid"].GetInt();
+            auto ts = stat["ts"].GetInt();
+            auto dur = stat["dur"].GetInt();
+            auto cat = stat["cat"].GetString();
+        }
+    }
 };
 
 struct MetricSeries
@@ -86,12 +106,29 @@ struct LightSpeedApp : public App
 
         {
             Document json;
-            json.Parse(am::str(DATA_FILENAME).c_str());
-            auto& stats_array = json["stats"].GetArray();
-            for (auto& stat : stats_array)
+            const auto& str = am::str(DATA_FILENAME);
+            if (!str.empty())
             {
-                MetricSeries series(stat);
-                storage.metric_storage[series.name] = series;
+                json.Parse(str.c_str());
+
+                if (json.HasMember("stats"))
+                {
+                    auto& stats_array = json["stats"].GetArray();
+                    for (auto& item : stats_array)
+                    {
+                        MetricSeries series(item);
+                        storage.metric_storage[series.name] = series;
+                    }
+                }
+                else if (json.HasMember("traceEvents"))
+                {
+                    auto& event_array = json["traceEvents"].GetArray();
+                    for (auto& item : event_array)
+                    {
+                        SpanSeries series(item);
+                        storage.span_storage[series.name] = series;
+                    }
+                }
             }
         }
 
