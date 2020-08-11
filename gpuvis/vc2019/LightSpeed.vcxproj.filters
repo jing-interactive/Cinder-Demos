@@ -170,9 +170,6 @@
     <ClCompile Include="..\src\RobotoCondensed_Regular.cpp">
       <Filter>depends</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\miniz.c">
-      <Filter>depends</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\MurmurHash3.cpp">
       <Filter>depends</Filter>
     </ClCompile>
@@ -183,9 +180,6 @@
       <Filter>depends</Filter>
     </ClCompile>
     <ClCompile Include="..\src\trace-cmd\event-parse.c">
-      <Filter>depends</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\gpuvis_icon.c">
       <Filter>depends</Filter>
     </ClCompile>
     <ClCompile Include="..\src\trace-cmd\trace-read.cpp">
@@ -226,9 +220,6 @@
     <ClInclude Include="..\src\noc_file_dialog.h">
       <Filter>depends</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\miniz.h">
-      <Filter>depends</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\MurmurHash3.h">
       <Filter>depends</Filter>
     </ClInclude>
@@ -236,9 +227,6 @@
       <Filter>depends</Filter>
     </ClInclude>
     <ClInclude Include="..\src\trace-cmd\list.h">
-      <Filter>depends</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\stb_image_write.h">
       <Filter>depends</Filter>
     </ClInclude>
     <ClInclude Include="..\src\stlini.h">

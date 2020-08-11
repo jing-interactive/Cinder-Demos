@@ -36,6 +36,8 @@
 
 #include "etl_utils.h"
 
+#pragma comment( lib, "tdh.lib" )
+
 /**
  * The following section contains some ETL helper functions based on the MS documentation examples
  *

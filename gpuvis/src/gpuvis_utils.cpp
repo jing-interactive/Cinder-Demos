@@ -57,14 +57,14 @@
 #include "Roboto_Regular.cpp"
 #include "RobotoCondensed_Regular.cpp"
 
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb_image_write.h"
+#include "stb/stb_image_write.h"
 
-static SDL_threadID g_main_tid = -1;
+using namespace ci;
+
 static std::vector< char * > g_log;
 static std::vector< char * > g_thread_log;
 static bool g_log_error = false;
-static SDL_mutex *g_mutex = nullptr;
+//static SDL_mutex *g_mutex = nullptr;
 
 static float g_scale = 1.0f;
 
@@ -106,23 +106,6 @@ font_id_t get_font_id( const char *name, const char *filename )
     return FontID_Unknown;
 }
 
-/*
- * log routines
- */
-void logf_init()
-{
-    g_main_tid = SDL_ThreadID();
-    g_mutex = SDL_CreateMutex();
-    if ( !g_mutex )
-        logf( "[Error] SDL_CreateMutex() failed." );
-}
-
-void logf_shutdown()
-{
-    SDL_DestroyMutex( g_mutex );
-    g_mutex = NULL;
-}
-
 const std::vector< char * > &logf_get()
 {
     return g_log;
@@ -137,22 +120,6 @@ void logf( const char *fmt, ... )
     va_start( args, fmt );
     ret = vasprintf( &buf, fmt, args );
     va_end( args );
-
-    if ( ret >= 0 )
-    {
-        if ( SDL_ThreadID() == g_main_tid )
-        {
-            g_log_error |= !strncasecmp( buf, "[error]", 7 );
-
-            g_log.push_back( buf );
-        }
-        else
-        {
-            SDL_LockMutex( g_mutex );
-            g_thread_log.push_back( buf );
-            SDL_UnlockMutex( g_mutex );
-        }
-    }
 }
 
 bool logf_update()
@@ -160,21 +127,6 @@ bool logf_update()
     bool ret = g_log_error;
 
     g_log_error = false;
-
-    if ( g_thread_log.size() )
-    {
-        SDL_LockMutex( g_mutex );
-
-        for ( char *str : g_thread_log )
-        {
-            ret |= !strncasecmp( str, "[error]", 7 );
-
-            g_log.push_back( str );
-        }
-        g_thread_log.clear();
-
-        SDL_UnlockMutex( g_mutex );
-    }
 
     return ret;
 }
@@ -305,15 +257,15 @@ std::string string_implode( std::vector< std::string > &elements, const std::str
 // trim from start (in place)
 void string_ltrim( std::string &s )
 {
-    s.erase( s.begin(), std::find_if( s.begin(), s.end(),
-             std::not1( std::ptr_fun< int, int >( std::isspace ) ) ) );
+    //s.erase( s.begin(), std::find_if( s.begin(), s.end(),
+    //         std::not_fn(&std::isspace ) ) );
 }
 
 // trim from end (in place)
 void string_rtrim( std::string &s )
 {
-    s.erase( std::find_if( s.rbegin(), s.rend(),
-             std::not1( std::ptr_fun< int, int >( std::isspace ) ) ).base(), s.end() );
+    //s.erase( std::find_if( s.rbegin(), s.rend(),
+    //         std::not_fn(&std::isspace ) ).base(), s.end() );
 }
 
 // trim from both ends (in place)
@@ -346,10 +298,10 @@ std::string string_trimmed( std::string s )
 
 std::string string_remove_punct( const std::string &s )
 {
-    std::string ret;
-    std::remove_copy_if( s.begin(), s.end(),
-                         std::back_inserter( ret ),
-                         std::ptr_fun< int, int >( &std::ispunct ) );
+    std::string ret = s;
+    //std::remove_copy_if( s.begin(), s.end(),
+    //                     std::back_inserter( ret ),
+    //                     &std::ispunct);
 
     return ret;
 }
@@ -664,13 +616,13 @@ bool imgui_begin_columns( const char* str_id, int columns_count, ImGuiColumnsFla
 {
     ImGui::BeginColumns( str_id, columns_count, flags );
 
-    ImGuiColumnsSet *columns = ImGui::GetCurrentWindow()->DC.ColumnsSet;
+    ImGuiColumns *columns = ImGui::GetCurrentWindow()->DC.CurrentColumns;
     return columns->IsFirstFrame;
 }
 
 bool imgui_end_columns()
 {
-    ImGuiColumnsSet *columns = ImGui::GetCurrentWindow()->DC.ColumnsSet;
+    ImGuiColumns *columns = ImGui::GetCurrentWindow()->DC.CurrentColumns;
 
     ImGui::EndColumns();
 
@@ -772,9 +724,6 @@ static colors_t col_index_from_imguicol( ImGuiCol col )
     case ImGuiCol_ResizeGrip: return col_ImGui_ResizeGrip;
     case ImGuiCol_ResizeGripHovered: return col_ImGui_ResizeGripHovered;
     case ImGuiCol_ResizeGripActive: return col_ImGui_ResizeGripActive;
-    case ImGuiCol_CloseButton: return col_ImGui_CloseButton;
-    case ImGuiCol_CloseButtonHovered: return col_ImGui_CloseButtonHovered;
-    case ImGuiCol_CloseButtonActive: return col_ImGui_CloseButtonActive;
     case ImGuiCol_PlotLines: return col_Max;
     case ImGuiCol_PlotLinesHovered: return col_Max;
     case ImGuiCol_PlotHistogram: return col_Max;
@@ -1396,8 +1345,10 @@ const std::string TextClrs::mstr( const std::string &str_in, ImU32 color )
     return set( buf, color ) + str_in + m_buf[ TClr_Def ];
 }
 
-void Keybd::update( const SDL_KeyboardEvent &key )
+void Keybd::update( const app::KeyEvent &key )
 {
+    // TODO:
+#if 0
     if ( key.type == SDL_KEYDOWN )
     {
         // Mark keystate as down w/ mod state
@@ -1411,6 +1362,7 @@ void Keybd::update( const SDL_KeyboardEvent &key )
         // Clear key state
         m_keystate[ key.keysym.scancode ] = 0;
     }
+ #endif
 }
 
 void Keybd::clear()
@@ -1422,74 +1374,74 @@ void Actions::init()
 {
     clear();
 
-    m_actionmap.push_back( { action_help, KMOD_NONE, SDLK_F1, "Help dialog" } );
-    m_actionmap.push_back( { action_quit, KMOD_CTRL, SDLK_q, "Quit GpuVis" } );
-    m_actionmap.push_back( { action_save_screenshot, KMOD_NONE, SDLK_F12, "Capture screenshot" } );
+    m_actionmap.push_back( { action_help, 0, app::KeyEvent::KEY_F1, "Help dialog" } );
+    m_actionmap.push_back( { action_quit, app::KeyEvent::CTRL_DOWN, app::KeyEvent::KEY_q, "Quit GpuVis" } );
+    m_actionmap.push_back( { action_save_screenshot, 0, app::KeyEvent::KEY_F12, "Capture screenshot" } );
 
-    m_actionmap.push_back( { action_menu_file, KMOD_ALT, SDLK_f, "File Menu" } );
-    m_actionmap.push_back( { action_menu_options, KMOD_ALT, SDLK_o, "Options Menu" } );
+    m_actionmap.push_back( { action_menu_file, app::KeyEvent::ALT_DOWN, app::KeyEvent::KEY_f, "File Menu" } );
+    m_actionmap.push_back( { action_menu_options, app::KeyEvent::ALT_DOWN, app::KeyEvent::KEY_o, "Options Menu" } );
 
-    m_actionmap.push_back( { action_open, KMOD_CTRL | KMOD_SHIFT, SDLK_o, "Open Trace File dialog" } );
-    m_actionmap.push_back( { action_trace_info, KMOD_CTRL | KMOD_SHIFT, SDLK_i, "Display trace information" } );
+    m_actionmap.push_back( { action_open, app::KeyEvent::CTRL_DOWN | app::KeyEvent::SHIFT_DOWN, app::KeyEvent::KEY_o, "Open Trace File dialog" } );
+    m_actionmap.push_back( { action_trace_info, app::KeyEvent::CTRL_DOWN | app::KeyEvent::SHIFT_DOWN, app::KeyEvent::KEY_i, "Display trace information" } );
 
-    m_actionmap.push_back( { action_focus_graph, KMOD_CTRL | KMOD_SHIFT, SDLK_g, "Set focus to events graph" } );
-    m_actionmap.push_back( { action_focus_eventlist, KMOD_CTRL | KMOD_SHIFT, SDLK_e, "Set focus to event list" } );
+    m_actionmap.push_back( { action_focus_graph, app::KeyEvent::CTRL_DOWN | app::KeyEvent::SHIFT_DOWN, app::KeyEvent::KEY_g, "Set focus to events graph" } );
+    m_actionmap.push_back( { action_focus_eventlist, app::KeyEvent::CTRL_DOWN | app::KeyEvent::SHIFT_DOWN, app::KeyEvent::KEY_e, "Set focus to event list" } );
 
-    m_actionmap.push_back( { action_toggle_show_eventlist, KMOD_NONE, SDLK_F11, "Toggle showing event list" } );
+    m_actionmap.push_back( { action_toggle_show_eventlist, 0, app::KeyEvent::KEY_F11, "Toggle showing event list" } );
 
-    m_actionmap.push_back( { action_graph_show_hovered_pid, KMOD_CTRL | KMOD_SHIFT, SDLK_s, "Toggle showing only first hovered pid events" } );
-    m_actionmap.push_back( { action_graph_show_hovered_tgid, KMOD_CTRL | KMOD_SHIFT, SDLK_t, "Toggle showing only first hovered tgid events" } );
+    m_actionmap.push_back( { action_graph_show_hovered_pid, app::KeyEvent::CTRL_DOWN | app::KeyEvent::SHIFT_DOWN, app::KeyEvent::KEY_s, "Toggle showing only first hovered pid events" } );
+    m_actionmap.push_back( { action_graph_show_hovered_tgid, app::KeyEvent::CTRL_DOWN | app::KeyEvent::SHIFT_DOWN, app::KeyEvent::KEY_t, "Toggle showing only first hovered tgid events" } );
 
-    m_actionmap.push_back( { action_cpugraph_hide_systemevents, KMOD_CTRL | KMOD_SHIFT, SDLK_h, "CPU Graph: Toggle hiding sched_switch 'system' events" } );
+    m_actionmap.push_back( { action_cpugraph_hide_systemevents, app::KeyEvent::CTRL_DOWN | app::KeyEvent::SHIFT_DOWN, app::KeyEvent::KEY_h, "CPU Graph: Toggle hiding sched_switch 'system' events" } );
 
-    m_actionmap.push_back( { action_graph_zoom_row, KMOD_CTRL | KMOD_SHIFT, SDLK_z, "Graph: Toggle hovered row timeline fullscreen" } );
-    m_actionmap.push_back( { action_graph_zoom_mouse, KMOD_NONE, SDLK_z, "Graph: Toggle hovered location zoom to 3ms / restore pre-zoom" } );
-    m_actionmap.push_back( { action_graph_hide_row, 0, SDLK_h, "Graph: Hide hovered row" } );
+    m_actionmap.push_back( { action_graph_zoom_row, app::KeyEvent::CTRL_DOWN | app::KeyEvent::SHIFT_DOWN, app::KeyEvent::KEY_z, "Graph: Toggle hovered row timeline fullscreen" } );
+    m_actionmap.push_back( { action_graph_zoom_mouse, 0, app::KeyEvent::KEY_z, "Graph: Toggle hovered location zoom to 3ms / restore pre-zoom" } );
+    m_actionmap.push_back( { action_graph_hide_row, 0, app::KeyEvent::KEY_h, "Graph: Hide hovered row" } );
 
-    m_actionmap.push_back( { action_toggle_vblank0, KMOD_CTRL | KMOD_SHIFT, SDLK_m, "Graph: Toggle showing vblank 0 markers" } );
-    m_actionmap.push_back( { action_toggle_vblank1, KMOD_CTRL | KMOD_SHIFT, SDLK_n, "Graph: Toggle showing vblank 1 markers" } );
-    m_actionmap.push_back( { action_toggle_vblank_hardware_timestamps, KMOD_CTRL | KMOD_SHIFT, SDLK_k, "Graph: Toggle showing hardware vblank timestamps" } );
-    m_actionmap.push_back( { action_toggle_framemarkers, KMOD_CTRL | KMOD_SHIFT, SDLK_f, "Graph: Toggle showing Frame Markers" } );
-    m_actionmap.push_back( { action_toggle_frame_filters, KMOD_CTRL | KMOD_SHIFT, SDLK_r, "Graph: Toggle Frame Filters" } );
+    m_actionmap.push_back( { action_toggle_vblank0, app::KeyEvent::CTRL_DOWN | app::KeyEvent::SHIFT_DOWN, app::KeyEvent::KEY_m, "Graph: Toggle showing vblank 0 markers" } );
+    m_actionmap.push_back( { action_toggle_vblank1, app::KeyEvent::CTRL_DOWN | app::KeyEvent::SHIFT_DOWN, app::KeyEvent::KEY_n, "Graph: Toggle showing vblank 1 markers" } );
+    m_actionmap.push_back( { action_toggle_vblank_hardware_timestamps, app::KeyEvent::CTRL_DOWN | app::KeyEvent::SHIFT_DOWN, app::KeyEvent::KEY_k, "Graph: Toggle showing hardware vblank timestamps" } );
+    m_actionmap.push_back( { action_toggle_framemarkers, app::KeyEvent::CTRL_DOWN | app::KeyEvent::SHIFT_DOWN, app::KeyEvent::KEY_f, "Graph: Toggle showing Frame Markers" } );
+    m_actionmap.push_back( { action_toggle_frame_filters, app::KeyEvent::CTRL_DOWN | app::KeyEvent::SHIFT_DOWN, app::KeyEvent::KEY_r, "Graph: Toggle Frame Filters" } );
 
-    m_actionmap.push_back( { action_frame_marker_prev_fit, KMOD_CTRL | KMOD_REPEAT, SDLK_LEFT, "Graph: Show and fit previous frame marker frame" } );
-    m_actionmap.push_back( { action_frame_marker_next_fit, KMOD_CTRL | KMOD_REPEAT, SDLK_RIGHT, "Graph: Show and fit next frame marker frame" } );
-    m_actionmap.push_back( { action_frame_marker_prev, KMOD_CTRL | KMOD_SHIFT | KMOD_REPEAT, SDLK_LEFT, "Graph: Show previous frame marker frame" } );
-    m_actionmap.push_back( { action_frame_marker_next, KMOD_CTRL| KMOD_SHIFT | KMOD_REPEAT, SDLK_RIGHT, "Graph: Show next frame marker frame" } );
+    m_actionmap.push_back( { action_frame_marker_prev_fit, app::KeyEvent::CTRL_DOWN | KMOD_REPEAT, app::KeyEvent::KEY_LEFT, "Graph: Show and fit previous frame marker frame" } );
+    m_actionmap.push_back( { action_frame_marker_next_fit, app::KeyEvent::CTRL_DOWN | KMOD_REPEAT, app::KeyEvent::KEY_RIGHT, "Graph: Show and fit next frame marker frame" } );
+    m_actionmap.push_back( { action_frame_marker_prev, app::KeyEvent::CTRL_DOWN | app::KeyEvent::SHIFT_DOWN | KMOD_REPEAT, app::KeyEvent::KEY_LEFT, "Graph: Show previous frame marker frame" } );
+    m_actionmap.push_back( { action_frame_marker_next, app::KeyEvent::CTRL_DOWN| app::KeyEvent::SHIFT_DOWN | KMOD_REPEAT, app::KeyEvent::KEY_RIGHT, "Graph: Show next frame marker frame" } );
 
-    m_actionmap.push_back( { action_graph_set_markerA, KMOD_CTRL | KMOD_SHIFT, SDLK_a, "Graph: Set marker A" } );
-    m_actionmap.push_back( { action_graph_set_markerB, KMOD_CTRL | KMOD_SHIFT, SDLK_b, "Graph: Set marker B" } );
-    m_actionmap.push_back( { action_graph_goto_markerA, KMOD_CTRL, SDLK_a, "Graph: Goto marker A" } );
-    m_actionmap.push_back( { action_graph_goto_markerB, KMOD_CTRL, SDLK_b, "Graph: Goto marker B" } );
+    m_actionmap.push_back( { action_graph_set_markerA, app::KeyEvent::CTRL_DOWN | app::KeyEvent::SHIFT_DOWN, app::KeyEvent::KEY_a, "Graph: Set marker A" } );
+    m_actionmap.push_back( { action_graph_set_markerB, app::KeyEvent::CTRL_DOWN | app::KeyEvent::SHIFT_DOWN, app::KeyEvent::KEY_b, "Graph: Set marker B" } );
+    m_actionmap.push_back( { action_graph_goto_markerA, app::KeyEvent::CTRL_DOWN, app::KeyEvent::KEY_a, "Graph: Goto marker A" } );
+    m_actionmap.push_back( { action_graph_goto_markerB, app::KeyEvent::CTRL_DOWN, app::KeyEvent::KEY_b, "Graph: Goto marker B" } );
 
-    m_actionmap.push_back( { action_graph_save_location1, KMOD_CTRL | KMOD_SHIFT, SDLK_1, "Graph: Save location 1" } );
-    m_actionmap.push_back( { action_graph_save_location2, KMOD_CTRL | KMOD_SHIFT, SDLK_2, "Graph: Save location 2" } );
-    m_actionmap.push_back( { action_graph_save_location3, KMOD_CTRL | KMOD_SHIFT, SDLK_3, "Graph: Save location 3" } );
-    m_actionmap.push_back( { action_graph_save_location4, KMOD_CTRL | KMOD_SHIFT, SDLK_4, "Graph: Save location 4" } );
-    m_actionmap.push_back( { action_graph_save_location5, KMOD_CTRL | KMOD_SHIFT, SDLK_5, "Graph: Save location 5" } );
+    m_actionmap.push_back( { action_graph_save_location1, app::KeyEvent::CTRL_DOWN | app::KeyEvent::SHIFT_DOWN, app::KeyEvent::KEY_1, "Graph: Save location 1" } );
+    m_actionmap.push_back( { action_graph_save_location2, app::KeyEvent::CTRL_DOWN | app::KeyEvent::SHIFT_DOWN, app::KeyEvent::KEY_2, "Graph: Save location 2" } );
+    m_actionmap.push_back( { action_graph_save_location3, app::KeyEvent::CTRL_DOWN | app::KeyEvent::SHIFT_DOWN, app::KeyEvent::KEY_3, "Graph: Save location 3" } );
+    m_actionmap.push_back( { action_graph_save_location4, app::KeyEvent::CTRL_DOWN | app::KeyEvent::SHIFT_DOWN, app::KeyEvent::KEY_4, "Graph: Save location 4" } );
+    m_actionmap.push_back( { action_graph_save_location5, app::KeyEvent::CTRL_DOWN | app::KeyEvent::SHIFT_DOWN, app::KeyEvent::KEY_5, "Graph: Save location 5" } );
 
-    m_actionmap.push_back( { action_graph_restore_location1, KMOD_CTRL, SDLK_1, "Graph: Restore location 1" } );
-    m_actionmap.push_back( { action_graph_restore_location2, KMOD_CTRL, SDLK_2, "Graph: Restore location 2" } );
-    m_actionmap.push_back( { action_graph_restore_location3, KMOD_CTRL, SDLK_3, "Graph: Restore location 3" } );
-    m_actionmap.push_back( { action_graph_restore_location4, KMOD_CTRL, SDLK_4, "Graph: Restore location 4" } );
-    m_actionmap.push_back( { action_graph_restore_location5, KMOD_CTRL, SDLK_5, "Graph: Restore location 5" } );
+    m_actionmap.push_back( { action_graph_restore_location1, app::KeyEvent::CTRL_DOWN, app::KeyEvent::KEY_1, "Graph: Restore location 1" } );
+    m_actionmap.push_back( { action_graph_restore_location2, app::KeyEvent::CTRL_DOWN, app::KeyEvent::KEY_2, "Graph: Restore location 2" } );
+    m_actionmap.push_back( { action_graph_restore_location3, app::KeyEvent::CTRL_DOWN, app::KeyEvent::KEY_3, "Graph: Restore location 3" } );
+    m_actionmap.push_back( { action_graph_restore_location4, app::KeyEvent::CTRL_DOWN, app::KeyEvent::KEY_4, "Graph: Restore location 4" } );
+    m_actionmap.push_back( { action_graph_restore_location5, app::KeyEvent::CTRL_DOWN, app::KeyEvent::KEY_5, "Graph: Restore location 5" } );
 
-    m_actionmap.push_back( { action_graph_pin_tooltip, KMOD_CTRL, SDLK_p, "Graph: Pin current graph tooltip" } );
+    m_actionmap.push_back( { action_graph_pin_tooltip, app::KeyEvent::CTRL_DOWN, app::KeyEvent::KEY_p, "Graph: Pin current graph tooltip" } );
 
-    m_actionmap.push_back( { action_scroll_up, KMOD_REPEAT, SDLK_UP, "Graph: Scroll / event list up" } );
-    m_actionmap.push_back( { action_scroll_down, KMOD_REPEAT, SDLK_DOWN, "Graph: Scroll / event list down" } );
+    m_actionmap.push_back( { action_scroll_up, KMOD_REPEAT, app::KeyEvent::KEY_UP, "Graph: Scroll / event list up" } );
+    m_actionmap.push_back( { action_scroll_down, KMOD_REPEAT, app::KeyEvent::KEY_DOWN, "Graph: Scroll / event list down" } );
 
-    m_actionmap.push_back( { action_scroll_left, KMOD_REPEAT, SDLK_LEFT, "Graph: Scroll / event list left" } );
-    m_actionmap.push_back( { action_scroll_right, KMOD_REPEAT, SDLK_RIGHT, "Graph: Scroll  event list right" } );
+    m_actionmap.push_back( { action_scroll_left, KMOD_REPEAT, app::KeyEvent::KEY_LEFT, "Graph: Scroll / event list left" } );
+    m_actionmap.push_back( { action_scroll_right, KMOD_REPEAT, app::KeyEvent::KEY_RIGHT, "Graph: Scroll  event list right" } );
 
-    m_actionmap.push_back( { action_scroll_pageup, KMOD_REPEAT, SDLK_PAGEUP, "Graph: Page / event list up" } );
-    m_actionmap.push_back( { action_scroll_pagedown, KMOD_REPEAT, SDLK_PAGEDOWN, "Graph: Page / event list down" } );
+    m_actionmap.push_back( { action_scroll_pageup, KMOD_REPEAT, app::KeyEvent::KEY_PAGEUP, "Graph: Page / event list up" } );
+    m_actionmap.push_back( { action_scroll_pagedown, KMOD_REPEAT, app::KeyEvent::KEY_PAGEDOWN, "Graph: Page / event list down" } );
 
-    m_actionmap.push_back( { action_scroll_home, KMOD_NONE, SDLK_HOME, "Graph: Scroll / event list to start" } );
-    m_actionmap.push_back( { action_scroll_end, KMOD_NONE, SDLK_END, "Graph: Scroll / event list to end" } );
+    m_actionmap.push_back( { action_scroll_home, 0, app::KeyEvent::KEY_HOME, "Graph: Scroll / event list to start" } );
+    m_actionmap.push_back( { action_scroll_end, 0, app::KeyEvent::KEY_END, "Graph: Scroll / event list to end" } );
 
-    m_actionmap.push_back( { action_escape, KMOD_NONE, SDLK_ESCAPE, NULL } );
-    m_actionmap.push_back( { action_return, KMOD_NONE, SDLK_RETURN, NULL } );
+    m_actionmap.push_back( { action_escape, 0, app::KeyEvent::KEY_ESCAPE, NULL } );
+    m_actionmap.push_back( { action_return, 0, app::KeyEvent::KEY_RETURN, NULL } );
 }
 
 void Actions::clear()
@@ -1500,22 +1452,22 @@ void Actions::clear()
 
 void Actions::keydown( ci::app::KeyEvent keycode, uint32_t modstate, bool repeat )
 {
-    modstate &= ( KMOD_CTRL | KMOD_ALT | KMOD_SHIFT );
+    modstate &= ( app::KeyEvent::CTRL_DOWN | app::KeyEvent::ALT_DOWN | app::KeyEvent::SHIFT_DOWN );
 
-    if ( modstate & KMOD_CTRL )
-        modstate |= KMOD_CTRL;
-    if ( modstate & KMOD_ALT )
-        modstate |= KMOD_ALT;
-    if ( modstate & KMOD_SHIFT )
-        modstate |= KMOD_SHIFT;
+    if ( modstate & app::KeyEvent::CTRL_DOWN )
+        modstate |= app::KeyEvent::CTRL_DOWN;
+    if ( modstate & app::KeyEvent::ALT_DOWN )
+        modstate |= app::KeyEvent::ALT_DOWN;
+    if ( modstate & app::KeyEvent::SHIFT_DOWN )
+        modstate |= app::KeyEvent::SHIFT_DOWN;
 
-    for ( const actionmap_t &map : m_actionmap )
+    for ( const auto &map : m_actionmap )
     {
         // If this is a repeat key and the action handler doesn't have bit set, bail
         if ( repeat && !( map.modstate & KMOD_REPEAT ) )
             continue;
 
-        if ( ( map.key == keycode ) &&
+        if ( ( map.key == keycode.getCode() ) &&
              ( ( map.modstate & ~KMOD_REPEAT ) == modstate ) )
         {
             set( map.action );
@@ -1553,20 +1505,20 @@ const std::string Actions::hotkey_str( action_t action )
 {
     if ( action != action_nil )
     {
-        for ( const actionmap_t &map : m_actionmap )
+        for ( const auto &map : m_actionmap )
         {
             if ( map.action == action )
             {
                 std::string str;
 
-                if ( map.modstate & KMOD_CTRL )
+                if ( map.modstate & app::KeyEvent::CTRL_DOWN )
                     str += "Ctrl+";
-                if ( map.modstate & KMOD_ALT )
+                if ( map.modstate & app::KeyEvent::ALT_DOWN )
                     str += "Alt+";
-                if ( map.modstate & KMOD_SHIFT )
+                if ( map.modstate & app::KeyEvent::SHIFT_DOWN )
                     str += "Shift+";
 
-                str += SDL_GetKeyName( map.key );
+                str += map.key;
 
                 return str;
             }

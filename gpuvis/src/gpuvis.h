@@ -1144,10 +1144,10 @@ public:
     MainApp() {}
     ~MainApp() {}
 
-    SDL_Window *create_window( const char *title );
+    ci::app::WindowRef create_window( const char *title );
 
     void init( int argc, char **argv );
-    void shutdown( SDL_Window *window );
+    void shutdown( ci::app::WindowRef window );
 
     bool load_file( const char *filename, bool last );
     void cancel_load_file();
@@ -1185,7 +1185,7 @@ public:
     state_t get_state();
     void set_state( state_t state, const char *filename = nullptr );
 
-    static int SDLCALL thread_func( void *data );
+    static int thread_func( void *data );
 
     static int load_trace_file( loading_info_t *loading_info, TraceEvents &trace_events, EventCallback trace_cb );
     static int load_etl_file( loading_info_t *loading_info, TraceEvents &trace_events, EventCallback trace_cb );
@@ -1203,7 +1203,7 @@ public:
     struct loading_info_t
     {
         // State_Idle, Loading, Loaded, CancelLoading
-        std::atomic_int8_t state = { 0 };
+        std::atomic< state_t > state = { State_Idle };
 
         // Which trace format are we loading
         trace_type_t type = trace_type_invalid;
@@ -1213,7 +1213,7 @@ public:
 
         std::string filename;
         TraceWin *win = nullptr;
-        SDL_Thread *thread = nullptr;
+        std::thread thread;
         std::vector< std::string > inputfiles;
 
         bool last;

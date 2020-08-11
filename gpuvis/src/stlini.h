@@ -26,8 +26,6 @@ typedef std::pair< std::string, std::string > INIEntry; // key, value
 typedef std::map< std::string, std::string, StlIniCompareStringNoCase > INISection;
 typedef std::map< std::string, INISection, StlIniCompareStringNoCase > INIFile;
 
-std::string util_get_config_dir( const char *dirname );
-
 class CIniFile
 {
 public:

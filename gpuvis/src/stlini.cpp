@@ -278,7 +278,7 @@ void CIniFile::Open( const char *app, const char *filename )
 {
     if ( m_filename.empty() )
     {
-        m_filename = util_get_config_dir( app );
+        //m_filename = util_get_config_dir( app );
         m_filename += "/";
         m_filename += filename;
 
@@ -419,50 +419,6 @@ void CIniFile::ClearSection( const char *section )
     if ( iSection != m_inifile.end() )
         m_inifile.erase( iSection );
 }
-
-std::string util_get_config_dir( const char *dirname )
-{
-#ifdef WIN32
-    return SDL_GetPrefPath( "gpuvis", "gpuvis" );
-#else
-    std::string config_dir;
-    static const char *xdg_config_home = getenv( "XDG_CONFIG_HOME" );
-
-    if ( xdg_config_home && xdg_config_home[ 0 ] )
-    {
-        config_dir = xdg_config_home;
-    }
-    else 
-    {
-        static const char *home = getenv( "HOME" );
-
-        if ( !home || !home[ 0 ] )
-        {
-            passwd *pw = getpwuid( geteuid() );
-            home = pw->pw_dir;
-        }
-
-        if ( home && home[ 0 ] )
-        {
-            config_dir = home;
-            config_dir += "/.config";
-        }
-    }
-
-    if ( !config_dir.size() )
-    {
-        // Egads, can't find home dir - just fall back to using tmp dir.
-        config_dir = P_tmpdir;
-    }
-
-    config_dir += "/";
-    config_dir += dirname;
-
-    mkdir( config_dir.c_str(), S_IRWXU | S_IRWXG | S_IRWXO );
-    return config_dir;
-#endif
-}
-
 
 #ifdef TEST_INI
 

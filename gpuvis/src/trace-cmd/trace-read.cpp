@@ -62,6 +62,7 @@ extern "C"
 }
 
 #include "../gpuvis_macros.h"
+
 #include "trace-read.h"
 
 enum

@@ -27,6 +27,9 @@
 
 #include <future>
 
+#include "imgui/imgui.h"          // BeginColumns(), EndColumns() WIP
+#include "imgui/imgui_internal.h" // BeginColumns(), EndColumns() WIP
+
 // ini file singleton
 CIniFile &s_ini();
 
@@ -492,7 +495,7 @@ public:
     {
         action_t action;
         uint32_t modstate;
-        ci::app::KeyEvent key;
+        uint32_t key;
         const char *desc;
     };
     std::vector< actionmap_t > m_actionmap;
