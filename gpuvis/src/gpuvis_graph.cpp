@@ -43,6 +43,8 @@
 #include "gpuvis_utils.h"
 #include "gpuvis.h"
 
+#include "MiniConfig.h"
+
 // Add code to show CPU graphs with sched_switch events shown...
 
 /*
@@ -503,7 +505,7 @@ bool event_renderer_t::is_event_filtered( const trace_event_t &event )
 
 static option_id_t get_comm_option_id( const std::string &row_name, loc_type_t row_type )
 {
-    option_id_t optid = s_opts().get_opt_graph_rowsize_id( row_name );
+    option_id_t optid = Opts::get_opt_graph_rowsize_id( row_name );
 
     if ( strstr( row_name.c_str(), "(print)" ) )
     {
@@ -547,7 +549,7 @@ static option_id_t get_comm_option_id( const std::string &row_name, loc_type_t r
             minval = 4;
         }
 
-        return s_opts().add_opt_graph_rowsize( row_name.c_str(), defval, minval );
+        return Opts::add_opt_graph_rowsize( row_name.c_str(), defval, minval );
     }
 
     return OPT_Invalid;
@@ -626,8 +628,8 @@ void graph_info_t::init_rows( const std::vector< GraphRows::graph_rows_info_t > 
             }
 
             // If we're graphing only filtered events, check if this comm has any events
-            if ( s_opts().getb( OPT_GraphOnlyFiltered ) &&
-                 s_opts().getb( OPT_Graph_HideEmptyFilteredRows ) &&
+            if ( GraphOnlyFiltered &&
+                 Graph_HideEmptyFilteredRows &&
                  !win.m_filter.events.empty() )
             {
                 // Get count of !filtered events for this pid
@@ -642,9 +644,9 @@ void graph_info_t::init_rows( const std::vector< GraphRows::graph_rows_info_t > 
         option_id_t optid = get_comm_option_id( rinfo.row_name, rinfo.row_type );
         if ( optid != OPT_Invalid )
         {
-            int rows = s_opts().geti( optid );
+            int rows = Opts::geti( optid );
 
-            rinfo.row_h = Clamp< int >( rows, 2, s_opts().MAX_ROW_SIZE ) * text_h;
+            rinfo.row_h = Clamp< int >( rows, 2, Opts::MAX_ROW_SIZE ) * text_h;
         }
 
         rinfo.id = id++;
@@ -691,7 +693,7 @@ void graph_info_t::calc_process_graph_height()
     const float valf_min = 8.0f * text_h;
 
     // Check if user hit F11 and only the graph is showing (no event list).
-    if ( !s_opts().getb( OPT_ShowEventList ) )
+    if ( !ShowEventList )
     {
         // If we have a zoomed row, use up all the available window space,
         // otherwise just use the total graph height
@@ -704,24 +706,24 @@ void graph_info_t::calc_process_graph_height()
 
     if ( prinfo_zoom )
     {
-        optid = OPT_GraphHeightZoomed;
+        optid = GraphHeightZoomed;
         max_graph_size = ImGui::GetWindowHeight() * 10.0f;
     }
     else
     {
-        optid = OPT_GraphHeight;
+        optid = GraphHeight;
         max_graph_size = total_graph_height;
     }
 
     // Set up min / max sizes and clamp value in that range
-    float valf = s_opts().getf( optid );
+    float valf = Opts::getf( optid );
 
     // First time initialization - start with 1/2 the screen
     if ( !valf )
         valf = ImGui::GetContentRegionAvail().y / 2.0f;
 
     valf = Clamp< float >( valf, valf_min, max_graph_size );
-    s_opts().setf( optid, valf, valf_min, max_graph_size );
+    Opts::setf( optid, valf, valf_min, max_graph_size );
 
     visible_graph_height = valf;
 }
@@ -769,17 +771,17 @@ void graph_info_t::init()
                 ImGui::GetMousePos() : ImVec2( -FLT_MAX, -FLT_MAX );
 
     // Render timeline user space bars?
-    timeline_render_user = s_opts().getb( OPT_TimelineRenderUserSpace );
+    timeline_render_user = TimelineRenderUserSpace;
 
     // Render filtered events only?
-    graph_only_filtered = s_opts().getb( OPT_GraphOnlyFiltered ) &&
+    graph_only_filtered = GraphOnlyFiltered &&
             !win.m_filter.events.empty();
 
     // Grab last hovered graph event
     hovered_eventid = win.m_graph.last_hovered_eventid;
 
     // If the event list is visible, grab the selected event
-    if ( s_opts().getb( OPT_ShowEventList ) )
+    if ( ShowEventList )
         selected_eventid = win.m_eventlist.selected_eventid;
 
     // If our hovered event is an amd timeline event, get the id
@@ -1464,7 +1466,7 @@ void row_draw_info_t::render_text( graph_info_t &gi, float w, float h )
 
     const char *buf = m_print_info->buf;
 
-    if ( !s_opts().getb( OPT_PrintRenderPrefixes ) )
+    if ( !PrintRenderPrefixes )
     {
         if ( !strncasecmp( buf, "[Compositor] ", 13 ) )
             buf += 13;
@@ -1718,7 +1720,7 @@ uint32_t TraceWin::graph_render_print_timeline( graph_info_t &gi )
 #endif
 
     // Check if we're drawing timeline labels
-    bool timeline_labels = s_opts().getb( OPT_PrintTimelineLabels ) &&
+    bool timeline_labels = PrintTimelineLabels &&
             !ImGui::GetIO().KeyAlt;
 
     int64_t ts_duration_max = m_trace_events.m_ftrace.print_ts_max;
@@ -1971,8 +1973,8 @@ uint32_t TraceWin::graph_render_amd_timeline( graph_info_t &gi )
     ImU32 col_userspace = s_clrs().get( col_Graph_BarUserspace );
     ImU32 col_hwqueue = s_clrs().get( col_Graph_BarHwQueue );
     const std::vector< uint32_t > &locs = *gi.prinfo_cur->plocs;
-    bool render_timeline_events = s_opts().getb( OPT_TimelineEvents );
-    bool render_timeline_labels = s_opts().getb( OPT_TimelineLabels ) &&
+    bool render_timeline_events = TimelineEvents;
+    bool render_timeline_labels = TimelineLabels &&
             !ImGui::GetIO().KeyAlt;
 
     event_renderer_t event_renderer( gi, gi.rc.y, gi.rc.w, gi.rc.h );
@@ -2121,7 +2123,7 @@ uint32_t TraceWin::graph_render_row_events( graph_info_t &gi )
 
     const std::vector< uint32_t > &locs = *gi.prinfo_cur->plocs;
     event_renderer_t event_renderer( gi, gi.rc.y + 4, gi.rc.w, gi.rc.h - 8 );
-    bool hide_sched_switch = s_opts().getb( OPT_HideSchedSwitchEvents );
+    bool hide_sched_switch = HideSchedSwitchEvents;
 
     for ( size_t idx = vec_find_eventid( locs, gi.eventstart );
           idx < locs.size();
@@ -2221,7 +2223,7 @@ uint32_t TraceWin::graph_render_i915_reqwait_events( graph_info_t &gi )
     float row_h = std::max< float >( 2.0f, gi.rc.h / row_count );
 
     // Check if we're drawing timeline labels
-    bool timeline_labels = s_opts().getb( OPT_PrintTimelineLabels ) &&
+    bool timeline_labels = PrintTimelineLabels &&
             !ImGui::GetIO().KeyAlt;
 
 #if 0
@@ -2330,7 +2332,7 @@ uint32_t TraceWin::graph_render_i915_req_events( graph_info_t &gi )
     float row_h = std::max< float >( 2.0f, gi.rc.h / row_count );
 
     // Check if we're drawing timeline labels
-    bool render_timeline_labels = s_opts().getb( OPT_PrintTimelineLabels ) &&
+    bool render_timeline_labels = PrintTimelineLabels &&
             !ImGui::GetIO().KeyAlt;
 
 #if 0
@@ -2656,9 +2658,9 @@ static float get_vblank_xdiffs( TraceWin &win, graph_info_t &gi, const std::vect
         uint32_t id = vblank_locs->at( idx );
         trace_event_t &event = win.get_event( id );
 
-        if ( s_opts().getcrtc( event.crtc ) )
+        if ( Opts::getcrtc( event.crtc ) )
         {
-            float x = gi.ts_to_screenx( event.get_vblank_ts( s_opts().getb( OPT_VBlankHighPrecTimestamps ) ) );
+            float x = gi.ts_to_screenx( event.get_vblank_ts( VBlankHighPrecTimestamps ) );
 
             if ( xlast )
                 xdiff = std::max< float >( xdiff, x - xlast );
@@ -2701,11 +2703,11 @@ void TraceWin::graph_render_vblanks( graph_info_t &gi )
 
             trace_event_t &event = get_event( id );
 
-            if ( s_opts().getcrtc( event.crtc ) )
+            if ( Opts::getcrtc( event.crtc ) )
             {
                 // Handle drm_vblank_event0 .. drm_vblank_event2
                 uint32_t col = Clamp< uint32_t >( col_VBlank0 + event.crtc, col_VBlank0, col_VBlank2 );
-                float x = gi.ts_to_screenx( event.get_vblank_ts( s_opts().getb( OPT_VBlankHighPrecTimestamps ) ) );
+                float x = gi.ts_to_screenx( event.get_vblank_ts( VBlankHighPrecTimestamps ) );
 
                 imgui_drawrect_filled( x, gi.rc.y, imgui_scale( 1.0f ), gi.rc.h,
                                        s_clrs().get( col, alpha ) );
@@ -2719,7 +2721,7 @@ void TraceWin::graph_render_framemarker_frames( graph_info_t &gi )
     if ( m_frame_markers.m_right_frames.empty() )
         return;
 
-    if ( !s_opts().getb( OPT_RenderFrameMarkers ) )
+    if ( !RenderFrameMarkers )
         return;
 
     // Clear frame markers
@@ -2869,7 +2871,7 @@ void TraceWin::graph_render_mouse_selection( graph_info_t &gi )
 
 void TraceWin::graph_render_eventlist_selection( graph_info_t &gi )
 {
-    if ( s_opts().getb( OPT_ShowEventList ) )
+    if ( ShowEventList )
     {
         // Draw rectangle for visible event list contents
         if ( is_valid_id( m_eventlist.start_eventid ) &&
@@ -3019,7 +3021,7 @@ void TraceWin::zoom_graph_row()
 bool TraceWin::frame_markers_enabled()
 {
     return !m_frame_markers.m_left_frames.empty() &&
-            s_opts().getb( OPT_RenderFrameMarkers );
+            RenderFrameMarkers;
 }
 
 void TraceWin::frame_markers_goto( int target, bool fit_frame )
@@ -3607,9 +3609,9 @@ void TraceWin::graph_render_resizer( graph_info_t &gi )
 {
     bool mouse_captured = ( m_graph.mouse_captured == MOUSE_CAPTURED_RESIZE_GRAPH );
 
-    if ( s_opts().getb( OPT_ShowEventList ) || mouse_captured )
+    if ( ShowEventList || mouse_captured )
     {
-        option_id_t opt = gi.prinfo_zoom ? OPT_GraphHeightZoomed : OPT_GraphHeight;
+        option_id_t opt = gi.prinfo_zoom ? GraphHeightZoomed : GraphHeight;
 
         ImGui::Button( "##resize_graph", ImVec2( ImGui::GetContentRegionAvailWidth(), imgui_scale( 4.0f ) ) );
 
@@ -3621,12 +3623,12 @@ void TraceWin::graph_render_resizer( graph_info_t &gi )
             if ( !ImGui::IsMouseDown( 0 ) )
                 m_graph.mouse_captured = MOUSE_NOT_CAPTURED;
             else
-                s_opts().setf( opt, m_graph.mouse_capture_pos.y + ImGui::GetMouseDragDelta( 0 ).y );
+                Opts::setf( opt, m_graph.mouse_capture_pos.y + ImGui::GetMouseDragDelta( 0 ).y );
         }
         else if ( ImGui::IsItemClicked() )
         {
             m_graph.mouse_captured = MOUSE_CAPTURED_RESIZE_GRAPH;
-            m_graph.mouse_capture_pos.y = s_opts().getf( opt );
+            m_graph.mouse_capture_pos.y = Opts::getf( opt );
         }
     }
 }
@@ -3871,7 +3873,7 @@ bool TraceWin::graph_render_popupmenu( graph_info_t &gi )
 
     // Change row size. Ie "Gfx size: 10"
     if ( !gi.prinfo_zoom && ( optid != OPT_Invalid ) )
-        s_opts().render_imgui_opt( optid );
+        Opts::render_imgui_opt( optid );
 
     ImGui::Separator();
 
@@ -4072,7 +4074,7 @@ bool TraceWin::graph_render_popupmenu( graph_info_t &gi )
 
     ImGui::Separator();
 
-    s_opts().render_imgui_options();
+    Opts::render_imgui_options();
 
     if ( s_actions().get( action_escape ) )
         ImGui::CloseCurrentPopup();
@@ -4188,17 +4190,17 @@ void TraceWin::graph_mouse_tooltip_vblanks( std::string &ttip, graph_info_t &gi,
         {
             trace_event_t &event = get_event( vblank_locs->at( idx ) );
 
-            if ( s_opts().getcrtc( event.crtc ) )
+            if ( Opts::getcrtc( event.crtc ) )
             {
                 if ( event.ts < mouse_ts )
                 {
-                    if ( mouse_ts - event.get_vblank_ts( s_opts().getb( OPT_VBlankHighPrecTimestamps ) ) < prev_vblank_ts )
-                        prev_vblank_ts = mouse_ts - event.get_vblank_ts( s_opts().getb( OPT_VBlankHighPrecTimestamps ) );
+                    if ( mouse_ts - event.get_vblank_ts( VBlankHighPrecTimestamps ) < prev_vblank_ts )
+                        prev_vblank_ts = mouse_ts - event.get_vblank_ts( VBlankHighPrecTimestamps );
                 }
-                if ( event.get_vblank_ts( s_opts().getb( OPT_VBlankHighPrecTimestamps ) ) > mouse_ts )
+                if ( event.get_vblank_ts( VBlankHighPrecTimestamps ) > mouse_ts )
                 {
-                    if ( event.get_vblank_ts( s_opts().getb( OPT_VBlankHighPrecTimestamps ) ) - mouse_ts < next_vblank_ts )
-                        next_vblank_ts = event.get_vblank_ts( s_opts().getb( OPT_VBlankHighPrecTimestamps ) ) - mouse_ts;
+                    if ( event.get_vblank_ts( VBlankHighPrecTimestamps ) - mouse_ts < next_vblank_ts )
+                        next_vblank_ts = event.get_vblank_ts( VBlankHighPrecTimestamps ) - mouse_ts;
                 }
             }
         }

@@ -1,15 +1,15 @@
 #pragma once
 
-#include "cinder/app/App.h"
-#include "cinder/app/RendererGl.h"
-#include "cinder/gl/gl.h"
-#include "cinder/Log.h"
+#include <cinder/app/App.h>
+#include <cinder/app/RendererGl.h>
+#include <cinder/gl/gl.h>
+#include <cinder/Log.h>
+#include <imgui/imgui.h>
+#include "implot/implot.h"
+
 #include "../../blocks/rapidjson/rapidjson.h"
 #include "../../blocks/rapidjson/document.h"
 
-#include "AssetManager.h"
-#include "MiniConfigImgui.h"
-#include "implot/implot.h"
 #include "gpuvis_macros.h"
 #include "gpuvis.h"
 #include "gpuvis_utils.h"
@@ -18,15 +18,15 @@ using namespace rapidjson;
 
 struct Span
 {
-    string name;
+    std::string name;
     float start = 0;
     float end = 0;
 };
 
 struct SpanSeries
 {
-    string name;
-    vector<Span> span_array;
+    std::string name;
+    std::vector<Span> span_array;
 
     SpanSeries()
     {
@@ -86,18 +86,18 @@ struct MetricSeries
     float min_x = 0;
     float max_x = 1;
 
-    string name;
-    vector<float> t_array;
-    vector<float> x_array;
+    std::string name;
+    std::vector<float> t_array;
+    std::vector< float > x_array;
 };
 
 struct DataStorage
 {
-    unordered_map<string, SpanSeries> span_storage;
-    unordered_map<string, MetricSeries> metric_storage;
+    std::unordered_map<std::string, SpanSeries> span_storage;
+    std::unordered_map< std::string, MetricSeries > metric_storage;
 };
 
-struct LightSpeedApp : public App
+struct LightSpeedApp : public ci::app::App
 {
     struct loading_info_t;
 
@@ -125,9 +125,6 @@ struct LightSpeedApp : public App
     void parse_cmdline( int argc, char **argv );
 
     void handle_hotkeys();
-
-    void get_window_pos( int &x, int &y, int &w, int &h );
-    void save_window_pos( int x, int y, int w, int h );
 
     void open_trace_dialog();
 

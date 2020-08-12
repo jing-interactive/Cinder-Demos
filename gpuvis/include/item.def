@@ -1,6 +1,44 @@
-ITEM_DEF(int, APP_WIDTH, 1024)
-ITEM_DEF(int, APP_HEIGHT, 768)
+ITEM_DEF(int, WIN_X, 100)
+ITEM_DEF(int, WIN_Y, 100)
+ITEM_DEF(int, WIN_W, 1280)
+ITEM_DEF(int, WIN_H, 1024)
 ITEM_DEF(string, DATA_FILENAME, "test.json")
 ITEM_DEF_MINMAX(int, PANEL_HEIGHT, 100, 100, 400)
 ITEM_DEF_MINMAX(int, PANEL_TICK_T, 100, 0, 200)
 ITEM_DEF_MINMAX(int, PANEL_TICK_X, 3, 0, 10)
+
+ITEM_DEF(bool, TimelineLabels, true );
+ITEM_DEF(bool, TimelineEvents, true );
+ITEM_DEF(bool, TimelineRenderUserSpace, false );
+ITEM_DEF(bool, PrintTimelineLabels, true );
+ITEM_DEF(bool, PrintRenderPrefixes, false );
+ITEM_DEF(bool, GraphOnlyFiltered, true );
+ITEM_DEF(bool, Graph_HideEmptyFilteredRows, true );
+ITEM_DEF(bool, ShowEventList, true );
+ITEM_DEF(bool, SyncEventListToGraph, true );
+ITEM_DEF(bool, HideSchedSwitchEvents, true );
+ITEM_DEF(bool, ShowFps, false );
+ITEM_DEF(bool, VerticalSync, true );
+
+ITEM_DEF_MINMAX(float, GraphHeight, 0, 0, 1);
+ITEM_DEF_MINMAX(float, GraphHeightZoomed, 0, 0, 1);
+ITEM_DEF_MINMAX(int, EventListRowCount, 0, 0, 100);
+ITEM_DEF_MINMAX(float, Scale, 2.0f, 0.25f, 6.0f);
+ITEM_DEF_MINMAX(float, Gamma, 1.4f, 1.0f, 4.0f);
+ITEM_DEF(bool, TrimTrace,true);
+ITEM_DEF(bool, UseFreetype,true);
+
+ITEM_DEF(bool, RenderCrtc0, true);
+ITEM_DEF(bool, RenderCrtc1, true);
+ITEM_DEF(bool, RenderCrtc2, true);
+ITEM_DEF(bool, RenderCrtc3, true);
+ITEM_DEF(bool, RenderCrtc4, true);
+ITEM_DEF(bool, RenderCrtc5, true);
+ITEM_DEF(bool, RenderCrtc6, true);
+ITEM_DEF(bool, RenderCrtc7, true);
+ITEM_DEF(bool, RenderCrtc8, true);
+ITEM_DEF(bool, RenderCrtc9, true);
+
+ITEM_DEF(bool, VBlankHighPrecTimestamps, false);
+ITEM_DEF(bool, RenderFrameMarkers, true);
+ITEM_DEF(bool, ShowI915Counters, true);

@@ -20,7 +20,7 @@
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
     <WholeProgramOptimization>false</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
@@ -148,7 +148,6 @@
     <ClInclude Include="..\src\LightSpeedApp.h" />
     <ClInclude Include="..\src\MurmurHash3.h" />
     <ClInclude Include="..\src\noc_file_dialog.h" />
-    <ClInclude Include="..\src\stlini.h" />
     <ClInclude Include="..\src\tdopexpr.h" />
     <ClInclude Include="..\src\trace-cmd\event-parse.h" />
     <ClInclude Include="..\src\trace-cmd\kbuffer.h" />
@@ -180,7 +179,6 @@
     <ClCompile Include="..\src\proggy_tiny.cpp" />
     <ClCompile Include="..\src\RobotoCondensed_Regular.cpp" />
     <ClCompile Include="..\src\Roboto_Regular.cpp" />
-    <ClCompile Include="..\src\stlini.cpp" />
     <ClCompile Include="..\src\tdopexpr.cpp" />
     <ClCompile Include="..\src\trace-cmd\event-parse.c" />
     <ClCompile Include="..\src\trace-cmd\kbuffer-parse.c" />

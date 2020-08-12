@@ -173,9 +173,6 @@
     <ClCompile Include="..\src\MurmurHash3.cpp">
       <Filter>depends</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\stlini.cpp">
-      <Filter>depends</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\ya_getopt.c">
       <Filter>depends</Filter>
     </ClCompile>
@@ -230,9 +227,6 @@
       <Filter>depends</Filter>
     </ClInclude>
     <ClInclude Include="..\src\trace-cmd\list.h">
-      <Filter>depends</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\stlini.h">
       <Filter>depends</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ya_getopt.h">

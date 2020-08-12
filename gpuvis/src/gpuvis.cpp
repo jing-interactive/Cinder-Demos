@@ -50,43 +50,11 @@
 #include "gpuvis_etl.h"
 #include "gpuvis.h"
 
+#include "MiniConfig.h"
+
 #include "miniz.h"
 
-// https://github.com/ocornut/imgui/issues/88
-#if defined( __APPLE__ )
-  #define NOC_FILE_DIALOG_IMPLEMENTATION
-  #define NOC_FILE_DIALOG_OSX
-  #include "noc_file_dialog.h"
-#elif defined( USE_GTK3 )
-  #define NOC_FILE_DIALOG_IMPLEMENTATION
-  #define NOC_FILE_DIALOG_GTK
-  #include "noc_file_dialog.h"
-#elif defined( WIN32 )
-  #define NOC_FILE_DIALOG_IMPLEMENTATION
-  #define NOC_FILE_DIALOG_WIN32
-  #include "noc_file_dialog.h"
-#endif
-
 using namespace ci;
-
-
-CIniFile &s_ini()
-{
-    static CIniFile s_inifile;
-    return s_inifile;
-}
-
-Opts &s_opts()
-{
-    static Opts s_opts;
-    return s_opts;
-}
-
-Clrs &s_clrs()
-{
-    static Clrs s_clrs;
-    return s_clrs;
-}
 
 TextClrs &s_textclrs()
 {
@@ -104,6 +72,11 @@ Actions &s_actions()
 {
     static Actions s_actions;
     return s_actions;
+}
+
+bool Opts::getcrtc( int crtc )
+{
+    return RenderCrtc0; // TODO:
 }
 
 /*
@@ -251,270 +224,6 @@ std::vector< uint32_t > *TraceLocationsRingCtxSeq::get_locations( uint32_t ringn
 
     return m_locs.get_val( key );
 }
-
-/*
- * Opts
- */
-void Opts::init_opt_bool( option_id_t optid, const char *description, const char *key,
-                    bool defval, OPT_Flags flags )
-{
-    option_t &opt = m_options[ optid ];
-
-    opt.flags = OPT_Bool | flags;
-    opt.desc = description;
-    opt.inikey = key;
-    opt.inisection = "$options$";
-    opt.valf = defval;
-}
-
-void Opts::init_opt( option_id_t optid, const char *description, const char *key,
-               float defval, float minval, float maxval, OPT_Flags flags )
-{
-    option_t &opt = m_options[ optid ];
-
-    opt.flags = flags;
-    opt.desc = description;
-    opt.inikey = key;
-    opt.inisection = "$options$";
-    opt.valf = defval;
-    opt.valf_min = minval;
-    opt.valf_max = maxval;
-}
-
-void Opts::init()
-{
-    m_options.resize( OPT_PresetMax );
-
-    init_opt_bool( OPT_TimelineLabels, "Show gfx timeline labels", "timeline_gfx_labels", true );
-    init_opt_bool( OPT_TimelineEvents, "Show gfx timeline events", "timeline_gfx_events", true );
-    init_opt_bool( OPT_TimelineRenderUserSpace, "Show gfx timeline userspace", "timeline_gfx_userspace", false );
-    init_opt_bool( OPT_PrintTimelineLabels, "Show print timeline labels", "print_timeline_gfx_labels", true );
-    init_opt_bool( OPT_PrintRenderPrefixes, "Show print prefixes (like [Compositor])", "print_render_prefixes", false );
-    init_opt_bool( OPT_GraphOnlyFiltered, "Graph only filtered events", "graph_only_filtered", true );
-    init_opt_bool( OPT_Graph_HideEmptyFilteredRows, "Hide empty filtered comm rows", "hide_empty_filtered_rows", true );
-    init_opt_bool( OPT_ShowEventList, "Toggle showing event list", "show_event_list", true );
-    init_opt_bool( OPT_SyncEventListToGraph, "Sync event list to graph mouse location", "sync_eventlist_to_graph", true );
-    init_opt_bool( OPT_HideSchedSwitchEvents, "Hide sched_switch events", "hide_sched_switch_events", true );
-    init_opt_bool( OPT_ShowFps, "Show frame rate", "show_fps", false );
-    init_opt_bool( OPT_VerticalSync, "Vertical sync", "vertical_sync", true );
-
-    m_options[ OPT_ShowEventList ].action = action_toggle_show_eventlist;
-
-    init_opt( OPT_GraphHeight, "Graph Size: %.1f", "graph_height", 0, 0, 1, OPT_Float | OPT_Hidden );
-    init_opt( OPT_GraphHeightZoomed, "Zoomed Graph Size: %.1f", "graph_height_zoomed", 0, 0, 1, OPT_Float | OPT_Hidden );
-    init_opt( OPT_EventListRowCount, "Event List Size: %.0f", "eventlist_rows", 0, 0, 100, OPT_Int | OPT_Hidden );
-    init_opt( OPT_Scale, "Font Scale: %.1f", "scale", 2.0f, 0.25f, 6.0f, OPT_Float | OPT_Hidden );
-    init_opt( OPT_Gamma, "Font Gamma: %.1f", "gamma", 1.4f, 1.0f, 4.0f, OPT_Float | OPT_Hidden );
-    init_opt_bool( OPT_TrimTrace, "Trim Trace to align CPU buffers", "trim_trace_to_cpu_buffers", true, OPT_Hidden );
-    init_opt_bool( OPT_UseFreetype, "Use Freetype", "use_freetype", true, OPT_Hidden );
-
-    for ( uint32_t i = OPT_RenderCrtc0; i <= OPT_RenderCrtc9; i++ )
-    {
-        const std::string desc = string_format( "Show vblank crtc%d markers", i - OPT_RenderCrtc0 );
-        const std::string inikey = string_format( "render_crtc%d", i - OPT_RenderCrtc0 );
-
-        init_opt_bool( i, desc.c_str(), inikey.c_str(), true );
-    }
-
-    init_opt_bool( OPT_VBlankHighPrecTimestamps, "Use high-precision HW vblank timestamps (if available)", "vblank_high_prec_timestamps", false );
-
-    init_opt_bool( OPT_RenderFrameMarkers, "Show render frame markers", "render_framemarkers", true );
-
-    init_opt_bool( OPT_ShowI915Counters, "Show i915-perf counters", "render_i915_perf_counters", true );
-
-    // Set up action mappings so we can display hotkeys in render_imgui_opt().
-    m_options[ OPT_RenderCrtc0 ].action = action_toggle_vblank0;
-    m_options[ OPT_RenderCrtc1 ].action = action_toggle_vblank1;
-    m_options[ OPT_VBlankHighPrecTimestamps].action = action_toggle_vblank_hardware_timestamps;
-    m_options[ OPT_RenderFrameMarkers ].action = action_toggle_framemarkers;
-
-    add_opt_graph_rowsize( "gfx", 8 );
-
-    // Default sizes for these rows are in get_comm_option_id() in gpuvis_graph.cpp...
-    //   "print", "i915_req", "i915_reqwait", ...
-
-    // Create all the entries for the compute shader rows
-    // for ( uint32_t val = 0; ; val++ )
-    // {
-    //     std::string str = comp_str_create_val( val );
-    //     if ( str.empty() )
-    //         break;
-    //
-    //     add_opt_graph_rowsize( str.c_str() );
-    // }
-
-    // Read option values stored in ini file
-    for ( size_t i = 0; i < m_options.size(); i++ )
-    {
-        option_t &opt = m_options[ i ];
-
-        opt.valf = s_ini().GetFloat( opt.inikey.c_str(), opt.valf, opt.inisection.c_str() );
-    }
-}
-
-void Opts::shutdown()
-{
-    for ( size_t i = 0; i < m_options.size(); i++ )
-    {
-        const option_t &opt = m_options[ i ];
-
-        if ( opt.flags & OPT_Int )
-            s_ini().PutInt( opt.inikey.c_str(), ( int )opt.valf, opt.inisection.c_str() );
-        else if ( opt.flags & OPT_Bool )
-            s_ini().PutInt( opt.inikey.c_str(), opt.valf ? 1 : 0, opt.inisection.c_str() );
-        else
-            s_ini().PutFloat( opt.inikey.c_str(), opt.valf, opt.inisection.c_str() );
-    }
-}
-
-option_id_t Opts::add_opt_graph_rowsize( const char *row_name, int defval, int minval )
-{
-    option_t opt;
-    const char *fullname = row_name;
-
-    if ( !strncmp( row_name, "plot:", 5 ) )
-        row_name = fullname + 5;
-
-    opt.flags = OPT_Int | OPT_Hidden;
-    opt.desc = string_format( "Row height: %%.0f" );
-    opt.inikey = row_name;
-    opt.inisection = "$row_sizes$";
-    opt.valf = s_ini().GetInt( opt.inikey.c_str(), defval, opt.inisection.c_str() );
-    opt.valf_min = minval;
-    opt.valf_max = MAX_ROW_SIZE;
-
-    // Upper case first letter in description
-    opt.desc[ 0 ] = toupper( opt.desc[ 0 ] );
-
-    option_id_t optid = m_options.size();
-    m_options.push_back( opt );
-    m_graph_rowname_optid_map.m_map[ fullname ] = optid;
-
-    return optid;
-}
-
-option_id_t Opts::get_opt_graph_rowsize_id( const std::string &row_name )
-{
-    option_id_t *optid = m_graph_rowname_optid_map.get_val( row_name );
-
-    return optid ? *optid : OPT_Invalid;
-}
-
-int Opts::geti( option_id_t optid )
-{
-    assert( m_options[ optid ].flags & OPT_Int );
-
-    return ( int )m_options[ optid ].valf;
-}
-
-bool Opts::getb( option_id_t optid )
-{
-    assert( m_options[ optid ].flags & OPT_Bool );
-
-    return ( m_options[ optid ].valf != 0.0f );
-}
-
-float Opts::getf( option_id_t optid )
-{
-    assert( !( m_options[ optid ].flags & ( OPT_Int | OPT_Bool ) ) );
-
-    return m_options[ optid ].valf;
-}
-
-bool Opts::getcrtc( int crtc )
-{
-    uint32_t val = crtc + OPT_RenderCrtc0;
-
-    return ( val <= OPT_RenderCrtc9 ) ? getb( val ) : false;
-}
-
-void Opts::setf( option_id_t optid, float valf, float valf_min, float valf_max )
-{
-    m_options[ optid ].valf = valf;
-
-    if ( valf_min != FLT_MAX )
-        m_options[ optid ].valf_min = valf_min;
-
-    if ( valf_max != FLT_MAX )
-        m_options[ optid ].valf_max = valf_max;
-}
-
-void Opts::setb( option_id_t optid, bool valb )
-{
-    assert( m_options[ optid ].flags & OPT_Bool );
-
-    m_options[ optid ].valf = valb ? 1.0f : 0.0f;
-}
-
-void Opts::setdesc( option_id_t optid, const std::string &desc )
-{
-    m_options[ optid ].desc = desc;
-}
-
-bool Opts::render_imgui_opt( option_id_t optid, float w )
-{
-    bool changed = false;
-    option_t &opt = m_options[ optid ];
-
-    ImGui::PushID( optid );
-
-    if ( opt.flags & OPT_Bool )
-    {
-        bool val = !!opt.valf;
-        std::string desc = opt.desc;
-
-        if ( ( optid >= OPT_RenderCrtc0 ) && ( optid <= OPT_RenderCrtc2 ) )
-        {
-            // Quick hack to color the vblank string: col_VBlank0 .. col_VBlank2
-            const char *vblankstr = " vblank ";
-            ImU32 color = col_VBlank0 + ( optid - OPT_RenderCrtc0 );
-            std::string str = s_textclrs().mstr( vblankstr, s_clrs().get( color ) );
-
-            string_replace_str( desc, vblankstr, str );
-        }
-
-        changed = ImGui::Checkbox( desc.c_str(), &val );
-
-        if ( opt.action != action_nil )
-        {
-            ImGui::SameLine();
-            ImGui::TextDisabled( "%s", s_actions().hotkey_str( opt.action ).c_str() );
-        }
-
-        if ( changed )
-            opt.valf = val;
-    }
-    else
-    {
-        ImGui::PushItemWidth( imgui_scale( w ) );
-        changed = ImGui::SliderFloat( "##opt_valf", &opt.valf, opt.valf_min, opt.valf_max, opt.desc.c_str() );
-        ImGui::PopItemWidth();
-    }
-
-    ImGui::PopID();
-
-    return changed;
-}
-
-void Opts::render_imgui_options()
-{
-    for ( size_t i = 0; i < m_options.size(); i++ )
-    {
-        if ( m_options[ i ].flags & OPT_Hidden )
-            continue;
-
-        if ( ( i >= OPT_RenderCrtc0 ) && ( i <= OPT_RenderCrtc9 ) )
-        {
-            int crtc = ( int )( i - OPT_RenderCrtc0 );
-
-            if ( crtc > m_crtc_max )
-                continue;
-        }
-
-        render_imgui_opt( i );
-    }
-}
-
 
 // See notes at top of gpuvis_graph.cpp for explanation of these events.
 static bool is_amd_timeline_event( const trace_event_t &event )
@@ -1452,7 +1161,7 @@ void TraceEvents::init_new_event_vblank( trace_event_t &event )
         trace_event_t &event_vblank_queued = m_events[ *vblank_queued_id ];
 
         // If so, set the vblank queued time
-        event_vblank_queued.duration = event.get_vblank_ts( s_opts().getb( OPT_VBlankHighPrecTimestamps ) ) - event_vblank_queued.ts;
+        event_vblank_queued.duration = event.get_vblank_ts( VBlankHighPrecTimestamps ) - event_vblank_queued.ts;
     }
 
     m_tdopexpr_locs.add_location_str( "$name=drm_vblank_event", event.id );
@@ -1462,7 +1171,7 @@ void TraceEvents::init_new_event_vblank( trace_event_t &event )
      */
     if ( m_vblank_info[ event.crtc ].last_vblank_ts )
     {
-        int64_t diff = event.get_vblank_ts( s_opts().getb( OPT_VBlankHighPrecTimestamps ) ) - m_vblank_info[ event.crtc ].last_vblank_ts;
+        int64_t diff = event.get_vblank_ts( VBlankHighPrecTimestamps ) - m_vblank_info[ event.crtc ].last_vblank_ts;
 
         // Normalize ts diff to known frequencies
         diff = normalize_vblank_diff( diff );
@@ -1472,7 +1181,7 @@ void TraceEvents::init_new_event_vblank( trace_event_t &event )
         m_vblank_info[ event.crtc ].count++;
     }
 
-    m_vblank_info[ event.crtc ].last_vblank_ts = event.get_vblank_ts( s_opts().getb( OPT_VBlankHighPrecTimestamps ) );
+    m_vblank_info[ event.crtc ].last_vblank_ts = event.get_vblank_ts( VBlankHighPrecTimestamps );
 }
 
 // new_event_cb adds all events to array, this function initializes them.
@@ -1630,7 +1339,7 @@ void TraceEvents::calculate_vblank_info()
                 std::string str = ts_to_timestr( diff, 2 );
                 const std::string desc = string_format( "Show vblank crtc%u markers (~%s)", i, str.c_str() );
 
-                s_opts().setdesc( OPT_RenderCrtc0 + i, desc );
+                // s_opts().setdesc( OPT_RenderCrtc0 + i, desc );
                 break;
             }
 
@@ -1646,7 +1355,7 @@ void TraceEvents::init()
 
     m_vblank_info.resize( m_crtc_max + 1 );
 
-    s_opts().set_crtc_max( m_crtc_max );
+    //s_opts().set_crtc_max( m_crtc_max );
 
     {
         // Initialize events...
@@ -2346,7 +2055,7 @@ TraceWin::~TraceWin()
     m_create_graph_row_dlg.shutdown();
     m_create_row_filter_dlg.shutdown();
 
-    s_opts().set_crtc_max( -1 );
+    //s_opts().set_crtc_max( -1 );
 }
 
 void TraceWin::render()
@@ -2387,14 +2096,14 @@ void TraceWin::render()
                 m_i915_perf.counters.init( m_trace_events );
             }
 
-            if ( !s_opts().getb( OPT_ShowEventList ) ||
+            if ( !ShowEventList ||
                  imgui_collapsingheader( "Event Graph", &m_graph.has_focus, ImGuiTreeNodeFlags_DefaultOpen ) )
             {
                 graph_render_options();
                 graph_render();
             }
 
-            if ( s_opts().getb( OPT_ShowEventList ) &&
+            if ( ShowEventList &&
                  imgui_collapsingheader( "Event List", &m_eventlist.has_focus, ImGuiTreeNodeFlags_DefaultOpen ) )
             {
                 eventlist_render_options();
@@ -2402,7 +2111,7 @@ void TraceWin::render()
                 eventlist_handle_hotkeys();
             }
 
-            if ( s_opts().getb( OPT_ShowI915Counters ) &&
+            if ( ShowI915Counters &&
                  imgui_collapsingheader( "I915 performance counters", &m_i915_perf.has_focus, ImGuiTreeNodeFlags_DefaultOpen ) )
             {
                 m_i915_perf.counters.render();
@@ -2990,9 +2699,9 @@ void TraceWin::eventlist_render_options()
     }
 
     if ( !m_inited ||
-         m_eventlist.hide_sched_switch_events_val != s_opts().getb( OPT_HideSchedSwitchEvents ) )
+         m_eventlist.hide_sched_switch_events_val != HideSchedSwitchEvents )
     {
-        bool hide_sched_switch = s_opts().getb( OPT_HideSchedSwitchEvents );
+        bool hide_sched_switch = HideSchedSwitchEvents;
         static const char filter_str[] = "$name != \"sched_switch\"";
 
         remove_event_filter( m_filter.buf, "$name == \"sched_switch\"" );
@@ -3098,12 +2807,12 @@ void TraceWin::eventlist_render_options()
         std::string label = string_format( "Graph only filtered (%lu events)", m_filter.events.size() );
 
         ImGui::SameLine();
-        s_opts().render_imgui_opt( OPT_GraphOnlyFiltered );
+        //s_opts().render_imgui_opt( OPT_GraphOnlyFiltered );
 
-        if ( s_opts().getb( OPT_GraphOnlyFiltered ) )
+        if ( GraphOnlyFiltered )
         {
             ImGui::SameLine();
-            s_opts().render_imgui_opt( OPT_Graph_HideEmptyFilteredRows );
+            //s_opts().render_imgui_opt( OPT_Graph_HideEmptyFilteredRows );
         }
     }
 }
@@ -3146,7 +2855,7 @@ void TraceWin::eventlist_render()
         float lineh = ImGui::GetTextLineHeightWithSpacing();
         const ImVec2 content_avail = ImGui::GetContentRegionAvail();
 
-        int eventlist_row_count = s_opts().geti( OPT_EventListRowCount );
+        int eventlist_row_count = EventListRowCount;
 
         // If the user has set the event list row count to 0 (auto size), make
         //  sure we always have at least 20 rows.
@@ -3168,7 +2877,7 @@ void TraceWin::eventlist_render()
         if ( scroll_lines )
             ImGui::SetScrollY( ImGui::GetScrollY() + scroll_lines * lineh );
 
-        if ( s_opts().getb( OPT_SyncEventListToGraph ) &&
+        if ( SyncEventListToGraph &&
              !m_eventlist.do_gotoevent &&
              ( m_graph.ts_marker_mouse != -1 ) &&
              ( m_graph.ts_marker_mouse != m_eventlist.ts_marker_mouse_sync ) )

@@ -265,6 +265,13 @@ public:
     std::vector< std::string > m_previous_filters;
 };
 
+struct Opts
+{
+    static const uint32_t MAX_ROW_SIZE = 128;
+
+    static bool getcrtc(int crtc);
+};
+
 struct row_filter_t
 {
     BitVec *bitvec = nullptr;
@@ -1020,114 +1027,6 @@ public:
 
 void add_sched_switch_pid_comm( trace_info_t &trace_info, const trace_event_t &event,
                                 const char *pidstr, const char *commstr );
-    
-typedef uint32_t option_id_t;
-// Preset ini options
-enum : uint32_t
-{
-    OPT_Invalid = ( uint32_t )-1,
-    OPT_TimelineLabels = 0,
-    OPT_TimelineEvents,
-    OPT_TimelineRenderUserSpace,
-    OPT_PrintTimelineLabels,
-    OPT_PrintRenderPrefixes,
-    OPT_GraphOnlyFiltered,
-    OPT_Graph_HideEmptyFilteredRows,
-    OPT_ShowEventList,
-    OPT_SyncEventListToGraph,
-    OPT_HideSchedSwitchEvents,
-    OPT_RenderCrtc0,
-    OPT_RenderCrtc1,
-    OPT_RenderCrtc2,
-    OPT_RenderCrtc3,
-    OPT_RenderCrtc4,
-    OPT_RenderCrtc5,
-    OPT_RenderCrtc6,
-    OPT_RenderCrtc7,
-    OPT_RenderCrtc8,
-    OPT_RenderCrtc9,
-    OPT_VBlankHighPrecTimestamps,
-    OPT_RenderFrameMarkers,
-    OPT_GraphHeight,
-    OPT_GraphHeightZoomed,
-    OPT_EventListRowCount,
-    OPT_Scale,
-    OPT_Gamma,
-    OPT_UseFreetype,
-    OPT_TrimTrace,
-    OPT_ShowFps,
-    OPT_VerticalSync,
-    OPT_ShowI915Counters,
-    OPT_PresetMax
-};
-
-struct option_t
-{
-    uint32_t flags;
-    std::string desc;
-    std::string inikey;
-    std::string inisection;
-
-    float valf;
-    float valf_min = 0.0f;
-    float valf_max = 1.0f;
-
-    action_t action = action_nil;
-};
-
-class Opts
-{
-public:
-    Opts() {}
-    ~Opts() {}
-
-    void init();
-    void shutdown();
-
-    int geti( option_id_t optid );
-    bool getb( option_id_t optid );
-    float getf( option_id_t optid );
-    bool getcrtc( int crtc );
-
-    void setb( option_id_t optid, bool valb );
-    void setf( option_id_t optid, float valf, float valf_min = FLT_MAX, float valf_max = FLT_MAX );
-
-    void setdesc( option_id_t optid, const std::string &desc );
-
-    bool render_imgui_opt( option_id_t optid, float w = 200.0f );
-    void render_imgui_options();
-
-    option_id_t add_opt_graph_rowsize( const char *row_name, int defval = 4, int minval = 4 );
-    option_id_t get_opt_graph_rowsize_id( const std::string &row_name );
-
-    void set_crtc_max( int crtc_max ) { m_crtc_max = crtc_max; }
-
-    static const uint32_t MAX_ROW_SIZE = 128;
-
-private:
-    typedef uint32_t OPT_Flags;
-    enum : uint32_t
-    {
-        OPT_Float = 0x0000,
-        OPT_Bool = 0x0001,
-        OPT_Int = 0x0002,
-        OPT_Hidden = 0x004
-    };
-    void init_opt_bool( option_id_t optid, const char *description, const char *key,
-                        bool defval, OPT_Flags flags = 0 );
-    void init_opt( option_id_t optid, const char *description, const char *key,
-                   float defval, float minval, float maxval, OPT_Flags flags );
-
-private:
-    int m_crtc_max = -1;
-    std::vector< option_t > m_options;
-
-    // Map row names to option IDs to store graph row sizes. Ie, "gfx", "print", "sdma0", etc.
-    util_umap< std::string, option_id_t > m_graph_rowname_optid_map;
-};
-
-// Opts singleton
-Opts &s_opts();
 
 class row_pos_t
 {

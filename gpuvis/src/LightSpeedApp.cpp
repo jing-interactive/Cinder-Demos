@@ -1,4 +1,7 @@
 #include "LightSpeedApp.h"
+#include "AssetManager.h"
+#include "MiniConfigImgui.h"
+#include "implot/implot.h"
 
 using namespace ci;
 using namespace ci::app;
@@ -36,20 +39,8 @@ void LightSpeedApp::setup()
             }
         }
 #endif
-
-        ci::app::WindowRef window;
-
-        // Initialize logging system
-        logf_init();
-
-        ImGuiIO &io = ImGui::GetIO();
-
-        // Init ini singleton
-        s_ini().Open( "gpuvis", "gpuvis.ini" );
         // Initialize colors
         s_clrs().init();
-        // Init opts singleton
-        s_opts().init();
         // Init actions singleton
         s_actions().init();
 
@@ -94,8 +85,8 @@ void LightSpeedApp::setup()
     } );
 
     getWindow()->getSignalResize().connect( [ & ] {
-        APP_WIDTH = getWindowWidth();
-        APP_HEIGHT = getWindowHeight();
+        WIN_W = getWindowWidth();
+        WIN_H = getWindowHeight();
     } );
 
     getSignalUpdate().connect( [ & ] {
@@ -137,8 +128,8 @@ void LightSpeedApp::setup()
             //        done = true;
             //}
 
-            bool use_freetype = s_opts().getb( OPT_UseFreetype );
-            s_opts().setb( OPT_UseFreetype, use_freetype );
+            // bool use_freetype = s_opts().getb( OPT_UseFreetype );
+            // s_opts().setb( OPT_UseFreetype, use_freetype );
 
             // Handle global hotkeys
             handle_hotkeys();
@@ -156,17 +147,10 @@ void LightSpeedApp::setup()
             // Shut down app
         shutdown();
 
-        // Write option settings to ini file
-        s_opts().shutdown();
         // Save color entries
         s_clrs().shutdown();
-        // Close ini file
-        s_ini().Close();
 
         logf_clear();
-
-        // Cleanup
-        logf_shutdown();
 
 #if !defined( GPUVIS_TRACE_UTILS_DISABLE )
         if ( tracing == 1 )
@@ -189,6 +173,6 @@ void LightSpeedApp::setup()
 
 CINDER_APP( LightSpeedApp, RendererGl, []( App::Settings *settings ) {
     readConfig();
-    settings->setWindowSize( APP_WIDTH, APP_HEIGHT );
+    settings->setWindowSize( WIN_W, WIN_H);
     settings->setMultiTouchEnabled( false );
 } )

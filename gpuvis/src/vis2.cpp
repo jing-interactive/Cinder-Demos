@@ -1,7 +1,24 @@
 #include "LightSpeedApp.h"
 #include "gpuvis.h"
 #include "gpuvis_etl.h"
-#include "ya_getopt.h"
+#include "ya_getopt.h
+
+#include "MiniConfig.h"
+
+// https://github.com/ocornut/imgui/issues/88
+#if defined( __APPLE__ )
+#define NOC_FILE_DIALOG_IMPLEMENTATION
+#define NOC_FILE_DIALOG_OSX
+#include "noc_file_dialog.h"
+#elif defined( USE_GTK3 )
+#define NOC_FILE_DIALOG_IMPLEMENTATION
+#define NOC_FILE_DIALOG_GTK
+#include "noc_file_dialog.h"
+#elif defined( WIN32 )
+#define NOC_FILE_DIALOG_IMPLEMENTATION
+#define NOC_FILE_DIALOG_WIN32
+#include "noc_file_dialog.h"
+#endif
 
 using namespace ci;
 using namespace ci::app;
@@ -326,7 +343,8 @@ void LightSpeedApp::shutdown( )
         cancel_load_file();
 
         // Wait for our thread to die.
-        m_loading_info.thread.join();
+        if ( m_loading_info.thread.joinable() )
+            m_loading_info.thread.join();
     }
 
     set_state( State_Idle );
@@ -675,22 +693,6 @@ void LightSpeedApp::load_fonts()
 
         m_show_scale_popup = true;
     }
-}
-
-void LightSpeedApp::get_window_pos( int &x, int &y, int &w, int &h )
-{
-    x = s_ini().GetInt( "win_x", 0 );
-    y = s_ini().GetInt( "win_y", 0);
-    w = s_ini().GetInt( "win_w", 1280 );
-    h = s_ini().GetInt( "win_h", 1024 );
-}
-
-void LightSpeedApp::save_window_pos( int x, int y, int w, int h )
-{
-    s_ini().PutInt( "win_x", x );
-    s_ini().PutInt( "win_y", y );
-    s_ini().PutInt( "win_w", w );
-    s_ini().PutInt( "win_h", h );
 }
 
 static const std::string trace_info_label( TraceEvents &trace_events )
