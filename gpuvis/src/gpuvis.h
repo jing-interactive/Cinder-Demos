@@ -22,15 +22,20 @@
  * THE SOFTWARE.
  */
 
+#pragma once
+
+#include <unordered_set>
+
+#include "trace-cmd/trace-read.h"
+#include "gpuvis_macros.h"
+#include "gpuvis_utils.h"
+
 extern "C" {
     struct intel_perf_data_reader;
 }
 
-// Opts singleton
-class Opts &s_opts();
-
 // Main app singleton
-class MainApp &s_app();
+struct LightSpeedApp &s_app();
 
 class TraceEvents;
 
@@ -1013,7 +1018,9 @@ public:
     friend class graph_info_t;
 };
 
-// MainApp ini options
+void add_sched_switch_pid_comm( trace_info_t &trace_info, const trace_event_t &event,
+                                const char *pidstr, const char *commstr );
+    
 typedef uint32_t option_id_t;
 // Preset ini options
 enum : uint32_t
@@ -1119,6 +1126,9 @@ private:
     util_umap< std::string, option_id_t > m_graph_rowname_optid_map;
 };
 
+// Opts singleton
+Opts &s_opts();
+
 class row_pos_t
 {
 public:
@@ -1135,131 +1145,3 @@ public:
     std::array< std::map< int64_t, int64_t >, Opts::MAX_ROW_SIZE > m_row_pos = {};
 };
 
-class MainApp
-{
-public:
-    struct loading_info_t;
-
-public:
-    MainApp() {}
-    ~MainApp() {}
-
-    ci::app::WindowRef create_window( const char *title );
-
-    void init( int argc, char **argv );
-    void shutdown( ci::app::WindowRef window );
-
-    bool load_file( const char *filename, bool last );
-    void cancel_load_file();
-
-    // Trace file loaded and viewing?
-    bool is_trace_loaded();
-
-    void render();
-    void render_log();
-    void render_console();
-    void render_save_filename();
-    void render_menu( const char *str_id );
-    void render_menu_options();
-    void render_font_options();
-    void render_color_picker();
-
-    void update();
-    void load_fonts();
-
-    void parse_cmdline( int argc, char **argv );
-
-    void handle_hotkeys();
-
-    void get_window_pos( int &x, int &y, int &w, int &h );
-    void save_window_pos( int x, int y, int w, int h );
-
-    void open_trace_dialog();
-
-    enum state_t
-    {
-        State_Idle,
-        State_Loading,
-        State_CancelLoading
-    };
-    state_t get_state();
-    void set_state( state_t state, const char *filename = nullptr );
-
-    static int thread_func( void *data );
-
-    static int load_trace_file( loading_info_t *loading_info, TraceEvents &trace_events, EventCallback trace_cb );
-    static int load_etl_file( loading_info_t *loading_info, TraceEvents &trace_events, EventCallback trace_cb );
-    static int load_i915_perf_file( loading_info_t *loading_info, TraceEvents &trace_events, EventCallback trace_cb );
-
-public:
-    enum trace_type_t
-    {
-        trace_type_invalid,
-        trace_type_trace,
-        trace_type_etl,
-        trace_type_i915_perf_trace,
-    };
-
-    struct loading_info_t
-    {
-        // State_Idle, Loading, Loaded, CancelLoading
-        std::atomic< state_t > state = { State_Idle };
-
-        // Which trace format are we loading
-        trace_type_t type = trace_type_invalid;
-
-        uint64_t tracestart = 0;
-        uint64_t tracelen = 0;
-
-        std::string filename;
-        TraceWin *win = nullptr;
-        std::thread thread;
-        std::vector< std::string > inputfiles;
-
-        bool last;
-    };
-    loading_info_t m_loading_info;
-
-    struct save_info_t
-    {
-        char filename_buf[ PATH_MAX ] = { 0 };
-
-        std::string title;
-        std::string filename_new;
-        std::string filename_orig;
-        std::string errstr;
-
-        std::function< bool ( save_info_t &save_info ) > save_cb;
-    };
-    save_info_t m_saving_info;
-
-    TraceWin *m_trace_win = nullptr;
-
-    trace_type_t m_trace_type = trace_type_invalid;
-
-    FontInfo m_font_main;
-    FontInfo m_font_small;
-
-    ImGuiTextFilter m_filter;
-    size_t m_log_size = ( size_t )-1;
-    std::vector< std::string > m_log;
-
-    std::string m_colorpicker_event;
-    colors_t m_colorpicker_color = 0;
-    ColorPicker m_colorpicker;
-
-    ImageBuf m_imagebuf;
-
-    bool m_quit = false;
-    bool m_focus_gpuvis_console = false;
-    bool m_show_gpuvis_console = false;
-    bool m_show_imgui_test_window = false;
-    bool m_show_imgui_style_editor = false;
-    bool m_show_imgui_metrics_editor = false;
-    bool m_show_font_window = false;
-    bool m_show_color_picker = false;
-    bool m_show_scale_popup = false;
-    bool m_show_help = false;
-
-    std::string m_show_trace_info;
-};

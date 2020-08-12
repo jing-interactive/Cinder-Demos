@@ -188,6 +188,9 @@
     <ClCompile Include="..\src\trace-cmd\trace-seq.c">
       <Filter>depends</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\vis2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\Resources.h">
@@ -243,6 +246,9 @@
     </ClInclude>
     <ClInclude Include="..\src\gpuvis_macros.h">
       <Filter>depends</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\LightSpeedApp.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

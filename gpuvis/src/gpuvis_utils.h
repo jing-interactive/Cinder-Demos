@@ -27,6 +27,7 @@
 
 #include <future>
 
+#include "stlini.h"
 #include "imgui/imgui.h"          // BeginColumns(), EndColumns() WIP
 #include "imgui/imgui_internal.h" // BeginColumns(), EndColumns() WIP
 

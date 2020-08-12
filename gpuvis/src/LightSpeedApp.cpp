@@ -1,184 +1,194 @@
-#include "cinder/app/App.h"
-#include "cinder/app/RendererGl.h"
-#include "cinder/gl/gl.h"
-#include "cinder/Log.h"
-#include "../../blocks/rapidjson/rapidjson.h"
-#include "../../blocks/rapidjson/document.h"
-
-#include "AssetManager.h"
-#include "MiniConfigImgui.h"
-#include "implot/implot.h"
+#include "LightSpeedApp.h"
 
 using namespace ci;
 using namespace ci::app;
 using namespace std;
 using namespace rapidjson;
 
-struct Span
+void LightSpeedApp::setup()
 {
-    string name;
-    float start = 0;
-    float end = 0;
-};
+    log::makeLogger< log::LoggerFileRotating >( fs::path(), "app.%Y.%m.%d.log" );
+    createConfigImgui();
 
-struct SpanSeries
-{
-    string name;
-    vector<Span> span_array;
-
-    SpanSeries()
     {
-    }
 
-    SpanSeries(const Document::GenericValue& stat)
-    {
-        name = stat["name"].GetString();
-        auto pid = stat["pid"].GetInt();
-        auto& ph = stat["ph"];
-        if (ph == "X")
+#if !defined( GPUVIS_TRACE_UTILS_DISABLE )
+        int tracing = -1;
+
+        for ( int i = 1; i < argc; i++ )
         {
-            auto tid = stat["tid"].GetInt();
-            auto ts = stat["ts"].GetInt();
-            auto dur = stat["dur"].GetInt();
-            auto cat = stat["cat"].GetString();
-        }
-    }
-};
-
-struct MetricSeries
-{
-    MetricSeries()
-    {
-
-    }
-
-    MetricSeries(const Document::GenericValue& stat)
-    {
-        name = stat["name"].GetString();
-        auto& t_array_json = stat["t"].GetArray();
-        for (auto& it : t_array_json)
-        {
-            auto v = it.GetFloat();
-            if (v > max_t) max_t = v;
-            else if (v < min_t) min_t = v;
-            t_array.push_back(v);
-        }
-        auto& x_array_json = stat["x"].GetArray();
-        for (auto& it : x_array_json)
-        {
-            auto v = it.GetFloat();
-            if (v > max_x) max_x = v;
-            else if (v < min_x) min_x = v;
-            x_array.push_back(v);
-        }
-    }
-
-    static ImPlotPoint getter(void* data, int idx)
-    {
-        auto* self = (MetricSeries*)data;
-        return ImPlotPoint(self->t_array[idx], self->x_array[idx]);
-    }
-
-    float min_t = 0;
-    float max_t = 1;
-    float min_x = 0;
-    float max_x = 1;
-
-    string name;
-    vector<float> t_array;
-    vector<float> x_array;
-};
-
-struct DataStorage
-{
-    unordered_map<string, SpanSeries> span_storage;
-    unordered_map<string, MetricSeries> metric_storage;
-};
-
-struct LightSpeedApp : public App
-{
-    DataStorage storage;
-
-    void setup() override
-    {
-        log::makeLogger<log::LoggerFileRotating>(fs::path(), "app.%Y.%m.%d.log");
-        createConfigImgui();
-
-        {
-            Document json;
-            const auto& str = am::str(DATA_FILENAME);
-            if (!str.empty())
+            if ( !strcasecmp( argv[ i ], "--trace" ) )
             {
-                json.Parse(str.c_str());
-
-                if (json.HasMember("stats"))
+                if ( gpuvis_trace_init() == -1 )
                 {
-                    auto& stats_array = json["stats"].GetArray();
-                    for (auto& item : stats_array)
-                    {
-                        MetricSeries series(item);
-                        storage.metric_storage[series.name] = series;
-                    }
+                    printf( "WARNING: gpuvis_trace_init() failed.\n" );
                 }
-                else if (json.HasMember("traceEvents"))
+                else
                 {
-                    auto& event_array = json["traceEvents"].GetArray();
-                    for (auto& item : event_array)
-                    {
-                        SpanSeries series(item);
-                        storage.span_storage[series.name] = series;
-                    }
+                    printf( "Tracing enabled. Tracefs dir: %s\n", gpuvis_get_tracefs_dir() );
+
+                    gpuvis_start_tracing( 0 );
+
+                    tracing = gpuvis_tracing_on();
+                    printf( "gpuvis_tracing_on: %d\n", tracing );
+                }
+                break;
+            }
+        }
+#endif
+
+        ci::app::WindowRef window;
+
+        // Initialize logging system
+        logf_init();
+
+        ImGuiIO &io = ImGui::GetIO();
+
+        // Init ini singleton
+        s_ini().Open( "gpuvis", "gpuvis.ini" );
+        // Initialize colors
+        s_clrs().init();
+        // Init opts singleton
+        s_opts().init();
+        // Init actions singleton
+        s_actions().init();
+
+        // Setup imgui default text color
+        s_textclrs().update_colors();
+
+        // Load our fonts
+        load_fonts();
+    }
+
+    {
+        Document json;
+        const auto &str = am::str( DATA_FILENAME );
+        if ( !str.empty() )
+        {
+            json.Parse( str.c_str() );
+
+            if ( json.HasMember( "stats" ) )
+            {
+                auto &stats_array = json[ "stats" ].GetArray();
+                for ( auto &item : stats_array )
+                {
+                    MetricSeries series( item );
+                    storage.metric_storage[ series.name ] = series;
+                }
+            }
+            else if ( json.HasMember( "traceEvents" ) )
+            {
+                auto &event_array = json[ "traceEvents" ].GetArray();
+                for ( auto &item : event_array )
+                {
+                    SpanSeries series( item );
+                    storage.span_storage[ series.name ] = series;
                 }
             }
         }
+    }
 
-        getWindow()->getSignalKeyUp().connect([&](KeyEvent& event) {
-            if (event.getCode() == KeyEvent::KEY_ESCAPE) quit();
-        });
+    getWindow()->getSignalKeyUp().connect( [ & ]( KeyEvent &event ) {
+        if ( event.getCode() == KeyEvent::KEY_ESCAPE )
+            quit();
+    } );
 
-        getWindow()->getSignalResize().connect([&] {
-            APP_WIDTH = getWindowWidth();
-            APP_HEIGHT = getWindowHeight();
-        });
+    getWindow()->getSignalResize().connect( [ & ] {
+        APP_WIDTH = getWindowWidth();
+        APP_HEIGHT = getWindowHeight();
+    } );
 
-        getSignalUpdate().connect([&] {
-            bool open = false;
-            ImPlot::ShowDemoWindow(&open);
+    getSignalUpdate().connect( [ & ] {
+        bool open = false;
+        ImPlot::ShowDemoWindow( &open );
 
-
-            if (ImGui::Begin("Plot"))
+        if ( ImGui::Begin( "Plot" ) )
+        {
+            for ( const auto &kv : storage.metric_storage )
             {
-                for (const auto& kv : storage.metric_storage)
+                auto &series = kv.second;
+
+                ImPlot::SetNextPlotLimits( series.min_t, series.max_t, series.min_x, series.max_x, ImGuiCond_Always );
+                ImPlot::SetNextPlotTicksX( series.min_t, series.max_t, PANEL_TICK_T );
+                ImPlot::SetNextPlotTicksY( series.min_x, series.max_x, PANEL_TICK_X );
+
+                if ( ImPlot::BeginPlot( series.name.c_str(), NULL, NULL, ImVec2( -1, PANEL_HEIGHT ), ImPlotFlags_Default | ImPlotFlags_NoChild ) )
                 {
-                    auto& series = kv.second;
-
-                    ImPlot::SetNextPlotLimits(series.min_t, series.max_t, series.min_x, series.max_x, ImGuiCond_Always);
-                    ImPlot::SetNextPlotTicksX(series.min_t, series.max_t, PANEL_TICK_T);
-                    ImPlot::SetNextPlotTicksY(series.min_x, series.max_x, PANEL_TICK_X);
-
-                    if (ImPlot::BeginPlot(series.name.c_str(), NULL, NULL, ImVec2(-1, PANEL_HEIGHT), ImPlotFlags_Default | ImPlotFlags_NoChild))
-                    {
-                        //ImPlot::PushStyleColor(ImPlotCol_Line, items[i].Col);
-                        ImPlot::PlotLine(series.name.c_str(), MetricSeries::getter, (void*)&series, series.t_array.size());
-                        //ImPlot::PopStyleColor();
-                        ImPlot::EndPlot();
-                    }
+                    //ImPlot::PushStyleColor(ImPlotCol_Line, items[i].Col);
+                    ImPlot::PlotLine( series.name.c_str(), MetricSeries::getter, ( void * )&series, series.t_array.size() );
+                    //ImPlot::PopStyleColor();
+                    ImPlot::EndPlot();
                 }
             }
-            ImGui::End();
+        }
+        ImGui::End();
 
-        });
+        {
+            // Clear keyboard actions.
+            s_actions().clear();
 
-        getSignalCleanup().connect([&] { writeConfig(); });
+            //while ( SDL_PollEvent( &event ) )
+            //{
+            //    if ( ( event.type == SDL_KEYDOWN ) || ( event.type == SDL_KEYUP ) )
+            //        s_keybd().update( event.key );
+            //    else if ( ( event.type == SDL_WINDOWEVENT ) && ( event.window.event == SDL_WINDOWEVENT_FOCUS_LOST ) )
+            //        s_keybd().clear();
+            //    else if ( event.type == SDL_QUIT )
+            //        done = true;
+            //}
 
-        getWindow()->getSignalDraw().connect([&] {
-            gl::clear();
-        });
-    }
-};
+            bool use_freetype = s_opts().getb( OPT_UseFreetype );
+            s_opts().setb( OPT_UseFreetype, use_freetype );
 
-CINDER_APP(LightSpeedApp, RendererGl, [](App::Settings* settings) {
+            // Handle global hotkeys
+            handle_hotkeys();
+
+            // Render trace windows
+            render();
+
+            // Update app font settings, scale, etc
+            update();
+        }
+    } );
+
+    getSignalCleanup().connect( [ & ] { 
+        writeConfig(); 
+            // Shut down app
+        shutdown();
+
+        // Write option settings to ini file
+        s_opts().shutdown();
+        // Save color entries
+        s_clrs().shutdown();
+        // Close ini file
+        s_ini().Close();
+
+        logf_clear();
+
+        // Cleanup
+        logf_shutdown();
+
+#if !defined( GPUVIS_TRACE_UTILS_DISABLE )
+        if ( tracing == 1 )
+        {
+            char filename[ PATH_MAX ];
+            int ret = gpuvis_trigger_capture_and_keep_tracing( filename, sizeof( filename ) );
+
+            printf( "Tracing wrote '%s': %d\n", filename, ret );
+        }
+
+        gpuvis_trace_shutdown();
+#endif
+        
+        } );
+
+    getWindow()->getSignalDraw().connect( [ & ] {
+        gl::clear();
+    } );
+}
+
+CINDER_APP( LightSpeedApp, RendererGl, []( App::Settings *settings ) {
     readConfig();
-    settings->setWindowSize(APP_WIDTH, APP_HEIGHT);
-    settings->setMultiTouchEnabled(false);
-})
+    settings->setWindowSize( APP_WIDTH, APP_HEIGHT );
+    settings->setMultiTouchEnabled( false );
+} )

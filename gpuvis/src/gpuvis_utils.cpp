@@ -809,7 +809,9 @@ void ImageBuf::CreateFromCaptureGL( int x, int y, int w, int h )
 
 int ImageBuf::SaveFile( const char *filename )
 {
-    return stbi_write_png( filename, Width, Height, 4, Data, Width * 4 );
+    // TODO;
+    //return stbi_write_png( filename, Width, Height, 4, Data, Width * 4 );
+    return 1;
 }
 
 void ImageBuf::RemoveAlpha()

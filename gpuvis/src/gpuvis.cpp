@@ -29,8 +29,7 @@
 #include <unordered_set>
 #include <functional>
 #include <sys/stat.h>
-#include <cinder/app/App.h>
-#include <cinder/gl/gl.h>
+#include "LightSpeedApp.h"
 
 #define YA_GETOPT_NO_COMPAT_MACRO
 #include "ya_getopt.h"
@@ -541,7 +540,7 @@ static bool is_drm_sched_timeline_event( const trace_event_t &event )
              !strcmp( event.name, "drm_sched_process_job" ) );
 }
 
-static void add_sched_switch_pid_comm( trace_info_t &trace_info, const trace_event_t &event,
+void add_sched_switch_pid_comm( trace_info_t &trace_info, const trace_event_t &event,
                                        const char *pidstr, const char *commstr )
 {
     int pid = atoi( get_event_field_val( event, pidstr ) );
@@ -597,7 +596,7 @@ int TraceEvents::new_event_cb( const trace_event_t &event )
     m_eventsloaded.fetch_add( 1 );
 
     // Return 1 to cancel loading
-    return ( s_app().get_state() == MainApp::State_CancelLoading );
+    return ( s_app().get_state() == LightSpeedApp::State_CancelLoading );
 }
 
 /*
@@ -3484,11 +3483,4 @@ void TraceWin::graph_dialogs_render()
         m_create_filter_eventid = INVALID_ID;
     }
     m_frame_markers.render_dlg( m_trace_events );
-}
-
-static const std::string trace_info_label( TraceEvents &trace_events )
-{
-    const char *basename = get_path_filename( trace_events.m_filename.c_str() );
-
-    return string_format( "Info for '%s'", s_textclrs().bright_str( basename ).c_str() );
 }

@@ -1,25 +1,30 @@
+#include "LightSpeedApp.h"
+#include "gpuvis.h"
+#include "gpuvis_etl.h"
+#include "ya_getopt.h"
 
-MainApp &s_app()
+using namespace ci;
+using namespace ci::app;
+using namespace std;
+using namespace rapidjson;
+
+LightSpeedApp &s_app()
 {
-    static MainApp s_app;
-    return s_app;
+    auto app = App::get();
+    return (LightSpeedApp&)*app;
 }
 
-
-/*
- * MainApp
- */
-MainApp::state_t MainApp::get_state()
+LightSpeedApp::state_t LightSpeedApp::get_state()
 {
     return ( state_t )m_loading_info.state.load();
 }
 
-bool MainApp::is_trace_loaded()
+bool LightSpeedApp::is_trace_loaded()
 {
     return m_trace_win && ( m_trace_win->m_trace_events.get_load_status() == TraceEvents::Trace_Loaded );
 }
 
-void MainApp::set_state( state_t state, const char *filename )
+void LightSpeedApp::set_state( state_t state, const char *filename )
 {
     if ( state == State_Loading )
         m_loading_info.filename = filename;
@@ -32,7 +37,7 @@ void MainApp::set_state( state_t state, const char *filename )
     m_loading_info.state.store( state );
 }
 
-void MainApp::cancel_load_file()
+void LightSpeedApp::cancel_load_file()
 {
     // Switch to cancel loading if we're currently loading
     if ( m_loading_info.state.load() == State_Loading )
@@ -43,6 +48,7 @@ void MainApp::cancel_load_file()
 static std::string unzip_first_file( const char *zipfile )
 {
     std::string ret;
+#if 0
     mz_zip_archive zip_archive;
 
     memset( &zip_archive, 0, sizeof( zip_archive ) );
@@ -87,11 +93,11 @@ static std::string unzip_first_file( const char *zipfile )
 
         mz_zip_reader_end( &zip_archive );
     }
-
+#endif
     return ret;
 }
 
-bool MainApp::load_file( const char *filename, bool last )
+bool LightSpeedApp::load_file( const char *filename, bool last )
 {
     GPUVIS_TRACE_BLOCKF( "%s: %s", __func__, filename );
 
@@ -158,19 +164,19 @@ bool MainApp::load_file( const char *filename, bool last )
 }
 
 
-int MainApp::load_trace_file( loading_info_t *loading_info, TraceEvents &trace_events, EventCallback trace_cb )
+int LightSpeedApp::load_trace_file( loading_info_t *loading_info, TraceEvents &trace_events, EventCallback trace_cb )
 {
     return read_trace_file( loading_info->filename.c_str(), trace_events.m_strpool,
         trace_events.m_trace_info, trace_cb );
 }
 
-int MainApp::load_etl_file( loading_info_t *loading_info, TraceEvents &trace_events, EventCallback trace_cb )
+int LightSpeedApp::load_etl_file( loading_info_t *loading_info, TraceEvents &trace_events, EventCallback trace_cb )
 {
     return read_etl_file( loading_info->filename.c_str(), trace_events.m_strpool,
         trace_events.m_trace_info, trace_cb );
 }
 
-int MainApp::load_i915_perf_file( loading_info_t *loading_info, TraceEvents &trace_events, EventCallback trace_cb )
+int LightSpeedApp::load_i915_perf_file( loading_info_t *loading_info, TraceEvents &trace_events, EventCallback trace_cb )
 {
 #ifdef USE_I915_PERF
     return read_i915_perf_file( loading_info->filename.c_str(), trace_events.m_strpool,
@@ -180,7 +186,7 @@ int MainApp::load_i915_perf_file( loading_info_t *loading_info, TraceEvents &tra
 #endif
 }
 
-int MainApp::thread_func( void *data )
+int LightSpeedApp::thread_func( void *data )
 {
     util_time_t t0 = util_get_time();
     loading_info_t *loading_info = ( loading_info_t *)data;
@@ -283,7 +289,7 @@ int MainApp::thread_func( void *data )
     return 0;
 }
 
-void MainApp::init( int argc, char **argv )
+void LightSpeedApp::init( int argc, char **argv )
 {
     parse_cmdline( argc, argv );
 
@@ -295,46 +301,11 @@ void MainApp::init( int argc, char **argv )
     imgui_set_scale( s_opts().getf( OPT_Scale ) );
 }
 
-#ifdef WIN32
-typedef HRESULT WINAPI setdpitype( int v );
-
-static void SetHighDPI()
-{
-    HMODULE h = LoadLibrary( "Shcore.dll" );
-
-    if ( h )
-    {
-        setdpitype *sd = ( setdpitype * )GetProcAddress( h, "SetProcessDpiAwareness" );
-        if ( sd )
-        {
-            // Call: SetProcessDpiAwareness( PROCESS_SYSTEM_DPI_AWARE );
-            sd( 2 );
-        }
-    }
-}
-#else
-static void SetHighDPI()
-{
-}
-#endif
-
-ci::app::WindowRef MainApp::create_window( const char *title )
-{
-    int x, y, w, h;
-    ci::app::WindowRef window;
-
-    get_window_pos( x, y, w, h );
-
-    window = app::createWindow( title, x, y, w, h,
-		SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-
-    return window;
-}
-
-void MainApp::shutdown( ci::app::WindowRef window )
+void LightSpeedApp::shutdown( )
 {
     GPUVIS_TRACE_BLOCK( __func__ );
 
+#if 0
     if ( window )
     {
         // Write main window position / size to ini file.
@@ -347,15 +318,15 @@ void MainApp::shutdown( ci::app::WindowRef window )
 
         save_window_pos( x - left, y - top, w, h );
     }
+#endif
 
-    if ( m_loading_info.thread )
+    //if ( m_loading_info.thread)
     {
         // Cancel any file loading going on.
         cancel_load_file();
 
         // Wait for our thread to die.
-        SDL_WaitThread( m_loading_info.thread, NULL );
-        m_loading_info.thread = NULL;
+        m_loading_info.thread.join();
     }
 
     set_state( State_Idle );
@@ -364,7 +335,7 @@ void MainApp::shutdown( ci::app::WindowRef window )
     m_trace_win = NULL;
 }
 
-void MainApp::render_save_filename()
+void LightSpeedApp::render_save_filename()
 {
     struct stat st;
     float w = imgui_scale( 300.0f );
@@ -469,7 +440,7 @@ static void render_help_entry( const char *hotkey, const char *desc )
     ImGui::Separator();
 }
 
-void MainApp::render()
+void LightSpeedApp::render()
 {
     if ( m_trace_win && m_trace_win->m_open )
     {
@@ -661,7 +632,7 @@ void MainApp::render()
     }
 }
 
-void MainApp::update()
+void LightSpeedApp::update()
 {
     if ( !m_loading_info.inputfiles.empty() && ( get_state() == State_Idle ) )
     {
@@ -677,12 +648,11 @@ void MainApp::update()
     {
         imgui_set_scale( s_opts().getf( OPT_Scale ) );
 
-        ImGui_ImplSdlGL3_InvalidateDeviceObjects();
         load_fonts();
     }
 }
 
-void MainApp::load_fonts()
+void LightSpeedApp::load_fonts()
 {
     // Clear all font texture data, ttf data, glyphs, etc.
     ImGui::GetIO().Fonts->Clear();
@@ -707,7 +677,7 @@ void MainApp::load_fonts()
     }
 }
 
-void MainApp::get_window_pos( int &x, int &y, int &w, int &h )
+void LightSpeedApp::get_window_pos( int &x, int &y, int &w, int &h )
 {
     x = s_ini().GetInt( "win_x", 0 );
     y = s_ini().GetInt( "win_y", 0);
@@ -715,7 +685,7 @@ void MainApp::get_window_pos( int &x, int &y, int &w, int &h )
     h = s_ini().GetInt( "win_h", 1024 );
 }
 
-void MainApp::save_window_pos( int x, int y, int w, int h )
+void LightSpeedApp::save_window_pos( int x, int y, int w, int h )
 {
     s_ini().PutInt( "win_x", x );
     s_ini().PutInt( "win_y", y );
@@ -723,8 +693,14 @@ void MainApp::save_window_pos( int x, int y, int w, int h )
     s_ini().PutInt( "win_h", h );
 }
 
+static const std::string trace_info_label( TraceEvents &trace_events )
+{
+    const char *basename = get_path_filename( trace_events.m_filename.c_str() );
 
-void MainApp::render_menu_options()
+    return string_format( "Info for '%s'", s_textclrs().bright_str( basename ).c_str() );
+}
+
+void LightSpeedApp::render_menu_options()
 {
     if ( s_actions().get( action_escape ) )
         ImGui::CloseCurrentPopup();
@@ -801,7 +777,7 @@ void MainApp::render_menu_options()
     ImGui::Unindent();
 }
 
-void MainApp::render_font_options()
+void LightSpeedApp::render_font_options()
 {
     static const char lorem_str[] =
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do"
@@ -1085,7 +1061,7 @@ static void reset_event_colors_to_default( TraceWin *win )
     }
 }
 
-void MainApp::render_color_picker()
+void LightSpeedApp::render_color_picker()
 {
     bool changed = false;
     TraceWin *win = is_trace_loaded() ? m_trace_win : NULL;
@@ -1169,7 +1145,7 @@ void MainApp::render_color_picker()
     }
 }
 
-void MainApp::render_log()
+void LightSpeedApp::render_log()
 {
     ImGui::Text( "Log Filter:" );
     ImGui::SameLine();
@@ -1245,7 +1221,7 @@ void MainApp::render_log()
     }
 }
 
-void MainApp::render_console()
+void LightSpeedApp::render_console()
 {
     if ( !ImGui::Begin( "Gpuvis Console", &m_show_gpuvis_console, ImGuiWindowFlags_MenuBar ) )
     {
@@ -1274,7 +1250,7 @@ static const char *noc_file_dialog_open(int flags, const char *filters,
 }
 #endif
 
-void MainApp::open_trace_dialog()
+void LightSpeedApp::open_trace_dialog()
 {
     const char *errstr = noc_file_init();
 
@@ -1293,7 +1269,7 @@ void MainApp::open_trace_dialog()
     }
 }
 
-void MainApp::render_menu( const char *str_id )
+void LightSpeedApp::render_menu( const char *str_id )
 {
     ImGui::PushID( str_id );
 
@@ -1350,10 +1326,7 @@ void MainApp::render_menu( const char *str_id )
 
         if ( ImGui::MenuItem( "Quit", s_actions().hotkey_str( action_quit ).c_str() ) )
         {
-            SDL_Event event;
-
-            event.type = SDL_QUIT;
-            SDL_PushEvent( &event );
+            this->quit();
         }
 
         ImGui::EndMenu();
@@ -1378,7 +1351,7 @@ void MainApp::render_menu( const char *str_id )
     ImGui::PopID();
 }
 
-void MainApp::handle_hotkeys()
+void LightSpeedApp::handle_hotkeys()
 {
     if ( s_actions().get( action_help ) )
     {
@@ -1391,10 +1364,7 @@ void MainApp::handle_hotkeys()
 
     if ( s_actions().get( action_quit ) )
     {
-        SDL_Event event;
-
-        event.type = SDL_QUIT;
-        SDL_PushEvent( &event );
+        this->quit();
     }
 
     if ( s_actions().get( action_trace_info ) && is_trace_loaded() )
@@ -1446,7 +1416,7 @@ void MainApp::handle_hotkeys()
     }
 }
 
-void MainApp::parse_cmdline( int argc, char **argv )
+void LightSpeedApp::parse_cmdline( int argc, char **argv )
 {
     static struct option long_opts[] =
     {
@@ -1491,194 +1461,3 @@ void MainApp::parse_cmdline( int argc, char **argv )
     }
 }
 
-static void imgui_render( ci::app::WindowRef window )
-{
-    const ImVec4 color = s_clrs().getv4( col_ClearColor );
-    const ImVec2 &size = ImGui::GetIO().DisplaySize;
-
-    glViewport( 0, 0, ( int )size.x, ( int )size.y );
-    glClearColor( color.x, color.y, color.z, color.w );
-    glClear( GL_COLOR_BUFFER_BIT );
-
-    ImGui::Render();
-    ImGui_ImplSdlGL3_RenderDrawData(ImGui::GetDrawData(), s_opts().getf( OPT_Gamma ) );
-
-    SDL_GL_SwapWindow( window );
-}
-
-int main( int argc, char **argv )
-{
-#if !defined( GPUVIS_TRACE_UTILS_DISABLE )
-    int tracing = -1;
-
-    for ( int i = 1; i < argc; i++ )
-    {
-        if ( !strcasecmp( argv[ i ], "--trace" ) )
-        {
-            if ( gpuvis_trace_init() == -1 )
-            {
-                printf( "WARNING: gpuvis_trace_init() failed.\n" );
-            }
-            else
-            {
-                printf( "Tracing enabled. Tracefs dir: %s\n", gpuvis_get_tracefs_dir() );
-
-                gpuvis_start_tracing( 0 );
-
-                tracing = gpuvis_tracing_on();
-                printf( "gpuvis_tracing_on: %d\n", tracing );
-            }
-            break;
-        }
-    }
-#endif
-
-    SetHighDPI();
-
-    // Initialize SDL
-    if ( SDL_Init( SDL_INIT_VIDEO | SDL_INIT_TIMER ) )
-    {
-        fprintf( stderr, "Error. SDL_Init failed: %s\n", SDL_GetError() );
-        return -1;
-    }
-
-    // Create ImGui Context
-    ImGui::CreateContext();
-
-    ci::app::WindowRef window;
-
-    // Initialize logging system
-    logf_init();
-
-    ImGuiIO &io = ImGui::GetIO();
-
-    // Init ini singleton
-    s_ini().Open( "gpuvis", "gpuvis.ini" );
-    // Initialize colors
-    s_clrs().init();
-    // Init opts singleton
-    s_opts().init();
-    // Init actions singleton
-    s_actions().init();
-
-    // Init app
-    MainApp &app = s_app();
-    app.init( argc, argv );
-
-    // Setup imgui default text color
-    s_textclrs().update_colors();
-
-    // Setup window
-    SDL_GL_SetAttribute( SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG );
-    SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE );
-    SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
-    SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE, 24 );
-    SDL_GL_SetAttribute( SDL_GL_STENCIL_SIZE, 8 );
-    SDL_GL_SetAttribute( SDL_GL_CONTEXT_MAJOR_VERSION, 3 );
-    SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, 2 );
-
-    window = app.create_window( "GPUVis");
-    glcontext = SDL_GL_CreateContext( window );
-
-    gl3wInit();
-
-    // Setup ImGui binding
-    ImGui_ImplSdlGL3_Init( window );
-
-    // 1 for updates synchronized with the vertical retrace
-    bool vsync = true;
-    SDL_GL_SetSwapInterval( vsync );
-
-    // Load our fonts
-    app.load_fonts();
-
-    // Main loop
-    for (;;)
-    {
-        SDL_Event event;
-        bool done = false;
-
-        // Clear keyboard actions.
-        s_actions().clear();
-
-        while ( SDL_PollEvent( &event ) )
-        {
-            ImGui_ImplSdlGL3_ProcessEvent( &event );
-
-            if ( ( event.type == SDL_KEYDOWN ) || ( event.type == SDL_KEYUP ) )
-                s_keybd().update( event.key );
-            else if ( ( event.type == SDL_WINDOWEVENT ) && ( event.window.event == SDL_WINDOWEVENT_FOCUS_LOST ) )
-                s_keybd().clear();
-            else if ( event.type == SDL_QUIT )
-                done = true;
-        }
-
-        bool use_freetype = s_opts().getb( OPT_UseFreetype );
-        ImGui_ImplSdlGL3_NewFrame( window, &use_freetype );
-        s_opts().setb( OPT_UseFreetype, use_freetype );
-
-        if ( s_opts().getb( OPT_VerticalSync ) != vsync )
-        {
-            vsync = !vsync;
-            SDL_GL_SetSwapInterval( vsync );
-        }
-
-        // Check for logf() calls from background threads.
-        if ( logf_update() )
-        {
-            // One of the log items was an error - show the console
-            app.m_focus_gpuvis_console = true;
-        }
-
-        // Handle global hotkeys
-        app.handle_hotkeys();
-
-        // Render trace windows
-        app.render();
-
-        // ImGui Rendering
-        imgui_render( window );
-
-        // Update app font settings, scale, etc
-        app.update();
-
-        if ( done || app.m_quit )
-            break;
-    }
-
-    // Shut down app
-    app.shutdown( window );
-
-    // Write option settings to ini file
-    s_opts().shutdown();
-    // Save color entries
-    s_clrs().shutdown();
-    // Close ini file
-    s_ini().Close();
-
-    logf_clear();
-
-    // Cleanup
-    logf_shutdown();
-
-    ImGui_ImplSdlGL3_Shutdown();
-    ImGui::DestroyContext();
-
-    SDL_GL_DeleteContext( glcontext );
-    SDL_DestroyWindow( window );
-    SDL_Quit();
-
-#if !defined( GPUVIS_TRACE_UTILS_DISABLE )
-    if ( tracing == 1 )
-    {
-        char filename[ PATH_MAX ];
-        int ret = gpuvis_trigger_capture_and_keep_tracing( filename, sizeof( filename ) );
-
-        printf( "Tracing wrote '%s': %d\n", filename, ret );
-    }
-
-    gpuvis_trace_shutdown();
-#endif
-
-    return 0;
-}

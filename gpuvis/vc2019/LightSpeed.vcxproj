@@ -145,6 +145,7 @@
     <ClInclude Include="..\src\gpuvis_utils.h" />
     <ClInclude Include="..\src\hook_gtk3.h" />
     <ClInclude Include="..\src\i915-perf\i915-perf-read.h" />
+    <ClInclude Include="..\src\LightSpeedApp.h" />
     <ClInclude Include="..\src\MurmurHash3.h" />
     <ClInclude Include="..\src\noc_file_dialog.h" />
     <ClInclude Include="..\src\stlini.h" />
@@ -185,6 +186,7 @@
     <ClCompile Include="..\src\trace-cmd\kbuffer-parse.c" />
     <ClCompile Include="..\src\trace-cmd\trace-read.cpp" />
     <ClCompile Include="..\src\trace-cmd\trace-seq.c" />
+    <ClCompile Include="..\src\vis2.cpp" />
     <ClCompile Include="..\src\ya_getopt.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
