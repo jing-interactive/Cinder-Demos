@@ -1,7 +1,7 @@
 #include "LightSpeedApp.h"
 #include "gpuvis.h"
 #include "gpuvis_etl.h"
-#include "ya_getopt.h
+#include "ya_getopt.h"
 
 #include "MiniConfig.h"
 
@@ -216,7 +216,7 @@ int LightSpeedApp::thread_func( void *data )
         logf( "Reading trace file %s...", filename );
 
         EventCallback trace_cb = std::bind( &TraceEvents::new_event_cb, &trace_events, _1 );
-        trace_events.m_trace_info.trim_trace = s_opts().getb( OPT_TrimTrace );
+        trace_events.m_trace_info.trim_trace = TrimTrace;
         trace_events.m_trace_info.m_tracestart = loading_info->tracestart;
         trace_events.m_trace_info.m_tracelen = loading_info->tracelen;
         loading_info->tracestart = 0;
@@ -315,7 +315,7 @@ void LightSpeedApp::init( int argc, char **argv )
     logf( "Welcome to gpuvis\n" );
     logf( " " );
 
-    imgui_set_scale( s_opts().getf( OPT_Scale ) );
+    imgui_set_scale( Scale);
 }
 
 void LightSpeedApp::shutdown( )
@@ -640,7 +640,7 @@ void LightSpeedApp::render()
         ImGui::SameLine();
         if ( ImGui::Button( "No", ImVec2( 150, 0 ) ) )
         {
-            s_opts().setf( OPT_Scale, 1.0f );
+            Scale = 1.0f;
             m_font_main.m_changed = true;
             ImGui::CloseCurrentPopup();
             m_show_scale_popup = false;
@@ -664,7 +664,7 @@ void LightSpeedApp::update()
     if ( ( m_font_main.m_changed || m_font_small.m_changed ) &&
          !ImGui::IsMouseDown( 0 ) )
     {
-        imgui_set_scale( s_opts().getf( OPT_Scale ) );
+        imgui_set_scale( Scale);
 
         load_fonts();
     }
@@ -687,9 +687,9 @@ void LightSpeedApp::load_fonts()
     if ( m_trace_win )
         m_trace_win->m_trace_events.invalidate_ftraceprint_colors();
 
-    if ( s_ini().GetFloat( "scale", -1.0f ) == -1.0f )
+    //if ( s_ini().GetFloat( "scale", -1.0f ) == -1.0f )
     {
-        s_ini().PutFloat( "scale", s_opts().getf( OPT_Scale ) );
+        //s_ini().PutFloat( "scale", Scale  );
 
         m_show_scale_popup = true;
     }
@@ -774,7 +774,7 @@ void LightSpeedApp::render_menu_options()
     ImGui::TextColored( s_clrs().getv4( col_BrightText ), "%s", "Gpuvis Settings" );
     ImGui::Indent();
 
-    s_opts().render_imgui_options();
+    //s_opts().render_imgui_options();
 
     ImGui::Unindent();
 }
@@ -798,15 +798,15 @@ void LightSpeedApp::render_font_options()
 #ifdef USE_FREETYPE
         changed |= s_opts().render_imgui_opt( OPT_UseFreetype );
 #endif
-        changed |= s_opts().render_imgui_opt( OPT_Scale );
-        changed |= s_opts().render_imgui_opt( OPT_Gamma );
+        //changed |= s_opts().render_imgui_opt( OPT_Scale );
+        //changed |= s_opts().render_imgui_opt( OPT_Gamma );
 
         if ( ImGui::Button( "Reset to Defaults" ) )
         {
             m_font_main.m_reset = true;
             m_font_small.m_reset = true;
 
-            s_opts().setf( OPT_Gamma, 1.4f );
+            Gamma = 1.4f;
             changed = true;
         }
 
@@ -823,7 +823,7 @@ void LightSpeedApp::render_font_options()
 
         ImGui::TextWrapped( "%s: %s", font_name.c_str(), lorem_str );
 
-        m_font_main.render_font_options( s_opts().getb( OPT_UseFreetype ) );
+        m_font_main.render_font_options( UseFreetype );
         ImGui::TreePop();
     }
 
@@ -839,7 +839,7 @@ void LightSpeedApp::render_font_options()
 
         ImGui::EndChild();
 
-        m_font_small.render_font_options( s_opts().getb( OPT_UseFreetype ) );
+        m_font_small.render_font_options( UseFreetype);
 
         ImGui::TreePop();
     }
@@ -1045,12 +1045,14 @@ static void reset_colors_to_default( TraceWin *win )
 
 static void reset_event_colors_to_default( TraceWin *win )
 {
+    #if 0
     std::vector< INIEntry > entries = s_ini().GetSectionEntries( "$imgui_eventcolors$" );
 
     for ( const INIEntry &entry : entries )
     {
         s_ini().PutStr( entry.first.c_str(), "", "$imgui_eventcolors$" );
     }
+    #endif
 
     if ( win )
     {
@@ -1340,7 +1342,7 @@ void LightSpeedApp::render_menu( const char *str_id )
         ImGui::EndMenu();
     }
 
-    if ( s_opts().getb( OPT_ShowFps ) )
+    if ( ShowFps)
     {
         ImGui::Text( "%s%.2f ms/frame (%.1f FPS)%s",
                      s_textclrs().str( TClr_Bright ),
@@ -1378,16 +1380,16 @@ void LightSpeedApp::handle_hotkeys()
     }
 
     if ( s_actions().get( action_toggle_vblank0 ) )
-        s_opts().setb( OPT_RenderCrtc0, !s_opts().getb( OPT_RenderCrtc0 ) );
+        RenderCrtc0 = !RenderCrtc0;
     if ( s_actions().get( action_toggle_vblank1 ) )
-        s_opts().setb( OPT_RenderCrtc1, !s_opts().getb( OPT_RenderCrtc1 ) );
+        RenderCrtc1 = !RenderCrtc1;
     if ( s_actions().get( action_toggle_vblank_hardware_timestamps ) )
-        s_opts().setb( OPT_VBlankHighPrecTimestamps, !s_opts().getb( OPT_VBlankHighPrecTimestamps ) );
+        VBlankHighPrecTimestamps = !VBlankHighPrecTimestamps;
     if ( s_actions().get( action_toggle_framemarkers ) )
-        s_opts().setb( OPT_RenderFrameMarkers, !s_opts().getb( OPT_RenderFrameMarkers ) );
+        RenderFrameMarkers = !RenderFrameMarkers;
 
     if ( s_actions().get( action_toggle_show_eventlist ) )
-        s_opts().setb( OPT_ShowEventList, !s_opts().getb( OPT_ShowEventList ) );
+        ShowEventList = !ShowEventList;
 
     if (  s_actions().get( action_save_screenshot ) )
     {
@@ -1440,7 +1442,7 @@ void LightSpeedApp::parse_cmdline( int argc, char **argv )
         {
         case 0:
             if ( !strcasecmp( "scale", long_opts[ opt_ind ].name ) )
-                s_opts().setf( OPT_Scale, atof( ya_optarg ) );
+                Scale = atof(a_optarg ) );
             else if ( !strcasecmp( "tracestart", long_opts[ opt_ind ].name ) )
                 m_loading_info.tracestart = timestr_to_ts( ya_optarg );
             else if ( !strcasecmp( "tracelen", long_opts[ opt_ind ].name ) )

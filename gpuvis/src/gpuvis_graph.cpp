@@ -38,7 +38,6 @@
 #include "imgui/imgui_internal.h"
 
 #include "gpuvis_macros.h"
-#include "stlini.h"
 #include "trace-cmd/trace-read.h"
 #include "gpuvis_utils.h"
 #include "gpuvis.h"
@@ -505,6 +504,7 @@ bool event_renderer_t::is_event_filtered( const trace_event_t &event )
 
 static option_id_t get_comm_option_id( const std::string &row_name, loc_type_t row_type )
 {
+    // TODO:
     option_id_t optid = Opts::get_opt_graph_rowsize_id( row_name );
 
     if ( strstr( row_name.c_str(), "(print)" ) )
