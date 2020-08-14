@@ -144,7 +144,6 @@
     <ClInclude Include="..\src\gpuvis_macros.h" />
     <ClInclude Include="..\src\gpuvis_utils.h" />
     <ClInclude Include="..\src\hook_gtk3.h" />
-    <ClInclude Include="..\src\i915-perf\i915-perf-read.h" />
     <ClInclude Include="..\src\LightSpeedApp.h" />
     <ClInclude Include="..\src\MurmurHash3.h" />
     <ClInclude Include="..\src\noc_file_dialog.h" />
@@ -158,7 +157,6 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\Cinder\blocks\Cinder-VNM\ui\implot\implot.cpp" />
     <ClCompile Include="..\..\..\Cinder\blocks\Cinder-VNM\ui\implot\implot_demo.cpp" />
-    <ClCompile Include="..\src\Droid_Sans.cpp" />
     <ClCompile Include="..\src\etl_utils.cpp" />
     <ClCompile Include="..\src\gpuvis.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
@@ -168,17 +166,12 @@
     <ClCompile Include="..\src\gpuvis_ftrace_print.cpp" />
     <ClCompile Include="..\src\gpuvis_graph.cpp" />
     <ClCompile Include="..\src\gpuvis_graphrows.cpp" />
-    <ClCompile Include="..\src\gpuvis_i915_perfcounters.cpp" />
     <ClCompile Include="..\src\gpuvis_plots.cpp" />
     <ClCompile Include="..\src\gpuvis_utils.cpp" />
-    <ClCompile Include="..\src\i915-perf\i915-perf-read.cpp" />
     <ClCompile Include="..\src\LightSpeedApp.cpp" />
     <ClCompile Include="..\..\..\Cinder\blocks\Cinder-VNM\src\AssetManager.cpp" />
     <ClCompile Include="..\..\..\Cinder\blocks\Cinder-VNM\src\MiniConfig.cpp" />
     <ClCompile Include="..\src\MurmurHash3.cpp" />
-    <ClCompile Include="..\src\proggy_tiny.cpp" />
-    <ClCompile Include="..\src\RobotoCondensed_Regular.cpp" />
-    <ClCompile Include="..\src\Roboto_Regular.cpp" />
     <ClCompile Include="..\src\tdopexpr.cpp" />
     <ClCompile Include="..\src\trace-cmd\event-parse.c" />
     <ClCompile Include="..\src\trace-cmd\kbuffer-parse.c" />

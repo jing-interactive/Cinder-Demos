@@ -116,11 +116,9 @@ struct LightSpeedApp : public ci::app::App
     void render_save_filename();
     void render_menu( const char *str_id );
     void render_menu_options();
-    void render_font_options();
     void render_color_picker();
 
     void update();
-    void load_fonts();
 
     void parse_cmdline( int argc, char **argv );
 
@@ -188,9 +186,6 @@ struct LightSpeedApp : public ci::app::App
 
     trace_type_t m_trace_type = trace_type_invalid;
 
-    FontInfo m_font_main;
-    FontInfo m_font_small;
-
     ImGuiTextFilter m_filter;
     size_t m_log_size = ( size_t )-1;
     std::vector< std::string > m_log;
@@ -207,7 +202,6 @@ struct LightSpeedApp : public ci::app::App
     bool m_show_imgui_test_window = false;
     bool m_show_imgui_style_editor = false;
     bool m_show_imgui_metrics_editor = false;
-    bool m_show_font_window = false;
     bool m_show_color_picker = false;
     bool m_show_scale_popup = false;
     bool m_show_help = false;

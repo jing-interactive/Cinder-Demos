@@ -218,7 +218,6 @@ public:
     bool is_vblank() const                     { return !!( flags & TRACE_FLAG_VBLANK ); }
     bool is_timeline() const                   { return !!( flags & TRACE_FLAG_TIMELINE ); }
     bool is_sched_switch() const               { return !!( flags & TRACE_FLAG_SCHED_SWITCH ); }
-    bool is_i915_perf() const                  { return !!( flags & TRACE_FLAG_I915_PERF ); }
 
     bool has_duration() const                  { return duration != INT64_MAX; }
     int64_t get_vblank_ts(bool want_high_prec) const { return want_high_prec && (vblank_ts != INT64_MAX) && vblank_ts_high_prec ? vblank_ts : ts; }

@@ -59,7 +59,6 @@
 #include "trace-cmd/trace-read.h"
 
 #ifdef _WIN32
-#include "stlini.h"
 #include "gpuvis_utils.h"
 #include "etl_utils.h"
 #include "gpuvis_etl.h"

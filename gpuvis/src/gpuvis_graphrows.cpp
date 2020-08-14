@@ -36,7 +36,6 @@
 
 #include "imgui/imgui.h"
 #include "gpuvis_macros.h"
-#include "stlini.h"
 #include "trace-cmd/trace-read.h"
 #include "gpuvis_utils.h"
 #include "gpuvis.h"
@@ -219,7 +218,7 @@ save_umap_ini_entries( const util_umap< std::string, std::string > &blah,
 {
     uint32_t num = 0;
 
-    s_ini().ClearSection( section );
+    //s_ini().ClearSection( section );
 
     for ( const auto &i : blah.m_map )
     {
@@ -227,7 +226,7 @@ save_umap_ini_entries( const util_umap< std::string, std::string > &blah,
         const std::string &val = i.first + "\t" + i.second;
 
         snprintf_safe( key, "%02u", num++ );
-        s_ini().PutStr( key, val.c_str(), section );
+        //s_ini().PutStr( key, val.c_str(), section );
     }
 }
 
@@ -235,6 +234,7 @@ static const std::vector< std::pair< std::string, std::string > >
 read_umap_ini_entries( const char *section )
 {
     std::vector< std::pair< std::string, std::string > > ret;
+#if 0
     std::vector< INIEntry > entries = s_ini().GetSectionEntries( section );
 
     for ( const INIEntry &entry : entries )
@@ -244,7 +244,7 @@ read_umap_ini_entries( const char *section )
         if ( args.size() == 2 )
             ret.push_back( { args[ 0 ], args[ 1 ] } );
     }
-
+#endif
     return ret;
 }
 
@@ -316,28 +316,6 @@ void GraphRows::init( TraceEvents &trace_events )
             push_row( "sdma1 hw", type, plocs->size() );
     }
 
-    // Intel gpu events
-    {
-        if ( !trace_events.m_i915.perf_locs.empty() )
-            push_row( "i915-perf", LOC_TYPE_i915Perf, trace_events.m_i915.perf_locs.size() );
-
-        for ( auto &req_locs : trace_events.m_i915.req_locs.m_locs.m_map )
-        {
-            std::vector< uint32_t > &locs = req_locs.second;
-            const char *name = trace_events.m_strpool.findstr( req_locs.first );
-
-            push_row( name, LOC_TYPE_i915Request, locs.size() );
-        }
-
-        for ( auto &req_locs : trace_events.m_i915.reqwait_end_locs.m_locs.m_map )
-        {
-            std::vector< uint32_t > &locs = req_locs.second;
-            const char *name = trace_events.m_strpool.findstr( req_locs.first );
-
-            push_row( name, LOC_TYPE_i915RequestWait, locs.size() );
-        }
-    }
-
     // Qualcomm MSM GPU timeline
     {
         // How many max rings on Qualcomm MSM?
@@ -388,7 +366,9 @@ void GraphRows::init( TraceEvents &trace_events )
                 name += string_format( " (%.*s)", len, comm );
             }
 
-            bool hidden = !s_ini().GetInt( name.c_str(), hidden_def ? 0.0f : 1.0f, "$row_sizes$" );
+            bool hidden = false;
+            // TODO:
+            // !s_ini().GetInt( name.c_str(), hidden_def ? 0.0f : 1.0f, "$row_sizes$" );
 
             push_row( name, type, plocs->size(), hidden );
         };
@@ -405,6 +385,7 @@ void GraphRows::init( TraceEvents &trace_events )
         }
     }
 
+#if 0
     {
         std::vector< INIEntry > entries = s_ini().GetSectionEntries( "$graph_plots$" );
 
@@ -435,6 +416,7 @@ void GraphRows::init( TraceEvents &trace_events )
             }
         }
     }
+#endif
 
     std::vector< graph_rows_info_t > comms;
     for ( auto item : trace_events.m_comm_locs.m_locs.m_map )
@@ -452,7 +434,8 @@ void GraphRows::init( TraceEvents &trace_events )
     // Add the sorted comm events to our m_graph_rows_list array
     m_graph_rows_list.insert( m_graph_rows_list.end(), comms.begin(), comms.end() );
 
-    std::string graph_rows_hide_str = s_ini().GetStr( "graph_rows_hide_str", "" );
+    std::string graph_rows_hide_str;
+    //= s_ini().GetStr( "graph_rows_hide_str", "" );
     if ( !graph_rows_hide_str.empty() )
     {
         m_graph_rows_hide = string_explode( graph_rows_hide_str, '\t' );
@@ -523,7 +506,7 @@ void GraphRows::shutdown()
     }
 
     std::string str = string_implode( m_graph_rows_hide, "\t" );
-    s_ini().PutStr( "graph_rows_hide_str", str.c_str() );
+    //s_ini().PutStr( "graph_rows_hide_str", str.c_str() );
 
     save_umap_ini_entries( m_graph_rows_add, "$graph_rows_add$" );
     save_umap_ini_entries( m_graph_rows_move, "$graph_rows_move_after$" );
@@ -552,7 +535,7 @@ void GraphRows::add_row( const std::string &name_in, const std::string &filter_e
         std::string val = string_format( "%s\t%s\t%d",
                 plot.m_filter_str.c_str(), plot.m_scanf_str.c_str(), plot.m_interpolation );
 
-        s_ini().PutStr( name.c_str(), val.c_str(), "$graph_plots$" );
+        //s_ini().PutStr( name.c_str(), val.c_str(), "$graph_plots$" );
     }
     else
     {

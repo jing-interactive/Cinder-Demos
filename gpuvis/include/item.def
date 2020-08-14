@@ -41,4 +41,3 @@ ITEM_DEF(bool, RenderCrtc9, true);
 
 ITEM_DEF(bool, VBlankHighPrecTimestamps, false);
 ITEM_DEF(bool, RenderFrameMarkers, true);
-ITEM_DEF(bool, ShowI915Counters, true);

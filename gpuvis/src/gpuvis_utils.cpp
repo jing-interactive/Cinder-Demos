@@ -49,13 +49,7 @@
 #include "imgui/imgui_freetype.h"
 
 #include "gpuvis_macros.h"
-#include "stlini.h"
 #include "gpuvis_utils.h"
-
-#include "proggy_tiny.cpp"
-#include "Droid_Sans.cpp"
-#include "Roboto_Regular.cpp"
-#include "RobotoCondensed_Regular.cpp"
 
 #include "stb/stb_image_write.h"
 
@@ -67,44 +61,6 @@ static bool g_log_error = false;
 //static SDL_mutex *g_mutex = nullptr;
 
 static float g_scale = 1.0f;
-
-enum font_id_t
-{
-    FontID_Unknown = -1,
-    FontID_ProggyTiny = 0,
-    FontID_ProggyClean,
-    FontID_RobotoRegular,
-    FontID_RobotoCondensed,
-    FontID_DroidSans,
-    FontID_TTFFile
-};
-struct font_info
-{
-    const char *name;
-    const void *ttf_data;
-    int ttf_size;
-} g_font_info[] =
-{
-    { "Proggy Tiny (10)", ProggyTiny_compressed_data, ProggyTiny_compressed_size },
-    { "Proggy Clean (13)", NULL, 0 },
-    { "Roboto Regular", Roboto_Regular_compressed_data, Roboto_Regular_compressed_size },
-    { "Roboto Condensed", RobotoCondensed_Regular_compressed_data, RobotoCondensed_Regular_compressed_size },
-    { "Droid Sans", Droid_Sans_compressed_data, Droid_Sans_compressed_size },
-};
-
-font_id_t get_font_id( const char *name, const char *filename )
-{
-    if ( filename && get_file_size( filename ) )
-        return FontID_TTFFile;
-
-    for ( size_t i = 0; i < ARRAY_SIZE( g_font_info ); i++ )
-    {
-        if ( !strcasecmp( name, g_font_info[ i ].name ) )
-            return ( font_id_t )i;
-    }
-
-    return FontID_Unknown;
-}
 
 const std::vector< char * > &logf_get()
 {
@@ -658,7 +614,8 @@ bool imgui_begin_columns( const char *title,
             if ( inited )
             {
                 // Try to restore the column widths
-                float val = s_ini().GetFloat( key.c_str(), -1.0f );
+                float val = -1.0f;
+                //s_ini().GetFloat( key.c_str(), -1.0f );
                 if ( val <= 0.0f )
                     break;
 
@@ -667,7 +624,7 @@ bool imgui_begin_columns( const char *title,
             else
             {
                 // Save the column widths
-                s_ini().PutFloat( key.c_str(), ImGui::GetColumnWidth( i ) );
+                //s_ini().PutFloat( key.c_str(), ImGui::GetColumnWidth( i ) );
             }
         }
 
@@ -886,264 +843,6 @@ bool imgui_save_screenshot( const char *filename )
     return !!Output.SaveFile( filename );
 }
 
-void FontInfo::update_ini()
-{
-    const char *section = m_section.c_str();
-
-    s_ini().PutStr( "name", m_name.c_str(), section );
-    s_ini().PutStr( "filename", m_filename.c_str(), section );
-    s_ini().PutFloat( "size", m_size, section );
-    s_ini().PutInt( "OverSampleH", m_font_cfg.OversampleH, section );
-    s_ini().PutInt( "OverSampleV", m_font_cfg.OversampleV, section );
-    s_ini().PutInt( "PixelSnapH", m_font_cfg.PixelSnapH, section );
-    s_ini().PutFloat( "GlyphExtraSpacing", m_font_cfg.GlyphExtraSpacing.x, section );
-    s_ini().PutInt( "RasterizerFlags", m_font_cfg.RasterizerFlags, section );
-    s_ini().PutFloat( "RasterizerMultiply", m_font_cfg.RasterizerMultiply, section );
-}
-
-void FontInfo::load_font( const char *section, const char *defname, float defsize, const ImWchar *glyph_ranges )
-{
-    ImGuiIO &io = ImGui::GetIO();
-
-    if ( !glyph_ranges )
-    {
-        static const ImWchar def_ranges[] =
-        {
-            // Basic Latin + Latin Supplement
-            // https://en.wikipedia.org/wiki/Latin-1_Supplement_(Unicode_block)
-            // ISO 8859-1: 0080-00FF. Controls C1 (0080–009F) are not graphic.
-            0x0020, 0x007F,
-            0x00A0, 0x00FF,
-            0,
-        };
-
-        glyph_ranges = &def_ranges[ 0 ];
-    }
-
-    m_section = section;
-    m_font_cfg = ImFontConfig();
-
-    if ( m_reset )
-    {
-        m_name = defname;
-        m_size = defsize;
-        m_filename.clear();
-
-        m_reset = false;
-    }
-    else
-    {
-        m_name = s_ini().GetStr( "name", defname, section );
-        m_filename = s_ini().GetStr( "filename", "", section );
-        m_size = s_ini().GetFloat( "size", defsize, section );
-
-        m_font_cfg.OversampleH = s_ini().GetInt( "OversampleH", m_font_cfg.OversampleH, section );
-        m_font_cfg.OversampleV = s_ini().GetInt( "OversampleV", m_font_cfg.OversampleV, section );
-        m_font_cfg.PixelSnapH = !!s_ini().GetInt( "PixelSnapH", m_font_cfg.PixelSnapH, section );
-        m_font_cfg.GlyphExtraSpacing.x = s_ini().GetFloat( "GlyphExtraSpacing", m_font_cfg.GlyphExtraSpacing.x, section );
-        m_font_cfg.RasterizerFlags = s_ini().GetInt( "RasterizerFlags", ImGuiFreeType::LightHinting, section );
-        m_font_cfg.RasterizerMultiply = s_ini().GetFloat( "RasterizerMultiply", m_font_cfg.RasterizerMultiply, section );
-    }
-
-    m_font_id = get_font_id( m_name.c_str(), m_filename.c_str() );
-
-    if ( !m_filename.empty() )
-        strcpy_safe( m_input_filename, m_filename.c_str() );
-
-    m_input_filename_err.clear();
-
-    float fontsize = Clamp< float >( imgui_scale( m_size ), 6.0, 96.0f );
-    if ( m_font_id == FontID_TTFFile )
-    {
-        ImFont *font = io.Fonts->AddFontFromFileTTF( m_filename.c_str(), fontsize, &m_font_cfg, glyph_ranges );
-
-        if ( font )
-        {
-            m_name = get_path_filename( m_filename.c_str() );
-        }
-        else
-        {
-            m_input_filename_err = string_format( "WARNING: AddFontFromFileTTF %s failed.\n", m_filename.c_str() );
-            m_font_id = get_font_id( m_name.c_str(), NULL );
-        }
-    }
-
-    if ( m_font_id != FontID_TTFFile )
-    {
-        if ( m_font_id == FontID_Unknown )
-            m_font_id = FontID_ProggyClean;
-
-        m_name = g_font_info[ m_font_id ].name;
-
-        if ( g_font_info[ m_font_id ].ttf_data )
-        {
-            io.Fonts->AddFontFromMemoryCompressedTTF(
-                        g_font_info[ m_font_id ].ttf_data,
-                        g_font_info[ m_font_id ].ttf_size,
-                        fontsize, &m_font_cfg, glyph_ranges );
-        }
-        else
-        {
-            m_font_cfg.SizePixels = fontsize;
-            io.Fonts->AddFontDefault( &m_font_cfg );
-        }
-    }
-
-    snprintf_safe( m_font_cfg.Name, "%s, %.1fpx", m_name.c_str(), fontsize );
-
-    update_ini();
-
-    m_changed = false;
-}
-
-static bool listbox_get_fontname( void *unused, int i, const char **name )
-{
-    if ( ( i >= 0 ) && ( ( size_t )i < ARRAY_SIZE( g_font_info ) ) )
-    {
-        *name = g_font_info[ i ].name;
-        return true;
-    }
-
-    return false;
-}
-
-void FontInfo::render_font_options( bool m_use_freetype )
-{
-    bool changed = false;
-
-    ImGui::PushID( this );
-
-    {
-        ImGui::PushItemWidth( imgui_scale( 200.0f ) );
-
-        ImGui::Text( "%s", "Embedded Fonts:" );
-        ImGui::SameLine();
-
-        changed |= ImGui::ListBox("##font", &m_font_id, listbox_get_fontname,
-                                  g_font_info, ARRAY_SIZE( g_font_info ), ARRAY_SIZE( g_font_info ) );
-        if ( changed )
-        {
-            m_name = g_font_info[ m_font_id ].name;
-            m_filename.clear();
-        }
-
-        ImGui::PopItemWidth();
-    }
-
-    {
-        ImGui::PushItemWidth( imgui_scale( 400.0f ) );
-        ImGui::AlignTextToFramePadding();
-        ImGui::Text( "TTF Filename:" );
-        ImGui::SameLine();
-
-        if ( ImGui::InputText( "##ttf_filename", m_input_filename, sizeof( m_input_filename ),
-                               ImGuiInputTextFlags_EnterReturnsTrue, 0 ) &&
-             m_input_filename[ 0 ] )
-        {
-            if ( !get_file_size( m_input_filename ) )
-            {
-                m_input_filename_err = string_format( "ERROR: %s not found.", m_input_filename );
-            }
-            else
-            {
-                m_filename = m_input_filename;
-                m_input_filename_err.clear();
-                changed = true;
-            }
-        }
-
-        ImGui::PopItemWidth();
-
-        if ( !m_input_filename_err.empty() )
-            ImGui::TextColored( ImVec4( 1, 0, 0, 1 ), "%s", m_input_filename_err.c_str() );
-    }
-
-    {
-        ImGui::PushItemWidth( imgui_scale( 200.0f ) );
-
-        changed |= ImGui::SliderFloat( "##size", &m_size, 7, 64, "Size: %.1f" );
-
-        ImGui::SameLine();
-        changed |= ImGui::SliderFloat( "##extra_spacing", &m_font_cfg.GlyphExtraSpacing.x, 0, 4, "Extra Spacing: %.2f" );
-        if ( ImGui::IsItemHovered() )
-            ImGui::SetTooltip( "%s", "Extra spacing (in pixels) between glyphs." );
-
-        changed |= ImGui::SliderFloat( "##Brighten", &m_font_cfg.RasterizerMultiply, 0.20f, 4.0f, "Brighten: %.2f" );
-
-        if ( !m_use_freetype )
-        {
-            ImGui::SameLine();
-            changed |= ImGui::SliderInt( "##oversample_h", &m_font_cfg.OversampleH, 1, 4, "OverSampleH: %.0f" );
-            if ( ImGui::IsItemHovered() )
-                ImGui::SetTooltip( "%s", "Rasterize at higher quality for sub-pixel positioning." );
-
-#if 0
-            // imgui doesn't currently do sub-pixel on Y axis.
-            ImGui::SameLine();
-            changed |= ImGui::SliderInt( "##oversample_v", &m_font_cfg.OversampleV, 1, 4, "OverSampleV: %.0f" );
-#endif
-        }
-
-        changed |= ImGui::Checkbox( "PixelSnapH", &m_font_cfg.PixelSnapH );
-        if ( ImGui::IsItemHovered() )
-            ImGui::SetTooltip( "%s", "Align every glyph to pixel boundary." );
-
-        if ( m_use_freetype )
-        {
-            static const struct
-            {
-                const char *name;
-                uint32_t flag;
-                const char *descr;
-            } s_FreeTypeFlags[] =
-            {
-                { "No hinting", ImGuiFreeType::NoHinting,
-                        "Disable hinting.\nThis generally generates 'blurrier' bitmap glyphs when\n"
-                        "the glyph are rendered in any of the anti-aliased modes." },
-                { "No auto-hint", ImGuiFreeType::NoAutoHint,
-                        "Disable auto-hinter." },
-                { "Force auto-hint", ImGuiFreeType::ForceAutoHint,
-                        "Prefer auto-hinter over the font's native hinter." },
-                { "Light hinting", ImGuiFreeType::LightHinting,
-                        "A lighter hinting algorithm for gray-level modes.\nMany generated glyphs are fuzzier but"
-                        "better resemble their original shape.\nThis is achieved by snapping glyphs to the pixel grid"
-                        "only vertically (Y-axis),\nas is done by Microsoft's ClearType and Adobe's proprietary"
-                        "font renderer.\nThis preserves inter-glyph spacing in horizontal text." },
-                { "Mono hinting", ImGuiFreeType::MonoHinting,
-                        "Strong hinting algorithm that should be used for monochrome output." },
-                { "Bold", ImGuiFreeType::Bold, "Artificially embolden the font." },
-            };
-
-            for ( size_t i = 0; i < ARRAY_SIZE( s_FreeTypeFlags ); i++ )
-            {
-                bool val = !!( m_font_cfg.RasterizerFlags & s_FreeTypeFlags[ i ].flag );
-
-                if ( s_FreeTypeFlags[ i ].flag != ImGuiFreeType::LightHinting )
-                    ImGui::SameLine();
-
-                if ( ImGui::Checkbox( s_FreeTypeFlags[ i ].name, &val ) )
-                {
-                    m_font_cfg.RasterizerFlags ^= s_FreeTypeFlags[ i ].flag;
-                    changed = true;
-                }
-
-                if ( ImGui::IsItemHovered() )
-                    ImGui::SetTooltip( "%s", s_FreeTypeFlags[ i ].descr );
-            }
-        }
-
-        ImGui::PopItemWidth();
-    }
-
-    if ( changed )
-    {
-        update_ini();
-        m_changed = true;
-    }
-
-    ImGui::PopID();
-}
-
 bool ColorPicker::render( ImU32 color, bool is_alpha, ImU32 defcolor )
 {
     bool ret = false;
@@ -1213,7 +912,8 @@ void Clrs::init()
     for ( colors_t i = 0; i < col_Max; i++ )
     {
         const char *key = s_colordata[ i ].name;
-        uint64_t val = s_ini().GetUint64( key, UINT64_MAX, "$imgui_colors$" );
+        uint64_t val = UINT64_MAX;
+        //s_ini().GetUint64( key, UINT64_MAX, "$imgui_colors$" );
 
         if ( val != UINT64_MAX )
         {
@@ -1230,10 +930,10 @@ void Clrs::shutdown()
         {
             const char *key = s_colordata[ i ].name;
 
-            if ( is_default( i ) )
-                s_ini().PutStr( key, "", "$imgui_colors$" );
-            else
-                s_ini().PutUint64( key, s_colordata[ i ].color, "$imgui_colors$" );
+            //if ( is_default( i ) )
+            //    s_ini().PutStr( key, "", "$imgui_colors$" );
+            //else
+            //    s_ini().PutUint64( key, s_colordata[ i ].color, "$imgui_colors$" );
         }
     }
 }

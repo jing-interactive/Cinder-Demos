@@ -43,9 +43,7 @@
 
 #include "tdopexpr.h"
 #include "trace-cmd/trace-read.h"
-#include "i915-perf/i915-perf-read.h"
 
-#include "stlini.h"
 #include "gpuvis_utils.h"
 #include "gpuvis_etl.h"
 #include "gpuvis.h"
@@ -55,6 +53,12 @@
 #include "miniz.h"
 
 using namespace ci;
+
+Clrs &s_clrs()
+{
+    static Clrs s_clrs;
+    return s_clrs;
+}
 
 TextClrs &s_textclrs()
 {
@@ -77,81 +81,6 @@ Actions &s_actions()
 bool Opts::getcrtc( int crtc )
 {
     return RenderCrtc0; // TODO:
-}
-
-/*
- * TraceLocationsRingCtxSeq
- */
-
-static const char *get_i915_engine_str( char ( &buf )[ 64 ], uint32_t classno )
-{
-    switch( classno & 0xf )
-    {
-    case 0: return "render"; //   I915_ENGINE_CLASS_RENDER        = 0,
-    case 1: return "copy";   //   I915_ENGINE_CLASS_COPY          = 1,
-    case 2: return "vid";    //   I915_ENGINE_CLASS_VIDEO         = 2,
-    case 3: return "videnh"; //   I915_ENGINE_CLASS_VIDEO_ENHANCE = 3,
-    }
-
-    snprintf_safe( buf, "engine%u:", classno & 0xf );
-    return buf;
-}
-
-uint32_t TraceLocationsRingCtxSeq::get_i915_ringno( const trace_event_t &event, bool *is_class_instance )
-{
-    if ( is_class_instance )
-        *is_class_instance = false;
-
-    if ( event.seqno )
-    {
-        const char *ringstr = get_event_field_val( event, "ring", NULL );
-
-        if ( ringstr )
-        {
-            // Return old i915_gem_ event: ring=%u
-            return strtoul( ringstr, NULL, 10 );
-        }
-        else
-        {
-            // Check new i915 event: engine=%u16:%u16 (class:instance)
-            const char *classstr = get_event_field_val( event, "class", NULL );
-            const char *instancestr = get_event_field_val( event, "instance", NULL );
-
-            if ( classstr && instancestr )
-            {
-                uint32_t classno = strtoul( classstr, NULL, 10 );
-                uint32_t instanceno = strtoul( instancestr, NULL, 10 );
-
-                if ( is_class_instance )
-                    *is_class_instance = true;
-
-                // engine_class from Mesa:
-                //   I915_ENGINE_CLASS_RENDER        = 0,
-                //   I915_ENGINE_CLASS_COPY          = 1,
-                //   I915_ENGINE_CLASS_VIDEO         = 2,
-                //   I915_ENGINE_CLASS_VIDEO_ENHANCE = 3,
-                assert( classno <= 0xf );
-                return ( instanceno << 4 ) | classno;
-            }
-        }
-    }
-
-    return ( uint32_t )-1;
-}
-
-uint32_t TraceLocationsRingCtxSeq::get_i915_hw_id( const trace_event_t &event)
-{
-    if ( event.seqno )
-    {
-        const char *hw_id_str = get_event_field_val( event, "hw_id", NULL );
-
-        if ( !hw_id_str )
-            return ( uint32_t )-1;
-
-        return strtoul( hw_id_str, NULL, 10 );
-    }
-
-    return ( uint32_t )-1;
 }
 
 uint64_t TraceLocationsRingCtxSeq::db_key( uint32_t ringno, uint32_t seqno, const char *ctxstr )
@@ -189,7 +118,7 @@ uint64_t TraceLocationsRingCtxSeq::db_key( const trace_event_t &event )
 
         if ( ctxstr )
         {
-            return db_key( get_i915_ringno( event ), event.seqno, ctxstr );
+            //return db_key( get_i915_ringno( event ), event.seqno, ctxstr );
         }
     }
 
@@ -1029,100 +958,6 @@ void TraceEvents::init_drm_sched_timeline_event( trace_event_t &event )
     }
 }
 
-void TraceEvents::init_i915_event( trace_event_t &event )
-{
-    i915_type_t event_type = get_i915_reqtype( event );
-
-    if ( event_type == i915_reqwait_begin )
-    {
-        m_i915.reqwait_begin_locs.add_location( event );
-    }
-    else if ( event_type == i915_reqwait_end )
-    {
-        std::vector< uint32_t > *plocs = m_i915.reqwait_begin_locs.get_locations( event );
-
-        if ( plocs )
-        {
-            bool ringno_is_class_instance;
-            uint32_t ringno = TraceLocationsRingCtxSeq::get_i915_ringno( event, &ringno_is_class_instance );
-            trace_event_t &event_begin = m_events[ plocs->back() ];
-
-            event_begin.duration = event.ts - event_begin.ts;
-            event.duration = event_begin.duration;
-
-            if ( ringno != ( uint32_t )-1 )
-            {
-                char buf[ 64 ];
-                uint32_t hashval;
-
-                event.graph_row_id = ( uint32_t )-1;
-
-                // Point i915_request_wait_end to i915_request_wait_begin
-                event.id_start = event_begin.id;
-                // Point i915_request_wait_begin to i915_request_wait_end
-                event_begin.id_start = event.id;
-
-                if ( ringno_is_class_instance )
-                    hashval = m_strpool.getu32f( "i915_reqwait %s%u", get_i915_engine_str( buf, ringno ), ringno >> 4 );
-                else
-                    hashval = m_strpool.getu32f( "i915_reqwait ring%u", ringno );
-
-                m_i915.reqwait_end_locs.add_location_u32( hashval, event.id );
-            }
-        }
-    }
-    else if ( event_type < i915_req_Max )
-    {
-        // Queue, Add, Submit, In, Notify, Out
-        m_i915.gem_req_locs.add_location( event );
-
-        if ( event_type == i915_req_Queue )
-            m_i915.req_queue_locs.add_location( event );
-    }
-}
-
-void TraceEvents::init_i915_perf_event( trace_event_t &event )
-{
-    if ( !event.has_duration() )
-        event.id_start = m_i915.perf_locs.back();
-    else
-    {
-        for ( uint32_t i = 1; i <= event.id; i++ )
-        {
-            const trace_event_t &req_event = m_events[ event.id - i ];
-
-            if ( !strcmp ( req_event.name, "i915_request_add" ) &&
-                 TraceLocationsRingCtxSeq::get_i915_hw_id( req_event ) == ( uint32_t )event.pid )
-            {
-                m_i915.perf_to_req_in.m_map[ event.id ] = req_event.id;
-                break;
-            }
-        }
-    }
-
-    m_i915.perf_locs.push_back( event.id );
-}
-
-void TraceEvents::update_i915_perf_colors()
-{
-    for ( const uint32_t event_id : m_i915.perf_locs )
-    {
-        trace_event_t &i915_perf_event = m_events[ event_id ];
-
-        if ( m_i915.perf_to_req_in.m_map.find( i915_perf_event.id ) == m_i915.perf_to_req_in.m_map.end() )
-        {
-            i915_perf_event.color = s_clrs().get( col_Graph_Bari915Execute );
-        }
-        else
-        {
-            uint32_t tg_event_id = m_i915.perf_to_req_in.m_map[ i915_perf_event.id ];
-            const trace_event_t &tg_event = m_events[ tg_event_id ];
-
-            i915_perf_event.color = tg_event.color;
-        }
-    }
-}
-
 static int64_t normalize_vblank_diff( int64_t diff )
 {
     static const int64_t rates[] =
@@ -1207,10 +1042,6 @@ void TraceEvents::init_new_event( trace_event_t &event )
             m_drm_vblank_event_queued.set_val( seqno, event.id );
     }
 
-    // Add this event comm to our comm locations map (ie, 'thread_main-1152')
-    if ( !event.is_i915_perf() )
-        m_comm_locs.add_location_str( event.comm, event.id );
-
     // Add this event name to event name map
     if ( event.is_vblank() )
     {
@@ -1270,14 +1101,6 @@ void TraceEvents::init_new_event( trace_event_t &event )
     else if ( is_msm_timeline_event( event.name ) )
     {
         init_msm_timeline_event( event );
-    }
-    else if ( event.seqno && !event.is_ftrace_print() )
-    {
-        init_i915_event( event );
-    }
-    else if ( event.is_i915_perf() )
-    {
-        init_i915_perf_event( event );
     }
 
     if ( !strcmp( event.name, "amdgpu_job_msg" ) )
@@ -1371,10 +1194,6 @@ void TraceEvents::init()
     // Init amd event durations
     calculate_amd_event_durations();
 
-    // Init intel event durations
-    calculate_i915_req_event_durations();
-    calculate_i915_reqwait_event_durations();
-
     // Init print column information
     calculate_event_print_info();
 
@@ -1384,9 +1203,7 @@ void TraceEvents::init()
     // Update tgid colors
     update_tgid_colors();
 
-    // Update i915 HW context ID colors
-    update_i915_perf_colors();
-
+#if 0
     std::vector< INIEntry > entries = s_ini().GetSectionEntries( "$imgui_eventcolors$" );
 
     // Restore event colors
@@ -1402,6 +1219,7 @@ void TraceEvents::init()
             set_event_color( eventname.c_str(), color );
         }
     }
+#endif
 }
 
 void TraceEvents::remove_single_tgids()
@@ -1427,7 +1245,7 @@ void TraceEvents::set_event_color( const std::string &eventname, ImU32 color )
 
     if ( plocs )
     {
-        s_ini().PutUint64( eventname.c_str(), color, "$imgui_eventcolors$" );
+        //s_ini().PutUint64( eventname.c_str(), color, "$imgui_eventcolors$" );
 
         for ( uint32_t idx : *plocs )
         {
@@ -1572,255 +1390,6 @@ void TraceEvents::calculate_amd_event_durations()
     }
 }
 
-// Old:
-//  i915_gem_request_add        dev=%u, ring=%u, ctx=%u, seqno=%u, global=%u
-//  i915_gem_request_submit     dev=%u, ring=%u, ctx=%u, seqno=%u, global=%u
-//  i915_gem_request_in         dev=%u, ring=%u, ctx=%u, seqno=%u, global=%u, port=%u
-//  i915_gem_request_out        dev=%u, ring=%u, ctx=%u, seqno=%u, global=%u, port=%u
-//  i915_gem_request_wait_begin dev=%u, ring=%u, ctx=%u, seqno=%u, global=%u, blocking=%u, flags=0x%x
-//  i915_gem_request_wait_end   ring=%u, ctx=%u, seqno=%u, global=%u
-//  i915_gem_request_queue      dev=%u, ring=%u, ctx=%u, seqno=%u, flags=0x%x
-//  intel_engine_notify         dev=%u, ring=%u, seqno=$u, waiters=%u
-
-// New (in v4.17):
-//  engine is "uabi_class:instance" u16 pairs stored as 'class':'instance' in ftrace file.
-//    class: I915_ENGINE_CLASS_RENDER, _COPY, _VIDEO, _VIDEO_ENHANCE
-//  i915_request_add            dev=0, engine=0:0, hw_id=9, ctx=30, seqno=2032, global=0
-//  i915_request_submit**       dev=0, engine=0:0, hw_id=9, ctx=30, seqno=6, global=0
-//  i915_request_in**           dev=0, engine=0:0, hw_id=9, ctx=30, seqno=3, prio=0, global=708, port=0
-//  i915_request_out**          dev=0, engine=0:0, hw_id=9, ctx=30, seqno=10552, global=12182, completed?=1
-//  i915_request_wait_begin     dev=0, engine=0:0, hw_id=9, ctx=30, seqno=120, global=894, blocking=0, flags=0x1
-//  i915_request_wait_end       dev=0, engine=0:0, hw_id=9, ctx=30, seqno=105, global=875
-//  i915_request_queue          dev=0, engine=0:0, hw_id=9, ctx=30, seqno=26, flags=0x0
-//  intel_engine_notify         dev=0, engine=0:0, seqno=11923, waiters=1
-
-// [**] Tracepoints only available w/ CONFIG_DRM_I915_LOW_LEVEL_TRACEPOINTS Kconfig enabled.
-
-// Svetlana:
-//  i915_request_queue: interrupt handler (should have tid of user space thread)
-
-// Notes from tursulin_ on #intel-gfx (Thanks Tvrtko!):
-//   'completed' you can detect preemption with
-//     if not 'completed' you know the same requests will be re-appearing at some later stage to run some more
-//   'waiters' means if anyone is actually listening for this event
-//   'blocking' you probably don't care about
-//   'priority' is obviously context priority which scheduler uses to determine who runs first
-//     for instance page flips get elevated priority so any request which contains data dependencies associated with that page flip will get priority bumped
-//     (and so can trigger preemption on other stuff)
-//   oh and btw, if you start "parsing" preemption, once you have a completed=0 notification the global seqno next time might be different
-//   so you use ctx and seqno fields to track request lifetime and global seqno for execution timeline
-//   ctx+seqno+engine for uniqueness
-
-i915_type_t get_i915_reqtype( const trace_event_t &event )
-{
-    if ( !strcmp( event.name, "intel_engine_notify" ) )
-        return i915_req_Notify;
-
-    if ( !strncmp( event.name, "i915_", 5 ) )
-    {
-        if ( strstr( event.name, "_request_queue" ) )
-            return i915_req_Queue;
-        else if ( strstr( event.name, "_request_add" ) )
-            return i915_req_Add;
-        else if ( strstr( event.name, "_request_submit" ) )
-            return i915_req_Submit;
-        else if ( strstr( event.name, "_request_in" ) )
-            return i915_req_In;
-        else if ( strstr( event.name, "_request_out" ) )
-            return i915_req_Out;
-        else if ( strstr( event.name, "_request_wait_begin" ) )
-            return i915_reqwait_begin;
-        else if ( strstr( event.name, "_request_wait_end" ) )
-            return i915_reqwait_end;
-    }
-
-    if ( event.is_i915_perf() )
-        return i915_perf;
-
-    return i915_req_Max;
-}
-
-static bool intel_set_duration( trace_event_t *event0, trace_event_t *event1, uint32_t color_index )
-{
-    if ( event0 && event1 && !event1->has_duration() && ( event1->ts >= event0->ts ) )
-    {
-        event1->duration = event1->ts - event0->ts;
-        event1->color_index = color_index;
-        event1->id_start = event0->id;
-        return true;
-    }
-
-    return false;
-}
-
-void TraceEvents::calculate_i915_reqwait_event_durations()
-{
-    for ( auto &req_locs : m_i915.reqwait_end_locs.m_locs.m_map )
-    {
-        row_pos_t row_pos;
-        std::vector< uint32_t > &locs = req_locs.second;
-        // const char *name = m_strpool.findstr( req_locs.first );
-
-        for ( uint32_t idx : locs )
-        {
-            trace_event_t &event = m_events[ idx ];
-            trace_event_t &event_begin = m_events[ event.id_start ];
-            uint32_t row = row_pos.get_row( event_begin.ts, event.ts );
-
-            event_begin.graph_row_id = row;
-            event.graph_row_id = row;
-        }
-
-        m_row_count.m_map[ req_locs.first ] = row_pos.m_rows;
-    }
-}
-
-void TraceEvents::calculate_i915_req_event_durations()
-{
-    // Our map should have events with the same ring/ctx/seqno
-    for ( auto &req_locs : m_i915.gem_req_locs.m_locs.m_map )
-    {
-        uint32_t ringno = ( uint32_t )-1;
-        bool ringno_is_class_instance = false;
-        trace_event_t *events[ i915_req_Max ] = { NULL };
-        std::vector< uint32_t > &locs = req_locs.second;
-
-        for ( uint32_t index : locs )
-        {
-            trace_event_t &event = m_events[ index ];
-            i915_type_t event_type = get_i915_reqtype( event );
-
-            // i915_reqwait_begin/end handled elsewhere...
-            assert( event_type <= i915_req_Out );
-
-            events[ event_type ] = &event;
-
-            if ( ringno == ( uint32_t )-1 )
-            {
-                ringno = TraceLocationsRingCtxSeq::get_i915_ringno( event, &ringno_is_class_instance );
-            }
-        }
-
-        // Notify shouldn't be set yet. It only has a ring and global seqno, no ctx.
-        // If we have request_in, search for the corresponding notify.
-        if ( !events[ i915_req_Notify ] && events[ i915_req_In ] )
-        {
-            // Try to find the global seqno from our request_in event
-            const char *globalstr = get_event_field_val( *events[ i915_req_In ], "global_seqno", NULL );
-
-            if ( !globalstr )
-                globalstr = get_event_field_val( *events[ i915_req_In ], "global", NULL );
-            if ( globalstr )
-            {
-                uint32_t global_seqno = strtoul( globalstr, NULL, 10 );
-                const std::vector< uint32_t > *plocs =
-                        m_i915.gem_req_locs.get_locations( ringno, global_seqno, "0" );
-
-                // We found event(s) that match our ring and global seqno.
-                if ( plocs )
-                {
-                    // Go through looking for an intel_engine_notify event.
-                    for ( uint32_t i : *plocs )
-                    {
-                        trace_event_t &event_notify = m_events[ i ];
-
-                        if ( !strcmp( event_notify.name, "intel_engine_notify" ) )
-                        {
-                            // Set id_start to point to the request_in event
-                            event_notify.id_start = events[ i915_req_In ]->id;
-
-                            // Add our notify event to the event list for this ring/ctx/seqno
-                            locs.push_back( event_notify.id );
-                            std::sort( locs.begin(), locs.end() );
-
-                            // Set our notify event
-                            events[ i915_req_Notify ] = &event_notify;
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-
-        // queue: req_queue -> req_add
-        bool set_duration = intel_set_duration( events[ i915_req_Queue ], events[ i915_req_Add ], col_Graph_Bari915Queue );
-
-        // submit-delay: req_add -> req_submit
-        set_duration |= intel_set_duration( events[ i915_req_Add ], events[ i915_req_Submit ], col_Graph_Bari915SubmitDelay );
-
-        // execute-delay: req_submit -> req_in
-        set_duration |= intel_set_duration( events[ i915_req_Submit ], events[ i915_req_In ], col_Graph_Bari915ExecuteDelay );
-
-        // execute (start to user interrupt): req_in -> engine_notify
-        set_duration |= intel_set_duration( events[ i915_req_In ], events[ i915_req_Notify ], col_Graph_Bari915Execute );
-
-        // context-complete-delay (user interrupt to context complete): engine_notify -> req_out
-        set_duration |= intel_set_duration( events[ i915_req_Notify ], events[ i915_req_Out ], col_Graph_Bari915CtxCompleteDelay );
-
-        // If we didn't get an intel_engine_notify event, do req_in -> req_out
-        set_duration |= intel_set_duration( events[ i915_req_In ], events[ i915_req_Out ], col_Graph_Bari915Execute );
-
-        if ( set_duration )
-        {
-            char buf[ 64 ];
-            uint32_t hashval;
-            int pid = events[ i915_req_Queue ] ? events[ i915_req_Queue ]->pid : 0;
-
-            if ( ringno_is_class_instance )
-                hashval = m_strpool.getu32f( "i915_req %s%u", get_i915_engine_str( buf, ringno ), ringno >> 4 );
-            else
-                hashval = m_strpool.getu32f( "i915_req ring%u", ringno );
-
-            for ( uint32_t i = 0; i < i915_req_Max; i++ )
-            {
-                if ( events[ i ] )
-                {
-                    // Switch the kernel pids in this group to match the i915_request_queue event (ioctl from user space).
-                    if ( pid && !events[ i ]->pid )
-                        events[ i ]->pid = pid;
-
-                    events[ i ]->graph_row_id = ( uint32_t )-1;
-                    m_i915.req_locs.add_location_u32( hashval, events[ i ]->id );
-                }
-            }
-        }
-    }
-
-    // Sort the events in the ring maps
-    for ( auto &req_locs : m_i915.req_locs.m_locs.m_map )
-    {
-        row_pos_t row_pos;
-        std::vector< uint32_t > &locs = req_locs.second;
-        // const char *name = m_strpool.findstr( req_locs.first );
-
-        std::sort( locs.begin(), locs.end() );
-
-        for ( uint32_t idx : locs )
-        {
-            if ( m_events[ idx ].graph_row_id != ( uint32_t )-1 )
-                continue;
-
-            trace_event_t &event = m_events[ idx ];
-            const std::vector< uint32_t > *plocs;
-            const trace_event_t *pevent = !strcmp( event.name, "intel_engine_notify" ) ?
-                        &m_events[ event.id_start ] : &event;
-
-            plocs = m_i915.gem_req_locs.get_locations( *pevent );
-            if ( plocs )
-            {
-                int64_t min_ts = m_events[ plocs->front() ].ts;
-                int64_t max_ts = m_events[ plocs->back() ].ts;
-                uint32_t row = row_pos.get_row( min_ts, max_ts );
-
-                for ( uint32_t i : *plocs )
-                    m_events[ i ].graph_row_id = row;
-            }
-        }
-
-        m_row_count.m_map[ req_locs.first ] = row_pos.m_rows;
-    }
-}
-
 const std::vector< uint32_t > *TraceEvents::get_locs( const char *name,
         loc_type_t *ptype, std::string *errstr )
 {
@@ -1846,21 +1415,6 @@ const std::vector< uint32_t > *TraceEvents::get_locs( const char *name,
     {
         type = LOC_TYPE_Print;
         plocs = &m_ftrace.print_locs;
-    }
-    else if ( !strncmp( name, "i915_reqwait ", 13 ) )
-    {
-        type = LOC_TYPE_i915RequestWait;
-        plocs = m_i915.reqwait_end_locs.get_locations_str( name );
-    }
-    else if ( !strncmp( name, "i915_req ", 9 ) )
-    {
-        type = LOC_TYPE_i915Request;
-        plocs = m_i915.req_locs.get_locations_str( name );
-    }
-    else if ( !strcmp( name, "i915-perf" ) )
-    {
-        type = LOC_TYPE_i915Perf;
-        plocs = &m_i915.perf_locs;
     }
     else if ( !strncmp( name, "plot:", 5 ) )
     {
@@ -2035,7 +1589,8 @@ TraceWin::TraceWin( const char *filename, size_t filesize )
 
     strcpy_safe( m_eventlist.timegoto_buf, "0.0" );
 
-    strcpy_safe( m_filter.buf, s_ini().GetStr( "event_filter_buf", "" ) );
+    // TODO:
+    //strcpy_safe( m_filter.buf, s_ini().GetStr( "event_filter_buf", "" ) );
     m_filter.enabled = !!m_filter.buf[ 0 ];
 
     m_graph.saved_locs.resize( action_graph_save_location5 - action_graph_save_location1 + 1 );
@@ -2047,7 +1602,8 @@ TraceWin::TraceWin( const char *filename, size_t filesize )
 
 TraceWin::~TraceWin()
 {
-    s_ini().PutStr( "event_filter_buf", m_filter.buf );
+    // TODO:
+    //s_ini().PutStr( "event_filter_buf", m_filter.buf );
 
     m_graph.rows.shutdown();
 
@@ -2091,9 +1647,6 @@ void TraceWin::render()
 
                 m_eventlist.do_gotoevent = true;
                 m_eventlist.goto_eventid = ts_to_eventid( m_graph.start_ts + m_graph.length_ts / 2 );
-
-                // Initialize the i915 counters view.
-                m_i915_perf.counters.init( m_trace_events );
             }
 
             if ( !ShowEventList ||
@@ -2109,12 +1662,6 @@ void TraceWin::render()
                 eventlist_render_options();
                 eventlist_render();
                 eventlist_handle_hotkeys();
-            }
-
-            if ( ShowI915Counters &&
-                 imgui_collapsingheader( "I915 performance counters", &m_i915_perf.has_focus, ImGuiTreeNodeFlags_DefaultOpen ) )
-            {
-                m_i915_perf.counters.render();
             }
 
             // Render pinned tooltips

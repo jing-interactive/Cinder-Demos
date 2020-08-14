@@ -119,9 +119,6 @@
     <ClCompile Include="..\..\..\Cinder\blocks\Cinder-VNM\ui\implot\implot_demo.cpp">
       <Filter>Blocks\vnm\ui</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\i915-perf\i915-perf-read.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\etl_utils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -143,9 +140,6 @@
     <ClCompile Include="..\src\gpuvis_graphrows.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\gpuvis_i915_perfcounters.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\gpuvis_plots.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -155,19 +149,7 @@
     <ClCompile Include="..\src\tdopexpr.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\Droid_Sans.cpp">
-      <Filter>depends</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\trace-cmd\kbuffer-parse.c">
-      <Filter>depends</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\proggy_tiny.cpp">
-      <Filter>depends</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\Roboto_Regular.cpp">
-      <Filter>depends</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\RobotoCondensed_Regular.cpp">
       <Filter>depends</Filter>
     </ClCompile>
     <ClCompile Include="..\src\MurmurHash3.cpp">
@@ -195,9 +177,6 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\ui\implot\implot.h">
       <Filter>Blocks\vnm\ui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\i915-perf\i915-perf-read.h">
-      <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="..\src\etl_utils.h">
       <Filter>Source Files</Filter>

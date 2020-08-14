@@ -37,13 +37,13 @@
 #include "imgui/imgui.h"
 #include "imgui/imgui_internal.h"   // BeginColumns(), EndColumns() WIP
 #include "gpuvis_macros.h"
-#include "stlini.h"
 #include "trace-cmd/trace-read.h"
 #include "gpuvis_utils.h"
 #include "gpuvis.h"
 
 void FrameMarkers::init()
 {
+#if 0
     std::vector< INIEntry > entries = s_ini().GetSectionEntries( "$framemarkers_filters$" );
 
     for ( const INIEntry &entry : entries )
@@ -55,7 +55,7 @@ void FrameMarkers::init()
         else if ( filter.size() == 2 )
             m_previous_filters.push_back( { filter[ 0 ], filter[ 1 ] } );
     }
-
+#endif
     if ( m_previous_filters.empty() )
     {
         // Add some default filters
@@ -81,7 +81,8 @@ void FrameMarkers::shutdown()
 
         snprintf_safe( key, "%02lu", i );
 
-        s_ini().PutStr( key, value.c_str(), "$framemarkers_filters$" );
+        // TODO:
+        //s_ini().PutStr( key, value.c_str(), "$framemarkers_filters$" );
     }
 }
 

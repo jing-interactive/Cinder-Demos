@@ -28,7 +28,7 @@ using namespace rapidjson;
 LightSpeedApp &s_app()
 {
     auto app = App::get();
-    return (LightSpeedApp&)*app;
+    return ( LightSpeedApp & )*app;
 }
 
 LightSpeedApp::state_t LightSpeedApp::get_state()
@@ -180,24 +180,23 @@ bool LightSpeedApp::load_file( const char *filename, bool last )
     return true;
 }
 
-
 int LightSpeedApp::load_trace_file( loading_info_t *loading_info, TraceEvents &trace_events, EventCallback trace_cb )
 {
     return read_trace_file( loading_info->filename.c_str(), trace_events.m_strpool,
-        trace_events.m_trace_info, trace_cb );
+                            trace_events.m_trace_info, trace_cb );
 }
 
 int LightSpeedApp::load_etl_file( loading_info_t *loading_info, TraceEvents &trace_events, EventCallback trace_cb )
 {
     return read_etl_file( loading_info->filename.c_str(), trace_events.m_strpool,
-        trace_events.m_trace_info, trace_cb );
+                          trace_events.m_trace_info, trace_cb );
 }
 
 int LightSpeedApp::load_i915_perf_file( loading_info_t *loading_info, TraceEvents &trace_events, EventCallback trace_cb )
 {
 #ifdef USE_I915_PERF
     return read_i915_perf_file( loading_info->filename.c_str(), trace_events.m_strpool,
-        trace_events.m_trace_info, &trace_events.i915_perf_reader, trace_cb );
+                                trace_events.m_trace_info, &trace_events.i915_perf_reader, trace_cb );
 #else
     return 0;
 #endif
@@ -206,7 +205,7 @@ int LightSpeedApp::load_i915_perf_file( loading_info_t *loading_info, TraceEvent
 int LightSpeedApp::thread_func( void *data )
 {
     util_time_t t0 = util_get_time();
-    loading_info_t *loading_info = ( loading_info_t *)data;
+    loading_info_t *loading_info = ( loading_info_t * )data;
     TraceEvents &trace_events = loading_info->win->m_trace_events;
     const char *filename = loading_info->filename.c_str();
 
@@ -250,20 +249,20 @@ int LightSpeedApp::thread_func( void *data )
         }
     }
 
-    if (loading_info->last)
+    if ( loading_info->last )
     {
         GPUVIS_TRACE_BLOCK( "trace_init" );
 
         // Sort events (with multiple files, events are added out of order)
         std::sort( trace_events.m_events.begin(), trace_events.m_events.end(),
-                   [=]( const trace_event_t& lx, const trace_event_t& rx )
-                       {
-                           return lx.ts < rx.ts;
-                       } );
+                   [ = ]( const trace_event_t &lx, const trace_event_t &rx ) {
+                       return lx.ts < rx.ts;
+                   } );
 
         // Assign event ids
-        for ( uint32_t i = 0; i < trace_events.m_events.size(); i++ ) {
-            trace_event_t& event = trace_events.m_events[i];
+        for ( uint32_t i = 0; i < trace_events.m_events.size(); i++ )
+        {
+            trace_event_t &event = trace_events.m_events[ i ];
 
             event.id = i;
 
@@ -288,9 +287,9 @@ int LightSpeedApp::thread_func( void *data )
         float time_init = util_time_to_ms( t0, util_get_time() ) - time_load;
 
         const std::string str = string_format(
-                    "Events read: %lu (Load:%.2fms Init:%.2fms) (string chunks:%lu size:%lu)",
-                    trace_events.m_events.size(), time_load, time_init,
-                    trace_events.m_strpool.m_alloc.m_chunks.size(), trace_events.m_strpool.m_alloc.m_totsize );
+            "Events read: %lu (Load:%.2fms Init:%.2fms) (string chunks:%lu size:%lu)",
+            trace_events.m_events.size(), time_load, time_init,
+            trace_events.m_strpool.m_alloc.m_chunks.size(), trace_events.m_strpool.m_alloc.m_totsize );
         logf( "%s", str.c_str() );
 
 #if !defined( GPUVIS_TRACE_UTILS_DISABLE )
@@ -315,10 +314,10 @@ void LightSpeedApp::init( int argc, char **argv )
     logf( "Welcome to gpuvis\n" );
     logf( " " );
 
-    imgui_set_scale( Scale);
+    imgui_set_scale( Scale );
 }
 
-void LightSpeedApp::shutdown( )
+void LightSpeedApp::shutdown()
 {
     GPUVIS_TRACE_BLOCK( __func__ );
 
@@ -386,7 +385,7 @@ void LightSpeedApp::render_save_filename()
         ImGui::TextColored( ImVec4( 1, 0, 0, 1 ), "%s", m_saving_info.errstr.c_str() );
 
     bool disabled = m_saving_info.filename_new.empty() ||
-            ( m_saving_info.filename_new == m_saving_info.filename_orig );
+                    ( m_saving_info.filename_new == m_saving_info.filename_orig );
 
     // Save button
     {
@@ -518,15 +517,6 @@ void LightSpeedApp::render()
             ImGui::ShowMetricsWindow( &m_show_imgui_metrics_editor );
         }
 
-        if ( m_show_font_window )
-        {
-            imgui_setnextwindowsize( 800, 600 );
-
-            ImGui::Begin( "Font Options", &m_show_font_window );
-            render_font_options();
-            ImGui::End();
-        }
-
         if ( m_show_color_picker )
         {
             imgui_setnextwindowsize( 800, 600 );
@@ -578,8 +568,7 @@ void LightSpeedApp::render()
             {
                 const char *hotkey;
                 const char *desc;
-            } s_help[] =
-            {
+            } s_help[] = {
                 { "Ctrl+click drag", "Graph: Select area" },
                 { "Shift+click drag", "Graph: Zoom selected area" },
                 { "Mousewheel", "Graph: Zoom in / out" },
@@ -641,7 +630,6 @@ void LightSpeedApp::render()
         if ( ImGui::Button( "No", ImVec2( 150, 0 ) ) )
         {
             Scale = 1.0f;
-            m_font_main.m_changed = true;
             ImGui::CloseCurrentPopup();
             m_show_scale_popup = false;
         }
@@ -659,39 +647,6 @@ void LightSpeedApp::update()
         load_file( filename, m_loading_info.inputfiles.size() == 1 );
 
         m_loading_info.inputfiles.erase( m_loading_info.inputfiles.begin() );
-    }
-
-    if ( ( m_font_main.m_changed || m_font_small.m_changed ) &&
-         !ImGui::IsMouseDown( 0 ) )
-    {
-        imgui_set_scale( Scale);
-
-        load_fonts();
-    }
-}
-
-void LightSpeedApp::load_fonts()
-{
-    // Clear all font texture data, ttf data, glyphs, etc.
-    ImGui::GetIO().Fonts->Clear();
-
-    // Add main font
-    m_font_main.load_font( "$imgui_font_main$", "Roboto Regular", 14.0f );
-
-    // Add small font
-    m_font_small.load_font( "$imgui_font_small$", "Roboto Condensed", 14.0f );
-
-
-    // Reset max rect size for the print events so they'll redo the CalcTextSize for the
-    //  print graph row backgrounds (in graph_render_print_timeline).
-    if ( m_trace_win )
-        m_trace_win->m_trace_events.invalidate_ftraceprint_colors();
-
-    //if ( s_ini().GetFloat( "scale", -1.0f ) == -1.0f )
-    {
-        //s_ini().PutFloat( "scale", Scale  );
-
-        m_show_scale_popup = true;
     }
 }
 
@@ -719,12 +674,6 @@ void LightSpeedApp::render_menu_options()
 
         if ( ImGui::MenuItem( "Gpuvis Console" ) )
             m_focus_gpuvis_console = true;
-
-        if ( ImGui::MenuItem( "Font Options" ) )
-        {
-            ImGui::SetWindowFocus( "Font Options" );
-            m_show_font_window = true;
-        }
 
         if ( ImGui::MenuItem( "Color Configuration" ) )
         {
@@ -779,87 +728,8 @@ void LightSpeedApp::render_menu_options()
     ImGui::Unindent();
 }
 
-void LightSpeedApp::render_font_options()
-{
-    static const char lorem_str[] =
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do"
-        "eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim"
-        "veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo"
-        "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse"
-        "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non"
-        "proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
-
-    ImGui::Indent();
-    ImGui::PushID( "font_options" );
-
-    {
-        bool changed = false;
-
-#ifdef USE_FREETYPE
-        changed |= s_opts().render_imgui_opt( OPT_UseFreetype );
-#endif
-        //changed |= s_opts().render_imgui_opt( OPT_Scale );
-        //changed |= s_opts().render_imgui_opt( OPT_Gamma );
-
-        if ( ImGui::Button( "Reset to Defaults" ) )
-        {
-            m_font_main.m_reset = true;
-            m_font_small.m_reset = true;
-
-            Gamma = 1.4f;
-            changed = true;
-        }
-
-        if ( changed )
-        {
-            // Ping font change so this stuff will reload in main loop.
-            m_font_main.m_changed = true;
-        }
-    }
-
-    if ( ImGui::TreeNodeEx( "Main Font", ImGuiTreeNodeFlags_DefaultOpen ) )
-    {
-        std::string font_name = s_textclrs().bright_str( m_font_main.m_name );
-
-        ImGui::TextWrapped( "%s: %s", font_name.c_str(), lorem_str );
-
-        m_font_main.render_font_options( UseFreetype );
-        ImGui::TreePop();
-    }
-
-    if ( ImGui::TreeNodeEx( "Small Font", ImGuiTreeNodeFlags_DefaultOpen ) )
-    {
-        std::string font_name = s_textclrs().bright_str( m_font_small.m_name );
-
-        ImGui::BeginChild( "small_font", ImVec2( 0, ImGui::GetTextLineHeightWithSpacing() * 4 ) );
-
-        imgui_push_smallfont();
-        ImGui::TextWrapped( "%s: %s", font_name.c_str(), lorem_str );
-        imgui_pop_font();
-
-        ImGui::EndChild();
-
-        m_font_small.render_font_options( UseFreetype);
-
-        ImGui::TreePop();
-    }
-
-    ImFontAtlas* atlas = ImGui::GetIO().Fonts;
-    if (ImGui::TreeNode( "Font atlas texture", "Atlas texture (%dx%d pixels)", atlas->TexWidth, atlas->TexHeight ) )
-    {
-        ImGui::Image( atlas->TexID,
-                      ImVec2( (float )atlas->TexWidth, ( float )atlas->TexHeight),
-                      ImVec2( 0, 0 ), ImVec2( 1, 1 ),
-                      ImVec4( 1, 1, 1, 1 ), ImVec4( 1, 1, 1, 0.5f ) );
-        ImGui::TreePop();
-    }
-
-    ImGui::PopID();
-    ImGui::Unindent();
-}
-
 static void render_color_items( colors_t i0, colors_t i1,
-        colors_t *selected_color, std::string *selected_color_event )
+                                colors_t *selected_color, std::string *selected_color_event )
 {
     const float w = imgui_scale( 32.0f );
     const float text_h = ImGui::GetTextLineHeight();
@@ -894,10 +764,10 @@ static void render_color_items( colors_t i0, colors_t i1,
 }
 
 static trace_event_t *get_first_colorable_event(
-        TraceEvents &trace_events, const char *eventname )
+    TraceEvents &trace_events, const char *eventname )
 {
     const std::vector< uint32_t > *plocs =
-            trace_events.m_eventnames_locs.get_locations_str( eventname );
+        trace_events.m_eventnames_locs.get_locations_str( eventname );
 
     if ( plocs )
     {
@@ -916,7 +786,7 @@ static trace_event_t *get_first_colorable_event(
 }
 
 static void render_color_event_items( TraceEvents &trace_events,
-        colors_t *selected_color, std::string *selected_color_event )
+                                      colors_t *selected_color, std::string *selected_color_event )
 {
     const float w = imgui_scale( 32.0f );
     const float text_h = ImGui::GetTextLineHeight();
@@ -978,7 +848,7 @@ static bool render_color_picker_colors( ColorPicker &colorpicker, colors_t selec
 }
 
 static bool render_color_picker_event_colors( ColorPicker &colorpicker,
-        TraceWin *win, const std::string &selected_color_event )
+                                              TraceWin *win, const std::string &selected_color_event )
 {
     bool changed = false;
     TraceEvents &trace_events = win->m_trace_events;
@@ -1005,7 +875,7 @@ static bool render_color_picker_event_colors( ColorPicker &colorpicker,
 
 static void update_changed_colors( TraceEvents &trace_events, colors_t color )
 {
-    switch( color )
+    switch ( color )
     {
     case col_FtracePrintText:
         trace_events.invalidate_ftraceprint_colors();
@@ -1045,14 +915,14 @@ static void reset_colors_to_default( TraceWin *win )
 
 static void reset_event_colors_to_default( TraceWin *win )
 {
-    #if 0
+#if 0
     std::vector< INIEntry > entries = s_ini().GetSectionEntries( "$imgui_eventcolors$" );
 
     for ( const INIEntry &entry : entries )
     {
         s_ini().PutStr( entry.first.c_str(), "", "$imgui_eventcolors$" );
     }
-    #endif
+#endif
 
     if ( win )
     {
@@ -1106,7 +976,7 @@ void LightSpeedApp::render_color_picker()
         else if ( ImGui::CollapsingHeader( "Event Colors" ) )
         {
             render_color_event_items( win->m_trace_events,
-                    &m_colorpicker_color, &m_colorpicker_event );
+                                      &m_colorpicker_color, &m_colorpicker_event );
         }
 
         ImGui::EndChild();
@@ -1123,7 +993,7 @@ void LightSpeedApp::render_color_picker()
     else if ( !m_colorpicker_event.empty() && win )
     {
         changed |= render_color_picker_event_colors( m_colorpicker,
-                win, m_colorpicker_event );
+                                                     win, m_colorpicker_event );
     }
 
     ImGui::NextColumn();
@@ -1247,8 +1117,8 @@ static const char *noc_file_init()
 }
 
 #define NOC_FILE_DIALOG_OPEN 0
-static const char *noc_file_dialog_open(int flags, const char *filters,
-        const char *default_path, const char *default_name)
+static const char *noc_file_dialog_open( int flags, const char *filters,
+                                         const char *default_path, const char *default_name )
 {
     return NULL;
 }
@@ -1265,8 +1135,8 @@ void LightSpeedApp::open_trace_dialog()
     else
     {
         const char *file = noc_file_dialog_open( NOC_FILE_DIALOG_OPEN,
-                                 "trace-cmd files (*.dat;*.trace;*.etl;*.zip)\0*.dat;*.trace;*.etl;*.zip\0",
-                                 NULL, "trace.dat" );
+                                                 "trace-cmd files (*.dat;*.trace;*.etl;*.zip)\0*.dat;*.trace;*.etl;*.zip\0",
+                                                 NULL, "trace.dat" );
 
         if ( file && file[ 0 ] )
             m_loading_info.inputfiles.push_back( file );
@@ -1283,7 +1153,7 @@ void LightSpeedApp::render_menu( const char *str_id )
         return;
     }
 
-    if ( ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) )
+    if ( ImGui::IsWindowFocused( ImGuiFocusedFlags_RootAndChildWindows ) )
     {
         if ( s_actions().get( action_menu_file ) )
             ImGui::OpenPopup( "File" );
@@ -1314,14 +1184,13 @@ void LightSpeedApp::render_menu( const char *str_id )
                 strcpy_safe( m_saving_info.filename_buf, "blah.trace" );
 
                 // Lambda for copying filename_orig to filename_new
-                m_saving_info.save_cb = []( save_info_t &save_info )
-                {
+                m_saving_info.save_cb = []( save_info_t &save_info ) {
                     bool close_popup = copy_file( save_info.filename_orig.c_str(), save_info.filename_new.c_str() );
 
                     if ( !close_popup )
                     {
                         save_info.errstr = string_format( "ERROR: copy_file to %s failed",
-                                                              save_info.filename_new.c_str() );
+                                                          save_info.filename_new.c_str() );
                     }
                     return close_popup;
                 };
@@ -1336,13 +1205,13 @@ void LightSpeedApp::render_menu( const char *str_id )
         ImGui::EndMenu();
     }
 
-    if ( ImGui::BeginMenu( "Options") )
+    if ( ImGui::BeginMenu( "Options" ) )
     {
         render_menu_options();
         ImGui::EndMenu();
     }
 
-    if ( ShowFps)
+    if ( ShowFps )
     {
         ImGui::Text( "%s%.2f ms/frame (%.1f FPS)%s",
                      s_textclrs().str( TClr_Bright ),
@@ -1391,9 +1260,9 @@ void LightSpeedApp::handle_hotkeys()
     if ( s_actions().get( action_toggle_show_eventlist ) )
         ShowEventList = !ShowEventList;
 
-    if (  s_actions().get( action_save_screenshot ) )
+    if ( s_actions().get( action_save_screenshot ) )
     {
-        ImGuiIO& io = ImGui::GetIO();
+        ImGuiIO &io = ImGui::GetIO();
         int w = ( int )io.DisplaySize.x;
         int h = ( int )io.DisplaySize.y;
 
@@ -1406,8 +1275,7 @@ void LightSpeedApp::handle_hotkeys()
         strcpy_safe( m_saving_info.filename_buf, "gpuvis.png" );
 
         // Lambda for copying filename_orig to filename_new
-        m_saving_info.save_cb = [&]( save_info_t &save_info )
-        {
+        m_saving_info.save_cb = [ & ]( save_info_t &save_info ) {
             bool close_popup = !!m_imagebuf.SaveFile( save_info.filename_new.c_str() );
 
             if ( !close_popup )
@@ -1422,8 +1290,7 @@ void LightSpeedApp::handle_hotkeys()
 
 void LightSpeedApp::parse_cmdline( int argc, char **argv )
 {
-    static struct option long_opts[] =
-    {
+    static struct option long_opts[] = {
         { "scale", ya_required_argument, 0, 0 },
         { "tracestart", ya_required_argument, 0, 0 },
         { "tracelen", ya_required_argument, 0, 0 },
@@ -1442,7 +1309,7 @@ void LightSpeedApp::parse_cmdline( int argc, char **argv )
         {
         case 0:
             if ( !strcasecmp( "scale", long_opts[ opt_ind ].name ) )
-                Scale = atof(a_optarg ) );
+                Scale = atof( ya_optarg );
             else if ( !strcasecmp( "tracestart", long_opts[ opt_ind ].name ) )
                 m_loading_info.tracestart = timestr_to_ts( ya_optarg );
             else if ( !strcasecmp( "tracelen", long_opts[ opt_ind ].name ) )
@@ -1464,4 +1331,3 @@ void LightSpeedApp::parse_cmdline( int argc, char **argv )
         m_loading_info.inputfiles.push_back( argv[ ya_optind ] );
     }
 }
-

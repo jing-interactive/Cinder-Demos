@@ -240,31 +240,6 @@ bool imgui_save_screenshot( const char *filename );
 #define IM_COL32_B( _x ) ( ( ( _x ) >> IM_COL32_B_SHIFT ) & 0xFF )
 #define IM_COL32_A( _x ) ( ( ( _x ) >> IM_COL32_A_SHIFT ) & 0xFF )
 
-class FontInfo
-{
-public:
-    FontInfo() {}
-    ~FontInfo() {}
-
-    void load_font( const char *section, const char *defname, float defsize, const ImWchar *glyph_ranges = NULL );
-    void render_font_options( bool m_use_freetype );
-
-protected:
-    void update_ini();
-
-public:
-    float m_size = 0.0f;
-    std::string m_filename;
-    std::string m_section;
-    std::string m_name;
-    ImFontConfig m_font_cfg;
-    int m_font_id = -1;
-
-    bool m_reset = false;
-    bool m_changed = false;
-    std::string m_input_filename_err;
-    char m_input_filename[ PATH_MAX ] = { 0 };
-};
 
 // Print color marked up text.
 // We've added a quick hack in ImFont::RenderText() which checks for:

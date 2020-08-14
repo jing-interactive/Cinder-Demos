@@ -46,9 +46,6 @@ void LightSpeedApp::setup()
 
         // Setup imgui default text color
         s_textclrs().update_colors();
-
-        // Load our fonts
-        load_fonts();
     }
 
     {
