@@ -139,14 +139,12 @@ struct LightSpeedApp : public ci::app::App
 
     static int load_trace_file( loading_info_t *loading_info, TraceEvents &trace_events, EventCallback trace_cb );
     static int load_etl_file( loading_info_t *loading_info, TraceEvents &trace_events, EventCallback trace_cb );
-    static int load_i915_perf_file( loading_info_t *loading_info, TraceEvents &trace_events, EventCallback trace_cb );
 
     enum trace_type_t
     {
         trace_type_invalid,
         trace_type_trace,
         trace_type_etl,
-        trace_type_i915_perf_trace,
     };
 
     struct loading_info_t

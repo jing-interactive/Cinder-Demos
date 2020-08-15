@@ -30,9 +30,6 @@
 #include "gpuvis_macros.h"
 #include "gpuvis_utils.h"
 
-extern "C" {
-    struct intel_perf_data_reader;
-}
 
 // Main app singleton
 struct LightSpeedApp &s_app();
@@ -577,8 +574,6 @@ public:
 
     // 0: events loaded, 1+: loading events, -1: error
     std::atomic_int8_t m_eventsloaded = { 1 };
-
-    struct intel_perf_data_reader *i915_perf_reader = NULL;
 
     struct {
         // set of rings discovered during event parsing

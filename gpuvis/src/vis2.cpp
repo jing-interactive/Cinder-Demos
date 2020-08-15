@@ -144,10 +144,6 @@ bool LightSpeedApp::load_file( const char *filename, bool last )
     {
         m_trace_type = trace_type_trace;
     }
-    else if ( real_ext && ( !strcmp( real_ext, ".i915-dat" ) || !strcmp( real_ext, ".i915-trace" ) ) )
-    {
-        m_trace_type = trace_type_i915_perf_trace;
-    }
 
     size_t filesize = get_file_size( filename );
     if ( !filesize )
@@ -192,16 +188,6 @@ int LightSpeedApp::load_etl_file( loading_info_t *loading_info, TraceEvents &tra
                           trace_events.m_trace_info, trace_cb );
 }
 
-int LightSpeedApp::load_i915_perf_file( loading_info_t *loading_info, TraceEvents &trace_events, EventCallback trace_cb )
-{
-#ifdef USE_I915_PERF
-    return read_i915_perf_file( loading_info->filename.c_str(), trace_events.m_strpool,
-                                trace_events.m_trace_info, &trace_events.i915_perf_reader, trace_cb );
-#else
-    return 0;
-#endif
-}
-
 int LightSpeedApp::thread_func( void *data )
 {
     util_time_t t0 = util_get_time();
@@ -229,9 +215,6 @@ int LightSpeedApp::thread_func( void *data )
             break;
         case trace_type_etl:
             ret = load_etl_file( loading_info, trace_events, trace_cb );
-            break;
-        case trace_type_i915_perf_trace:
-            ret = load_i915_perf_file( loading_info, trace_events, trace_cb );
             break;
         default:
             ret = -1;

@@ -172,7 +172,6 @@ enum trace_flag_type_t {
     TRACE_FLAG_SCHED_SWITCH_TASK_RUNNING    = 0x08000, // TASK_RUNNING
     TRACE_FLAG_SCHED_SWITCH_SYSTEM_EVENT    = 0x10000,
     TRACE_FLAG_AUTOGEN_COLOR                = 0x20000,
-    TRACE_FLAG_I915_PERF                    = 0x40000, // i915-perf gpu generated
 };
 
 struct trace_event_t
@@ -192,8 +191,6 @@ public:
     int crtc = -1;                    // drm_vblank_event crtc (or -1)
     int64_t vblank_ts = INT64_MAX;    // time-stamp that is passed with the drm_event_vblank event
     bool vblank_ts_high_prec = false; // denotes whether or not the hardware timestamp is high-precision
-    uint32_t i915_perf_timeline =
-        INVALID_ID;                   // Pointer into the i915-perf timelines to this element.
 
     uint32_t color = 0;             // color of the event (or 0 for default)
 

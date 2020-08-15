@@ -189,16 +189,7 @@ public:
     const size_t hovered_max = 10;
     std::vector< hovered_t > hovered_items;
 
-    // Selected i915 ring/seq/ctx info
-    struct
-    {
-        uint32_t selected_ringno = 0;
-        uint32_t selected_seqno = 0;
-        uint32_t selected_ctx = 0;
-    } i915;
-
     std::vector< uint32_t > sched_switch_bars;
-    std::vector< uint32_t > i915_perf_bars;
 
     // Id of hovered / selected fence signaled event
     uint32_t hovered_fence_signaled = INVALID_ID;
@@ -663,15 +654,6 @@ void graph_info_t::init_rows( const std::vector< GraphRows::graph_rows_info_t > 
         if ( prinfo_zoom )
         {
             prinfo_zoom_hw = find_row( ( row_name + " hw" ).c_str() );
-
-            if ( !prinfo_zoom_hw && !strncmp( row_name.c_str(), "i915_req ", 9 ) )
-            {
-                char buf[ 128 ];
-
-                // We are zooming i915_req row, show the i915_reqwait row as well
-                snprintf_safe( buf, "i915_reqwait %s", row_name.c_str() + 9 );
-                prinfo_zoom_hw = find_row( buf );
-            }
         }
     }
 
@@ -2734,10 +2716,6 @@ void TraceWin::graph_handle_hotkeys( graph_info_t &gi )
             const trace_event_t &event = get_event( event_id );
 
             m_graph.cpu_filter_pid = event.pid;
-        }
-        else if ( !gi.i915_perf_bars.empty() )
-        {
-            //
         }
         else if ( !gi.hovered_items.empty() )
         {
