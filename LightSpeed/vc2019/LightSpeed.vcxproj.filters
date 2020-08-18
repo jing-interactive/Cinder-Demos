@@ -116,6 +116,9 @@
     <ClCompile Include="..\..\..\Cinder\blocks\Cinder-VNM\ui\implot\implot_demo.cpp">
       <Filter>Blocks\vnm\ui</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\Cinder\blocks\Cinder-VNM\ui\implot\implot_items.cpp">
+      <Filter>Blocks\vnm\ui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\Resources.h">

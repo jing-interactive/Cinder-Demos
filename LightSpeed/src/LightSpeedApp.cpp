@@ -98,11 +98,13 @@ struct DataStorage
 struct LightSpeedApp : public App
 {
     DataStorage storage;
+    ImPlotContext* implotCtx = nullptr;
 
     void setup() override
     {
         log::makeLogger<log::LoggerFileRotating>(fs::path(), "app.%Y.%m.%d.log");
         createConfigImgui();
+        implotCtx = ImPlot::CreateContext();
 
         {
             Document json;
@@ -169,7 +171,10 @@ struct LightSpeedApp : public App
 
         });
 
-        getSignalCleanup().connect([&] { writeConfig(); });
+        getSignalCleanup().connect([&] {
+            ImPlot::DestroyContext(implotCtx);
+            writeConfig();
+        });
 
         getWindow()->getSignalDraw().connect([&] {
             gl::clear();

@@ -53,7 +53,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\include;"..\..\..\Cinder\include";..\..\..\Cinder\blocks\Cinder-VNM\include;..\..\..\Cinder\blocks\Cinder-VNM\ui;..\..\..\Cinder\blocks</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\include;"..\..\..\Cinder\include";..\..\..\Cinder\blocks\Cinder-VNM\include;..\..\..\Cinder\blocks\Cinder-VNM\ui;..\..\..\Cinder\blocks;..\..\..\Cinder\include\imgui</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WIN32_WINNT=0x0601;_WINDOWS;NOMINMAX;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -78,7 +78,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\include;"..\..\..\Cinder\include";..\..\..\Cinder\blocks\Cinder-VNM\include;..\..\..\Cinder\blocks\Cinder-VNM\ui;..\..\..\Cinder\blocks</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\include;"..\..\..\Cinder\include";..\..\..\Cinder\blocks\Cinder-VNM\include;..\..\..\Cinder\blocks\Cinder-VNM\ui;..\..\..\Cinder\blocks;..\..\..\Cinder\include\imgui</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WIN32_WINNT=0x0601;_WINDOWS;NOMINMAX;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <PrecompiledHeader />
@@ -139,6 +139,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\Cinder\blocks\Cinder-VNM\ui\implot\implot.cpp" />
     <ClCompile Include="..\..\..\Cinder\blocks\Cinder-VNM\ui\implot\implot_demo.cpp" />
+    <ClCompile Include="..\..\..\Cinder\blocks\Cinder-VNM\ui\implot\implot_items.cpp" />
     <ClCompile Include="..\src\LightSpeedApp.cpp" />
     <ClCompile Include="..\..\..\Cinder\blocks\Cinder-VNM\src\AssetManager.cpp" />
     <ClCompile Include="..\..\..\Cinder\blocks\Cinder-VNM\src\MiniConfig.cpp" />
