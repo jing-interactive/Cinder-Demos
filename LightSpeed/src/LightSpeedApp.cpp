@@ -209,6 +209,7 @@ struct LightSpeedApp : public App
                     ImPlot::SetNextPlotLimitsX(global_min_t, global_max_t, ImGuiCond_Always);
                     ImPlot::SetNextPlotTicksY(0, 10, 2);
 
+
                     if (ImPlot::BeginPlot(series.name.c_str(), NULL, NULL, ImVec2(-1, PANEL_HEIGHT), ImPlotFlags_Default | ImPlotFlags_NoChild))
                     {
                         //ImPlot::PushStyleColor(ImPlotCol_Line, items[i].Col);
@@ -217,6 +218,34 @@ struct LightSpeedApp : public App
                         {
                             ImPlot::PlotText(span.name.c_str(), span.start/*  / TIME_UNIT_SCALE */, 0, false, ImVec2(0, -PANEL_HEIGHT/2));
                         }
+
+#if 0
+                        ImPlot::PushPlotClipRect();
+                        ImDrawList* draw_list = ImGui::GetWindowDrawList();
+                        draw_list->AddRectFilled(ImVec2(tool_l, tool_t), ImVec2(tool_r, tool_b), IM_COL32(0, 255, 255, 64));
+                        ImPlot::PopPlotClipRect();
+#endif
+                        if (SHOW_TOOL_TIP && ImPlot::IsPlotHovered())
+                        {
+                            ImPlotPoint mouse = ImPlot::GetPlotMousePos();
+                            mouse.x = round(mouse.x);
+                            float half_width = 10;
+                            float  tool_l = ImPlot::PlotToPixels(mouse.x - half_width * 1.5, mouse.y).x;
+                            float  tool_r = ImPlot::PlotToPixels(mouse.x + half_width * 1.5, mouse.y).x;
+                            float  tool_t = ImPlot::GetPlotPos().y;
+                            float  tool_b = tool_t + ImPlot::GetPlotSize().y;
+                            for (const auto& span : series.span_array)
+                            {
+                                if (span.start <= mouse.x && mouse.x < span.end)
+                                {
+                                    ImGui::BeginTooltip();
+                                    ImGui::Text(span.label.c_str());
+                                    ImGui::EndTooltip();
+                                    break;
+                                }
+                            }
+                        }
+
                         //ImPlot::PopStyleColor();
                         ImPlot::EndPlot();
                     }
