@@ -8,15 +8,20 @@
 #include "AssetManager.h"
 #include "MiniConfigImgui.h"
 #include "implot/implot.h"
+#include "implot/implot_internal.h"
 
 using namespace ci;
 using namespace ci::app;
 using namespace std;
 using namespace rapidjson;
 
+float global_min_t = 0;
+float global_max_t = 1;
+
 struct Span
 {
     string name;
+    string label;
     float start = 0;
     float end = 0;
 };
@@ -33,14 +38,50 @@ struct SpanSeries
     SpanSeries(const Document::GenericValue& stat)
     {
         name = stat["name"].GetString();
-        auto pid = stat["pid"].GetInt();
-        auto& ph = stat["ph"];
-        if (ph == "X")
+        if (stat.HasMember("pid"))
         {
-            auto tid = stat["tid"].GetInt();
-            auto ts = stat["ts"].GetInt();
-            auto dur = stat["dur"].GetInt();
-            auto cat = stat["cat"].GetString();
+            // Chrome Event Format
+            auto pid = stat["pid"].GetInt();
+            auto& ph = stat["ph"];
+            if (ph == "X")
+            {
+                auto tid = stat["tid"].GetInt();
+                auto ts = stat["ts"].GetInt();
+                auto dur = stat["dur"].GetInt();
+                auto cat = stat["cat"].GetString();
+            }
+        }
+        else if (stat.HasMember("regions"))
+        {
+            // XXX Format
+            const auto& regions = stat["regions"].GetArray();
+            for (const auto& region : regions)
+            {
+                Span span;
+                span.name = region["name"].GetString();
+                span.label = region["label"].GetString();
+                span.start = region["start"].GetFloat();
+                span.end = region["end"].GetFloat();
+                span_array.emplace_back(span);
+            }
+        }
+    }
+
+    // Plots axis-aligned, filled rectangles. Every two consecutive points defines opposite corners of a single rectangle.
+    static ImPlotPoint getter(void* data, int idx)
+    {
+        auto* self = (SpanSeries*)data;
+        int span_idx = idx / 2;
+        int tag = idx % 2;
+        if (tag == 0)
+        {
+            float start_t = self->span_array[span_idx].start/*  / TIME_UNIT_SCALE */;
+            return ImPlotPoint(start_t, 0);
+        }
+        else
+        {
+            float end_t = self->span_array[span_idx].end/*  / TIME_UNIT_SCALE */;
+            return ImPlotPoint(end_t, 10);
         }
     }
 };
@@ -59,8 +100,8 @@ struct MetricSeries
         for (auto& it : t_array_json)
         {
             auto v = it.GetFloat();
-            if (v > max_t) max_t = v;
-            else if (v < min_t) min_t = v;
+            if (v > global_max_t) global_max_t = v;
+            else if (v < global_min_t) global_min_t = v;
             t_array.push_back(v);
         }
         auto& x_array_json = stat["x"].GetArray();
@@ -79,8 +120,6 @@ struct MetricSeries
         return ImPlotPoint(self->t_array[idx], self->x_array[idx]);
     }
 
-    float min_t = 0;
-    float max_t = 1;
     float min_x = 0;
     float max_x = 1;
 
@@ -122,7 +161,18 @@ struct LightSpeedApp : public App
                         storage.metric_storage[series.name] = series;
                     }
                 }
-                else if (json.HasMember("traceEvents"))
+
+                if (json.HasMember("regionTypes"))
+                {
+                    auto& span_series_array = json["regionTypes"].GetArray();
+                    for (auto& item : span_series_array)
+                    {
+                        SpanSeries series(item);
+                        storage.span_storage[series.name] = series;
+                    }
+                }
+                
+                if (json.HasMember("traceEvents"))
                 {
                     auto& event_array = json["traceEvents"].GetArray();
                     for (auto& item : event_array)
@@ -147,16 +197,39 @@ struct LightSpeedApp : public App
             bool open = false;
             ImPlot::ShowDemoWindow(&open);
 
-
             if (ImGui::Begin("Plot"))
             {
+                for (const auto& kv : storage.span_storage)
+                {
+                    auto& series = kv.second;
+                    if (!series.name._Starts_with("AC") && !series.name._Starts_with("3D"))
+                        continue;
+
+                    ImPlot::SetNextPlotTicksX(global_min_t, global_max_t, PANEL_TICK_T);
+                    ImPlot::SetNextPlotLimitsX(global_min_t, global_max_t, ImGuiCond_Always);
+                    ImPlot::SetNextPlotTicksY(0, 10, 2);
+
+                    if (ImPlot::BeginPlot(series.name.c_str(), NULL, NULL, ImVec2(-1, PANEL_HEIGHT), ImPlotFlags_Default | ImPlotFlags_NoChild))
+                    {
+                        //ImPlot::PushStyleColor(ImPlotCol_Line, items[i].Col);
+                        ImPlot::PlotRects(series.name.c_str(), SpanSeries::getter, (void*)&series, series.span_array.size() * 2);
+                        for (const auto& span : series.span_array)
+                        {
+                            ImPlot::PlotText(span.name.c_str(), span.start/*  / TIME_UNIT_SCALE */, PANEL_HEIGHT * 0.5f, true, ImVec2());
+                        }
+                        //ImPlot::PopStyleColor();
+                        ImPlot::EndPlot();
+                    }
+                }
+
                 for (const auto& kv : storage.metric_storage)
                 {
                     auto& series = kv.second;
 
-                    ImPlot::SetNextPlotLimits(series.min_t, series.max_t, series.min_x, series.max_x, ImGuiCond_Always);
-                    ImPlot::SetNextPlotTicksX(series.min_t, series.max_t, PANEL_TICK_T);
+                    ImPlot::SetNextPlotTicksX(global_min_t, global_max_t, PANEL_TICK_T);
+                    ImPlot::SetNextPlotLimitsX(global_min_t, global_max_t, ImGuiCond_Always);
                     ImPlot::SetNextPlotTicksY(series.min_x, series.max_x, PANEL_TICK_X);
+                    ImPlot::SetNextPlotLimitsY(series.min_x, series.max_x, ImGuiCond_Always);
 
                     if (ImPlot::BeginPlot(series.name.c_str(), NULL, NULL, ImVec2(-1, PANEL_HEIGHT), ImPlotFlags_Default | ImPlotFlags_NoChild))
                     {
