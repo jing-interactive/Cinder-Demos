@@ -215,7 +215,7 @@ struct LightSpeedApp : public App
                         ImPlot::PlotRects(series.name.c_str(), SpanSeries::getter, (void*)&series, series.span_array.size() * 2);
                         for (const auto& span : series.span_array)
                         {
-                            ImPlot::PlotText(span.name.c_str(), span.start/*  / TIME_UNIT_SCALE */, PANEL_HEIGHT * 0.5f, true, ImVec2());
+                            ImPlot::PlotText(span.name.c_str(), span.start/*  / TIME_UNIT_SCALE */, 0, false, ImVec2(0, -PANEL_HEIGHT/2));
                         }
                         //ImPlot::PopStyleColor();
                         ImPlot::EndPlot();
