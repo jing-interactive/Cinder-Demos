@@ -13,20 +13,20 @@
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
     </Filter>
     <Filter Include="Blocks">
-      <UniqueIdentifier>{2B9BB749-975C-46DF-B780-A4702DB00257}</UniqueIdentifier>
+      <UniqueIdentifier>{5773FD92-A595-489C-B81E-B3BBCEC8EEA5}</UniqueIdentifier>
     </Filter>
     <Filter Include="Blocks\vnm">
-      <UniqueIdentifier>{9D5B26F2-2720-49E7-801B-871F33B6858D}</UniqueIdentifier>
+      <UniqueIdentifier>{C4F461D5-0090-4B96-8256-A2E2EBD5D7F9}</UniqueIdentifier>
     </Filter>
     <Filter Include="Blocks\vnm\src">
-      <UniqueIdentifier>{1A4BB400-80FE-4E5F-9F85-EC0B8F84C1C7}</UniqueIdentifier>
+      <UniqueIdentifier>{2C57BEF0-45A1-41D3-B0CC-7E824FF693C4}</UniqueIdentifier>
     </Filter>
     <Filter Include="Blocks\vnm\include">
-      <UniqueIdentifier>{9599FB83-5C85-4F89-932E-D9CEF6540192}</UniqueIdentifier>
+      <UniqueIdentifier>{D333F27A-A1FA-4D6C-BEFC-06E298C58BC4}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\TestOptixDenoiserApp.cpp">
+    <ClCompile Include="..\src\DepthOnlyRenderingApp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClInclude Include="..\include\Resources.h">
@@ -35,7 +35,7 @@
     <ClInclude Include="..\include\item.def">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClCompile Include="..\src\TestOptixDenoiserApp.cpp">
+    <ClCompile Include="..\src\DepthOnlyRenderingApp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\Cinder\blocks\Cinder-VNM\src\AssetManager.cpp">
@@ -110,16 +110,10 @@
     <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\TuioHelper.h">
       <Filter>Blocks\vnm\include</Filter>
     </ClInclude>
-    <ClCompile Include="..\src\optixDenoiser.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\Resources.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\OptiXDenoiser.h">
-      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
