@@ -210,7 +210,7 @@ struct LightSpeedApp : public App
                     ImPlot::SetNextPlotTicksY(0, 10, 2);
 
 
-                    if (ImPlot::BeginPlot(series.name.c_str(), NULL, NULL, ImVec2(-1, PANEL_HEIGHT), ImPlotFlags_Default | ImPlotFlags_NoChild))
+                    if (ImPlot::BeginPlot(series.name.c_str(), NULL, NULL, ImVec2(-1, PANEL_HEIGHT), ImPlotFlags_NoChild))
                     {
                         //ImPlot::PushStyleColor(ImPlotCol_Line, items[i].Col);
                         ImPlot::PlotRects(series.name.c_str(), SpanSeries::getter, (void*)&series, series.span_array.size() * 2);
@@ -260,10 +260,10 @@ struct LightSpeedApp : public App
                     ImPlot::SetNextPlotTicksY(series.min_x, series.max_x, PANEL_TICK_X);
                     ImPlot::SetNextPlotLimitsY(series.min_x, series.max_x, ImGuiCond_Always);
 
-                    if (ImPlot::BeginPlot(series.name.c_str(), NULL, NULL, ImVec2(-1, PANEL_HEIGHT), ImPlotFlags_Default | ImPlotFlags_NoChild))
+                    if (ImPlot::BeginPlot(series.name.c_str(), NULL, NULL, ImVec2(-1, PANEL_HEIGHT), ImPlotFlags_NoChild))
                     {
                         //ImPlot::PushStyleColor(ImPlotCol_Line, items[i].Col);
-                        ImPlot::PlotLine(series.name.c_str(), MetricSeries::getter, (void*)&series, series.t_array.size());
+                        ImPlot::PlotLineG(series.name.c_str(), MetricSeries::getter, (void*)&series, series.t_array.size());
                         //ImPlot::PopStyleColor();
                         ImPlot::EndPlot();
                     }
