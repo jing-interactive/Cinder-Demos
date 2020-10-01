@@ -4,6 +4,8 @@
 #include "cinder/CameraUi.h"
 #include "cinder/Log.h"
 
+#include "../../blocks/_cuda/_cuda.h"
+
 #include "AssetManager.h"
 #include "MiniConfigImgui.h"
 #include "OptiXDenoiser.h"
@@ -16,6 +18,8 @@ struct TestOptixDenoiserApp : public App
 {
     void setup() override
     {
+        load_cuda();
+
         log::makeLogger<log::LoggerFileRotating>(fs::path(), "app.%Y.%m.%d.log");
         
         auto aabb = am::triMesh(MESH_NAME)->calcBoundingBox();

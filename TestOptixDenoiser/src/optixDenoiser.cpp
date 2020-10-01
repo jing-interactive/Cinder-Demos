@@ -29,6 +29,9 @@
 
 
 #include "OptiXDenoiser.h"
+#include "../../blocks/optix/optix_function_table_definition.h"
+#include "../../blocks/optix/optix_stubs.h"
+#include "../../blocks/_cuda/_cuda.h"
 
 #include <cstdlib>
 #include <iomanip>
@@ -38,10 +41,21 @@
 
 #include <Cinder/Surface.h>
 #include <Cinder/Timer.h>
+#include <cinder/Log.h>
 #include "AssetManager.h"
 
 using namespace ci;
 
+#define CUDA_CHECK(hr) (hr)
+#define OPTIX_CHECK(hr) (hr)
+#define CUDA_SYNC_CHECK() (0)
+
+static void context_log_cb(uint32_t level, const char* tag, const char* message, void* /*cbdata*/)
+{
+    if (level < 4)
+        CI_LOG_I("[" << std::setw(2) << level << "][" << std::setw(12) << tag << "]: "
+            << message << "\n");
+}
 
 //------------------------------------------------------------------------------
 //
@@ -60,6 +74,211 @@ void printUsageAndExit( const std::string& argv0 )
     exit(0);
 }
 
+void OptiXDenoiser::init(Data& data)
+{
+    CI_ASSERT(data.color);
+    CI_ASSERT(data.output);
+    CI_ASSERT(data.width);
+    CI_ASSERT(data.height);
+    CI_ASSERT_MSG(!data.normal || data.albedo, "Currently albedo is required if normal input is given");
+
+    m_host_output = data.output;
+
+    load_cuda();
+
+    //
+    // Initialize CUDA and create OptiX context
+    //
+    {
+        // Initialize CUDA
+        CUDA_CHECK(_cudaFree(0));
+
+        CUcontext cu_ctx = 0;  // zero means take the current context
+        OPTIX_CHECK(optixInit());
+        OptixDeviceContextOptions options = {};
+        options.logCallbackFunction = &context_log_cb;
+        options.logCallbackLevel = 4;
+        OPTIX_CHECK(optixDeviceContextCreate(cu_ctx, &options, &m_context));
+    }
+
+    //
+    // Create denoiser
+    //
+    {
+        OptixDenoiserOptions options = {};
+        options.inputKind =
+            data.normal ? OPTIX_DENOISER_INPUT_RGB_ALBEDO_NORMAL :
+            data.albedo ? OPTIX_DENOISER_INPUT_RGB_ALBEDO :
+            OPTIX_DENOISER_INPUT_RGB;
+        OPTIX_CHECK(optixDenoiserCreate(m_context, &options, &m_denoiser));
+        OPTIX_CHECK(optixDenoiserSetModel(
+            m_denoiser,
+            OPTIX_DENOISER_MODEL_KIND_HDR,
+            nullptr, // data
+            0        // size
+        ));
+    }
+
+
+    //
+    // Allocate device memory for denoiser
+    //
+    {
+        OptixDenoiserSizes denoiser_sizes;
+        OPTIX_CHECK(optixDenoiserComputeMemoryResources(
+            m_denoiser,
+            data.width,
+            data.height,
+            &denoiser_sizes
+        ));
+
+        // NOTE: if using tiled denoising, we would set scratch-size to 
+        //       denoiser_sizes.withOverlapScratchSizeInBytes
+        m_scratch_size = static_cast<uint32_t>(denoiser_sizes.withoutOverlapScratchSizeInBytes);
+
+        CUDA_CHECK(_cudaMalloc(reinterpret_cast<void**>(&m_intensity), sizeof(float)));
+        CUDA_CHECK(_cudaMalloc(
+            reinterpret_cast<void**>(&m_scratch),
+            m_scratch_size
+        ));
+
+        CUDA_CHECK(_cudaMalloc(
+            reinterpret_cast<void**>(&m_state),
+            denoiser_sizes.stateSizeInBytes
+        ));
+        m_state_size = static_cast<uint32_t>(denoiser_sizes.stateSizeInBytes);
+
+        const uint64_t frame_byte_size = data.width * data.height * sizeof(float4);
+        CUDA_CHECK(_cudaMalloc(reinterpret_cast<void**>(&m_inputs[0].data), frame_byte_size));
+        CUDA_CHECK(_cudaMemcpy(
+            reinterpret_cast<void*>(m_inputs[0].data),
+            data.color,
+            frame_byte_size,
+            cudaMemcpyHostToDevice
+        ));
+        m_inputs[0].width = data.width;
+        m_inputs[0].height = data.height;
+        m_inputs[0].rowStrideInBytes = data.width * sizeof(float4);
+        m_inputs[0].pixelStrideInBytes = sizeof(float4);
+        m_inputs[0].format = OPTIX_PIXEL_FORMAT_FLOAT4;
+
+        m_inputs[1].data = 0;
+        if (data.albedo)
+        {
+            CUDA_CHECK(_cudaMalloc(reinterpret_cast<void**>(&m_inputs[1].data), frame_byte_size));
+            CUDA_CHECK(_cudaMemcpy(
+                reinterpret_cast<void*>(m_inputs[1].data),
+                data.albedo,
+                frame_byte_size,
+                cudaMemcpyHostToDevice
+            ));
+            m_inputs[1].width = data.width;
+            m_inputs[1].height = data.height;
+            m_inputs[1].rowStrideInBytes = data.width * sizeof(float4);
+            m_inputs[1].pixelStrideInBytes = sizeof(float4);
+            m_inputs[1].format = OPTIX_PIXEL_FORMAT_FLOAT4;
+        }
+
+        m_inputs[2].data = 0;
+        if (data.normal)
+        {
+            CUDA_CHECK(_cudaMalloc(reinterpret_cast<void**>(&m_inputs[2].data), frame_byte_size));
+            CUDA_CHECK(_cudaMemcpy(
+                reinterpret_cast<void*>(m_inputs[2].data),
+                data.normal,
+                frame_byte_size,
+                cudaMemcpyHostToDevice
+            ));
+            m_inputs[2].width = data.width;
+            m_inputs[2].height = data.height;
+            m_inputs[2].rowStrideInBytes = data.width * sizeof(float4);
+            m_inputs[2].pixelStrideInBytes = sizeof(float4);
+            m_inputs[2].format = OPTIX_PIXEL_FORMAT_FLOAT4;
+        }
+
+        CUDA_CHECK(_cudaMalloc(reinterpret_cast<void**>(&m_output.data), frame_byte_size));
+        m_output.width = data.width;
+        m_output.height = data.height;
+        m_output.rowStrideInBytes = data.width * sizeof(float4);
+        m_output.pixelStrideInBytes = sizeof(float4);
+        m_output.format = OPTIX_PIXEL_FORMAT_FLOAT4;
+    }
+
+    //
+    // Setup denoiser
+    //
+    {
+        OPTIX_CHECK(optixDenoiserSetup(
+            m_denoiser,
+            0,  // CUDA stream
+            data.width,
+            data.height,
+            m_state,
+            m_state_size,
+            m_scratch,
+            m_scratch_size
+        ));
+
+
+        m_params.denoiseAlpha = 0;
+        m_params.hdrIntensity = m_intensity;
+        m_params.blendFactor = 0.0f;
+    }
+}
+
+
+void OptiXDenoiser::exec()
+{
+    OPTIX_CHECK(optixDenoiserComputeIntensity(
+        m_denoiser,
+        0, // CUDA stream
+        m_inputs,
+        m_intensity,
+        m_scratch,
+        m_scratch_size
+    ));
+
+    OPTIX_CHECK(optixDenoiserInvoke(
+        m_denoiser,
+        0, // CUDA stream
+        &m_params,
+        m_state,
+        m_state_size,
+        m_inputs,
+        m_inputs[2].data ? 3 : m_inputs[1].data ? 2 : 1, // num input channels
+        0, // input offset X
+        0, // input offset y
+        &m_output,
+        m_scratch,
+        m_scratch_size
+    ));
+
+    CUDA_SYNC_CHECK();
+}
+
+
+void OptiXDenoiser::finish()
+{
+    const uint64_t frame_byte_size = m_output.width * m_output.height * sizeof(float4);
+    CUDA_CHECK(_cudaMemcpy(
+        m_host_output,
+        reinterpret_cast<void*>(m_output.data),
+        frame_byte_size,
+        cudaMemcpyDeviceToHost
+    ));
+
+    // Cleanup resources
+    optixDenoiserDestroy(m_denoiser);
+    optixDeviceContextDestroy(m_context);
+
+    CUDA_CHECK(_cudaFree(reinterpret_cast<void*>(m_intensity)));
+    CUDA_CHECK(_cudaFree(reinterpret_cast<void*>(m_scratch)));
+    CUDA_CHECK(_cudaFree(reinterpret_cast<void*>(m_state)));
+    CUDA_CHECK(_cudaFree(reinterpret_cast<void*>(m_inputs[0].data)));
+    CUDA_CHECK(_cudaFree(reinterpret_cast<void*>(m_inputs[1].data)));
+    CUDA_CHECK(_cudaFree(reinterpret_cast<void*>(m_inputs[2].data)));
+    CUDA_CHECK(_cudaFree(reinterpret_cast<void*>(m_output.data)));
+}
 
 int32_t main_( int32_t argc, char** argv )
 {
@@ -126,9 +345,9 @@ int32_t main_( int32_t argc, char** argv )
         //const double t1 = sutil::currentTime();
         std::cout << "\tLoad inputs from disk     :" << timer.getSeconds() * 1000 << "ms" << std::endl;
 
-        CI_ASSERT( color.pixel_format  == sutil::FLOAT4 );
-        CI_ASSERT( !albedo.data || albedo.pixel_format == sutil::FLOAT4 );
-        CI_ASSERT( !normal.data || normal.pixel_format == sutil::FLOAT4 );
+        //CI_ASSERT( color.pixel_format  == sutil::FLOAT4 );
+        //CI_ASSERT( !albedo.data || albedo.pixel_format == sutil::FLOAT4 );
+        //CI_ASSERT( !normal.data || normal.pixel_format == sutil::FLOAT4 );
 
         std::vector<float> output;
         output.resize( color->getWidth()*color->getHeight()*4 );
@@ -136,9 +355,9 @@ int32_t main_( int32_t argc, char** argv )
         OptiXDenoiser::Data data;
         data.width    = color->getWidth();
         data.height   = color->getHeight();
-        data.color    = reinterpret_cast<float*>(  color.data );
-        data.albedo   = reinterpret_cast<float*>( albedo.data );
-        data.normal   = reinterpret_cast<float*>( normal.data );
+        data.color    = reinterpret_cast<float*>(  color->getData() );
+        data.albedo   = reinterpret_cast<float*>( albedo->getData() );
+        data.normal   = reinterpret_cast<float*>( normal->getData());
         data.output   = output.data();
 
         std::cout << "Denoising ..." << std::endl;
@@ -178,4 +397,6 @@ int32_t main_( int32_t argc, char** argv )
     {
         std::cerr << "ERROR: exception caught '" << e.what() << "'" << std::endl;
     }
+
+    return 0;
 }

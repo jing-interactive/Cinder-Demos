@@ -45,7 +45,6 @@ private:
 
     // wireframe grid batch
     geom::WirePlane  mGrid;
-    gl::GlslProgRef  mGridGlsl;
     gl::BatchRef     mGridRef;
 
     // matcap textures
@@ -56,6 +55,7 @@ private:
 
 void MatCapShadersApp::setup()
 {
+    am::addAssetDirectory("../../SSS/assets");
     setupCamera();
     setupTextures();
     setupBatches();
@@ -78,24 +78,15 @@ void MatCapShadersApp::setupCamera()
 
 void MatCapShadersApp::setupBatches()
 {
-    try
-    {
-        mMatcapGlsl = gl::GlslProg::create(loadAsset("shaders/matcap_vert.glsl"),
-            loadAsset("shaders/matcap_frag.glsl"));
-        mGridGlsl = gl::GlslProg::create(loadAsset("shaders/pass_thru_vert.glsl"),
-            loadAsset("shaders/pass_thru_frag.glsl"));
-    }
-    catch (gl::GlslProgCompileExc e)
-    {
-        console() << e.what() << std::endl;
-        quit();
-    }
+	mMatcapGlsl = am::glslProg("shaders/matcap_vert.glsl", "shaders/matcap_frag.glsl");
+    mMatcapGlsl->uniform("image", 0);
+    mMatcapGlsl->uniform("diffuse", 1);
 
-    mTriMesh = am::triMesh("Teapot");
+    mTriMesh = am::triMesh(MESH_NAME);
     mObjRef = gl::Batch::create(*mTriMesh, mMatcapGlsl);
 
     mGrid = geom::WirePlane().subdivisions(ivec2(10, 10)).size(vec2(2, 2));
-    mGridRef = gl::Batch::create(mGrid, mGridGlsl);
+    mGridRef = gl::Batch::create(mGrid, am::glslProg("color"));
 }
 
 void MatCapShadersApp::setupTextures()
@@ -111,7 +102,7 @@ void MatCapShadersApp::setupTextures()
     }
 
     mCurrentPath = mMatcapPaths.begin();
-    mMatcapTex = gl::Texture2d::create(loadImage(*mCurrentPath));
+    mMatcapTex = am::texture2d(mCurrentPath->string());
 }
 
 void MatCapShadersApp::nextTexture()
@@ -122,13 +113,7 @@ void MatCapShadersApp::nextTexture()
         if (mCurrentPath == mMatcapPaths.end())
             mCurrentPath = mMatcapPaths.begin();
 
-        try {
-            mMatcapTex = gl::Texture2d::create(loadImage(*mCurrentPath));
-        }
-        catch (cinder::Exception e) {
-            console() << e.what() << std::endl;
-            quit();
-        }
+        mMatcapTex = am::texture2d(mCurrentPath->string());
     }
 }
 
@@ -140,13 +125,7 @@ void MatCapShadersApp::prevTexture()
             mCurrentPath = mMatcapPaths.end();
         mCurrentPath--;
 
-        try {
-            mMatcapTex = gl::Texture2d::create(loadImage(*mCurrentPath));
-        }
-        catch (cinder::Exception e) {
-            console() << e.what() << std::endl;
-            quit();
-        }
+        mMatcapTex = am::texture2d(mCurrentPath->string());
     }
 }
 
@@ -176,13 +155,15 @@ void MatCapShadersApp::draw()
 
     gl::setMatrices(mCamera);
 
-    gl::ScopedTextureBind sTex(mMatcapTex);
+    gl::ScopedTextureBind t0(mMatcapTex, 0);
+    gl::ScopedTextureBind t1(am::texture2d(TEX0_NAME), 1);
 
     mGridRef->draw();
     mObjRef->draw();
 }
 
 CINDER_APP(MatCapShadersApp, RendererGl(RendererGl::Options().msaa(16)), [](App::Settings* settings) {
+    readConfig();
     settings->setMultiTouchEnabled(false);
     settings->setHighDensityDisplayEnabled(true);
     settings->setWindowSize(1280, 720);

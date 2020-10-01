@@ -6,9 +6,11 @@ uniform mat3 ciNormalMatrix;
 
 in vec4 ciPosition;
 in vec3 ciNormal;
+in vec2 ciTexCoord0;
 
 out vec3 cI; // incident ray, camera space
 out vec3 cN; // normal, camera space
+out vec2 TexCoord0;
 
 void main()
 {
@@ -16,4 +18,5 @@ void main()
     cN = normalize( ciNormalMatrix * ciNormal );
 
     gl_Position = ciModelViewProjection * ciPosition;
+    TexCoord0 = ciTexCoord0;
 }
