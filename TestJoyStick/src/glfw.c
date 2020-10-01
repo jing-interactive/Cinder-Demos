@@ -1,0 +1,16 @@
+#define _GLFW_WIN32
+
+#include "..\..\..\Cinder\src\glfw\src\win32_joystick.c"
+#include "..\..\..\Cinder\src\glfw\src\input.c"
+#include "..\..\..\Cinder\src\glfw\src\win32_window.c"
+#include "..\..\..\Cinder\src\glfw\src\win32_time.c"
+#include "..\..\..\Cinder\src\glfw\src\window.c"
+#include "..\..\..\Cinder\src\glfw\src\win32_init.c"
+#include "..\..\..\Cinder\src\glfw\src\monitor.c"
+#include "..\..\..\Cinder\src\glfw\src\wgl_context.c"
+#include "..\..\..\Cinder\src\glfw\src\win32_tls.c"
+#include "..\..\..\Cinder\src\glfw\src\init.c"
+#include "..\..\..\Cinder\src\glfw\src\context.c"
+#include "..\..\..\Cinder\src\glfw\src\win32_monitor.c"
+#include "..\..\..\Cinder\src\glfw\src\egl_context.c"
+#include "..\..\..\Cinder\src\glfw\src\vulkan.c"
