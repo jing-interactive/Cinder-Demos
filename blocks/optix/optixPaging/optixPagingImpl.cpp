@@ -79,18 +79,38 @@ __device__ __forceinline__ void addPagesToList( unsigned int  startingIndex,
     }
 }
 
-__global__ void devicePullRequests( unsigned int* usageBits,
-                                    unsigned int* residenceBits,
-                                    unsigned int  maxVaSizeInPages,
-                                    unsigned int* devRequestedPages,
-                                    unsigned int  numRequestedPages,
-                                    unsigned int* numRequestedPagesReturned,
-                                    unsigned int* devStalePages,
-                                    unsigned int  numStalePages,
-                                    unsigned int* numStalePagesReturned,
-                                    unsigned int* devEvictablePages,
-                                    unsigned int  numEvictablePages,
-                                    unsigned int* numEvictablePagesReturned )
+__device__ __forceinline__ void addPageMappingsToList( unsigned int        startingIndex,
+                                                       unsigned int        pageBits,
+                                                       unsigned int        pageBitOffset,
+                                                       unsigned int        maxCount,
+                                                       unsigned long long* pageTable,
+                                                       PageMapping*        outputArray )
+{
+    while( pageBits != 0 && ( startingIndex < maxCount ) )
+    {
+        // Find index of least significant bit and clear it
+        unsigned int bitIndex = __ffs( pageBits ) - 1;
+        pageBits ^= ( 1U << bitIndex );
+
+        // Add the requested page to the queue
+        unsigned int pageId          = pageBitOffset + bitIndex;
+        outputArray[startingIndex++] = PageMapping{pageId, pageTable[pageId]};
+    }
+}
+
+__global__ void devicePullRequests( unsigned int*       usageBits,
+                                    unsigned int*       residenceBits,
+                                    unsigned long long* pageTable,
+                                    unsigned int        maxVaSizeInPages,
+                                    unsigned int*       devRequestedPages,
+                                    unsigned int        numRequestedPages,
+                                    unsigned int*       numRequestedPagesReturned,
+                                    PageMapping*        devStalePages,
+                                    unsigned int        numStalePages,
+                                    unsigned int*       numStalePagesReturned,
+                                    unsigned int*       devEvictablePages,
+                                    unsigned int        numEvictablePages,
+                                    unsigned int*       numEvictablePagesReturned )
 {
     unsigned int globalIndex   = threadIdx.x + blockIdx.x * blockDim.x;
     unsigned int pageBitOffset = globalIndex * 32;
@@ -111,7 +131,7 @@ __global__ void devicePullRequests( unsigned int* usageBits,
         // Gather the stale pages, which are pages that are resident but not requested.
         const unsigned int stalePages = ~requestWord & residenceWord;
         const unsigned int staleIndex = countSetBitsAndCalcIndex( laneId, stalePages, numStalePagesReturned );
-        addPagesToList( staleIndex, stalePages, pageBitOffset, numStalePages, devStalePages );
+        addPageMappingsToList( staleIndex, stalePages, pageBitOffset, numStalePages, pageTable, devStalePages );
 
         globalIndex += gridDim.x * blockDim.x;
         pageBitOffset = globalIndex * 32;

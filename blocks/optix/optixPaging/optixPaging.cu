@@ -26,12 +26,12 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-#include <optixPaging/optixPagingImpl.cpp>
+#include "optixPagingImpl.cpp"
 
 __host__ void optixPagingPullRequests( OptixPagingContext* context,
                                        unsigned int*       devRequestedPages,
                                        unsigned int        numRequestedPages,
-                                       unsigned int*       devStalePages,
+                                       PageMapping*        devStalePages,
                                        unsigned int        numStalePages,
                                        unsigned int*       devEvictablePages,
                                        unsigned int        numEvictablePages,
@@ -51,10 +51,11 @@ __host__ void optixPagingPullRequests( OptixPagingContext* context,
     const int numPagesPerBlock   = numPagesPerThread * numThreadsPerBlock;
     const int numBlocks          = ( context->maxVaSizeInPages + ( numPagesPerBlock - 1 ) ) / numPagesPerBlock;
 
-    devicePullRequests<<<numBlocks, numThreadsPerBlock>>>( context->usageBits, context->residenceBits, context->maxVaSizeInPages,
-                                                           devRequestedPages, numRequestedPages, devNumPagesReturned,
-                                                           devStalePages, numStalePages, devNumPagesReturned + 1,
-                                                           devEvictablePages, numEvictablePages, devNumPagesReturned + 2 );
+    devicePullRequests<<<numBlocks, numThreadsPerBlock>>>( context->usageBits, context->residenceBits, context->pageTable,
+                                                           context->maxVaSizeInPages, devRequestedPages,
+                                                           numRequestedPages, devNumPagesReturned, devStalePages,
+                                                           numStalePages, devNumPagesReturned + 1, devEvictablePages,
+                                                           numEvictablePages, devNumPagesReturned + 2 );
 }
 
 __host__ void optixPagingPushMappings( OptixPagingContext* context,
@@ -64,12 +65,13 @@ __host__ void optixPagingPushMappings( OptixPagingContext* context,
                                        int                 invalidatedPageCount )
 {
     // Zero out the reference bits
-    unsigned int referenceBitsSizeInBytes = sizeof( unsigned int ) * static_cast<unsigned int>( context->residenceBits - context->usageBits );
+    unsigned int referenceBitsSizeInBytes =
+        sizeof( unsigned int ) * static_cast<unsigned int>( context->residenceBits - context->usageBits );
     OPTIX_PAGING_CHECK_CUDA_ERROR( cudaMemset( context->usageBits, 0, referenceBitsSizeInBytes ) );
 
-    const int numPagesPerThread = 2;
+    const int numPagesPerThread  = 2;
     const int numThreadsPerBlock = 128;
-    const int numPagesPerBlock = numPagesPerThread * numThreadsPerBlock;
+    const int numPagesPerBlock   = numPagesPerThread * numThreadsPerBlock;
     if( filledPageCount != 0 )
     {
         const int numFilledPageBlocks = ( filledPageCount + numPagesPerBlock - 1 ) / numPagesPerBlock;
@@ -121,5 +123,5 @@ __host__ void optixPagingSetup( OptixPagingContext* context, const OptixPagingSi
     OPTIX_PAGING_CHECK_CUDA_ERROR( cudaMemset( context->usageBits, 0, sizes.usageBitsSizeInBytes * numWorkers ) );
 
     // Set residence bits pointer in context (index half way into usage bits)
-    context->residenceBits = context->usageBits + ( sizes.usageBitsSizeInBytes / sizeof(unsigned int) / 2 );
+    context->residenceBits = context->usageBits + ( sizes.usageBitsSizeInBytes / sizeof( unsigned int ) / 2 );
 }

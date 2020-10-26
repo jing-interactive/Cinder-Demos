@@ -30,9 +30,9 @@
 
 #include <cuda_runtime.h>
 
-#if !defined(__CUDACC_RTC__)
-#include <utility>
+#if !defined( __CUDACC_RTC__ )
 #include <stdio.h>
+#include <utility>
 #endif
 
 inline bool optixPagingCheckCudaError( cudaError_t err )
@@ -49,23 +49,21 @@ inline bool optixPagingCheckCudaError( cudaError_t err )
 #define OPTIX_PAGING_CHECK_CUDA_ERROR( err ) optixPagingCheckCudaError( err )
 #endif
 
-const int MAX_WORKER_THREADS = 32;
-
 template <typename T>
-__host__ __device__ T minimum( T lhs, T rhs )
+__host__ __device__ inline T minimum( T lhs, T rhs )
 {
     return lhs < rhs ? lhs : rhs;
 }
 
 template <typename T>
-__host__ __device__ T maximum( T lhs, T rhs )
+__host__ __device__ inline T maximum( T lhs, T rhs )
 {
     return lhs > rhs ? lhs : rhs;
 }
 
 struct PageMapping
 {
-    unsigned int id;
+    unsigned int       id;
     unsigned long long page;
 };
 
@@ -83,9 +81,9 @@ struct OptixPagingOptions
 
 struct OptixPagingContext
 {
-    unsigned int  maxVaSizeInPages;
-    unsigned int* usageBits;      // also beginning of referenceBits. [ referenceBits | residencesBits ]
-    unsigned int* residenceBits;  // located half way into usasgeBits.
+    unsigned int        maxVaSizeInPages;
+    unsigned int*       usageBits;      // also beginning of referenceBits. [ referenceBits | residencesBits ]
+    unsigned int*       residenceBits;  // located half way into usasgeBits.
     unsigned long long* pageTable;
 };
 
@@ -134,7 +132,11 @@ __device__ inline bool checkBitSet( unsigned int bitIndex, const unsigned int* b
     return ( bitVector[wordIndex] & ( 1U << bitOffset ) ) != 0;
 }
 
-__device__ inline unsigned long long optixPagingMapOrRequest( unsigned int* usageBits, unsigned int* residenceBits, unsigned long long* pageTable, unsigned int page, bool* valid )
+__device__ inline unsigned long long optixPagingMapOrRequest( unsigned int*       usageBits,
+                                                              unsigned int*       residenceBits,
+                                                              unsigned long long* pageTable,
+                                                              unsigned int        page,
+                                                              bool*               valid )
 {
     bool requested = checkBitSet( page, usageBits );
     if( !requested )
