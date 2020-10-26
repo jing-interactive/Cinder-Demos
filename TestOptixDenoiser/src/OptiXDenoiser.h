@@ -31,9 +31,10 @@
 
 #include <cinder/CinderAssert.h>
 
+#include "../../blocks/cuew/cuew.h"
+#define OPTIX_DONT_INCLUDE_CUDA
 #include "../../blocks/optix/optix.h"
 
-#include <cuda_runtime_api.h>
 #include <stdint.h>
 
 class OptiXDenoiser

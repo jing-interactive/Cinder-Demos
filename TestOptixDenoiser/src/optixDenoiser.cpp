@@ -29,9 +29,9 @@
 
 
 #include "OptiXDenoiser.h"
+
 #include "../../blocks/optix/optix_function_table_definition.h"
 #include "../../blocks/optix/optix_stubs.h"
-#include "../../blocks/_cuda/_cuda.h"
 
 #include <cstdlib>
 #include <iomanip>
@@ -84,14 +84,12 @@ void OptiXDenoiser::init(Data& data)
 
     m_host_output = data.output;
 
-    load_cuda();
-
     //
     // Initialize CUDA and create OptiX context
     //
     {
         // Initialize CUDA
-        CUDA_CHECK(_cudaFree(0));
+        CUDA_CHECK(cuMemFree(0));
 
         CUcontext cu_ctx = 0;  // zero means take the current context
         OPTIX_CHECK(optixInit());
@@ -136,71 +134,68 @@ void OptiXDenoiser::init(Data& data)
         //       denoiser_sizes.withOverlapScratchSizeInBytes
         m_scratch_size = static_cast<uint32_t>(denoiser_sizes.withoutOverlapScratchSizeInBytes);
 
-        CUDA_CHECK(_cudaMalloc(reinterpret_cast<void**>(&m_intensity), sizeof(float)));
-        CUDA_CHECK(_cudaMalloc(
-            reinterpret_cast<void**>(&m_scratch),
+        CUDA_CHECK(cuMemAlloc((&m_intensity), sizeof(float)));
+        CUDA_CHECK(cuMemAlloc(
+            (&m_scratch),
             m_scratch_size
         ));
 
-        CUDA_CHECK(_cudaMalloc(
-            reinterpret_cast<void**>(&m_state),
+        CUDA_CHECK(cuMemAlloc(
+            (&m_state),
             denoiser_sizes.stateSizeInBytes
         ));
         m_state_size = static_cast<uint32_t>(denoiser_sizes.stateSizeInBytes);
 
-        const uint64_t frame_byte_size = data.width * data.height * sizeof(float4);
-        CUDA_CHECK(_cudaMalloc(reinterpret_cast<void**>(&m_inputs[0].data), frame_byte_size));
-        CUDA_CHECK(_cudaMemcpy(
-            reinterpret_cast<void*>(m_inputs[0].data),
+        const uint64_t frame_byte_size = data.width * data.height * sizeof(float) * 4;
+        CUDA_CHECK(cuMemAlloc((&m_inputs[0].data), frame_byte_size));
+        CUDA_CHECK(cuMemcpyHtoD(
+            (m_inputs[0].data),
             data.color,
-            frame_byte_size,
-            cudaMemcpyHostToDevice
+            frame_byte_size
         ));
         m_inputs[0].width = data.width;
         m_inputs[0].height = data.height;
-        m_inputs[0].rowStrideInBytes = data.width * sizeof(float4);
-        m_inputs[0].pixelStrideInBytes = sizeof(float4);
+        m_inputs[0].rowStrideInBytes = data.width * sizeof(float) * 4;
+        m_inputs[0].pixelStrideInBytes = sizeof(float) * 4;
         m_inputs[0].format = OPTIX_PIXEL_FORMAT_FLOAT4;
 
         m_inputs[1].data = 0;
         if (data.albedo)
         {
-            CUDA_CHECK(_cudaMalloc(reinterpret_cast<void**>(&m_inputs[1].data), frame_byte_size));
-            CUDA_CHECK(_cudaMemcpy(
-                reinterpret_cast<void*>(m_inputs[1].data),
+            CUDA_CHECK(cuMemAlloc((&m_inputs[1].data), frame_byte_size));
+            CUDA_CHECK(cuMemcpyHtoD(
+                (m_inputs[1].data),
                 data.albedo,
-                frame_byte_size,
-                cudaMemcpyHostToDevice
+                frame_byte_size
             ));
             m_inputs[1].width = data.width;
             m_inputs[1].height = data.height;
-            m_inputs[1].rowStrideInBytes = data.width * sizeof(float4);
-            m_inputs[1].pixelStrideInBytes = sizeof(float4);
+            m_inputs[1].rowStrideInBytes = data.width * sizeof(float) * 4;
+            m_inputs[1].pixelStrideInBytes = sizeof(float) * 4;
             m_inputs[1].format = OPTIX_PIXEL_FORMAT_FLOAT4;
         }
 
         m_inputs[2].data = 0;
         if (data.normal)
         {
-            CUDA_CHECK(_cudaMalloc(reinterpret_cast<void**>(&m_inputs[2].data), frame_byte_size));
-            CUDA_CHECK(_cudaMemcpy(
-                reinterpret_cast<void*>(m_inputs[2].data),
+            CUDA_CHECK(cuMemAlloc((&m_inputs[2].data), frame_byte_size));
+            CUDA_CHECK(cuMemcpyHtoD(
+                (m_inputs[2].data),
                 data.normal,
-                frame_byte_size,
-                cudaMemcpyHostToDevice
+                frame_byte_size
             ));
             m_inputs[2].width = data.width;
             m_inputs[2].height = data.height;
-            m_inputs[2].rowStrideInBytes = data.width * sizeof(float4);
-            m_inputs[2].pixelStrideInBytes = sizeof(float4);
+            m_inputs[2].rowStrideInBytes = data.width * sizeof(float) * 4;
+            m_inputs[2].pixelStrideInBytes = sizeof(float) * 4;
             m_inputs[2].format = OPTIX_PIXEL_FORMAT_FLOAT4;
         }
 
-        CUDA_CHECK(_cudaMalloc(reinterpret_cast<void**>(&m_output.data), frame_byte_size));
+        CUDA_CHECK(cuMemAlloc((&m_output.data), frame_byte_size));
         m_output.width = data.width;
         m_output.height = data.height;
-        m_output.rowStrideInBytes = data.width * sizeof(float4);
-        m_output.pixelStrideInBytes = sizeof(float4);
+        m_output.rowStrideInBytes = data.width * sizeof(float) * 4;
+        m_output.pixelStrideInBytes = sizeof(float) * 4;
         m_output.format = OPTIX_PIXEL_FORMAT_FLOAT4;
     }
 
@@ -259,25 +254,24 @@ void OptiXDenoiser::exec()
 
 void OptiXDenoiser::finish()
 {
-    const uint64_t frame_byte_size = m_output.width * m_output.height * sizeof(float4);
-    CUDA_CHECK(_cudaMemcpy(
+    const uint64_t frame_byte_size = m_output.width * m_output.height * sizeof(float) * 4;
+    CUDA_CHECK(cuMemcpyDtoH(
         m_host_output,
-        reinterpret_cast<void*>(m_output.data),
-        frame_byte_size,
-        cudaMemcpyDeviceToHost
+        (m_output.data),
+        frame_byte_size
     ));
 
     // Cleanup resources
     optixDenoiserDestroy(m_denoiser);
     optixDeviceContextDestroy(m_context);
 
-    CUDA_CHECK(_cudaFree(reinterpret_cast<void*>(m_intensity)));
-    CUDA_CHECK(_cudaFree(reinterpret_cast<void*>(m_scratch)));
-    CUDA_CHECK(_cudaFree(reinterpret_cast<void*>(m_state)));
-    CUDA_CHECK(_cudaFree(reinterpret_cast<void*>(m_inputs[0].data)));
-    CUDA_CHECK(_cudaFree(reinterpret_cast<void*>(m_inputs[1].data)));
-    CUDA_CHECK(_cudaFree(reinterpret_cast<void*>(m_inputs[2].data)));
-    CUDA_CHECK(_cudaFree(reinterpret_cast<void*>(m_output.data)));
+    CUDA_CHECK(cuMemFree((m_intensity)));
+    CUDA_CHECK(cuMemFree((m_scratch)));
+    CUDA_CHECK(cuMemFree((m_state)));
+    CUDA_CHECK(cuMemFree((m_inputs[0].data)));
+    CUDA_CHECK(cuMemFree((m_inputs[1].data)));
+    CUDA_CHECK(cuMemFree((m_inputs[2].data)));
+    CUDA_CHECK(cuMemFree((m_output.data)));
 }
 
 int32_t main_( int32_t argc, char** argv )

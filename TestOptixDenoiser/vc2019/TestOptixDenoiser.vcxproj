@@ -100,12 +100,9 @@
   <ItemGroup>
     <ResourceCompile Include="Resources.rc" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\blocks\_cuda\_cuda.def" />
-  </ItemGroup>
   <ItemGroup />
   <ItemGroup>
-    <ClInclude Include="..\..\blocks\_cuda\_cuda.h" />
+    <ClInclude Include="..\..\blocks\cuew\cuew.h" />
     <ClInclude Include="..\include\Resources.h" />
     <ClInclude Include="..\include\item.def" />
     <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\AnsiToUtf.h" />
@@ -130,11 +127,11 @@
     <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\StateMachine.h" />
     <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\TextureHelper.h" />
     <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\TuioHelper.h" />
-    <ClInclude Include="..\src\OptiXDenoiser.h" />
+    <ClInclude Include="..\src\OptixDenoiser.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\blocks\_cuda\_cuda.cpp" />
-    <ClCompile Include="..\src\optixDenoiser.cpp" />
+    <ClCompile Include="..\..\blocks\cuew\cuew.c" />
+    <ClCompile Include="..\src\OptixDenoiser.cpp" />
     <ClCompile Include="..\src\TestOptixDenoiserApp.cpp" />
     <ClCompile Include="..\..\..\Cinder\blocks\Cinder-VNM\src\AssetManager.cpp" />
     <ClCompile Include="..\..\..\Cinder\blocks\Cinder-VNM\src\MiniConfig.cpp" />

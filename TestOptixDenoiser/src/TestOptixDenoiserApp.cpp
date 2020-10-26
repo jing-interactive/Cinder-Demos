@@ -4,7 +4,7 @@
 #include "cinder/CameraUi.h"
 #include "cinder/Log.h"
 
-#include "../../blocks/_cuda/_cuda.h"
+#include "../../blocks/cuew/cuew.h"
 
 #include "AssetManager.h"
 #include "MiniConfigImgui.h"
@@ -18,7 +18,7 @@ struct TestOptixDenoiserApp : public App
 {
     void setup() override
     {
-        load_cuda();
+        int result = cuewInit(CUEW_INIT_CUDA | CUEW_INIT_NVRTC);
 
         log::makeLogger<log::LoggerFileRotating>(fs::path(), "app.%Y.%m.%d.log");
         

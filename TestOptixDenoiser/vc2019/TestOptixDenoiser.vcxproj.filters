@@ -113,32 +113,27 @@
     <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\TuioHelper.h">
       <Filter>Blocks\vnm\include</Filter>
     </ClInclude>
-    <ClCompile Include="..\src\optixDenoiser.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\blocks\_cuda\_cuda.cpp">
+    <ClCompile Include="..\..\blocks\cuew\cuew.c">
       <Filter>Blocks\_cuda</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\OptixDenoiser.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\Resources.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\OptiXDenoiser.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\blocks\_cuda\_cuda.h">
+    <ClInclude Include="..\..\blocks\cuew\cuew.h">
       <Filter>Blocks\_cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\OptixDenoiser.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resources.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\blocks\_cuda\_cuda.def">
-      <Filter>Blocks\_cuda</Filter>
-    </None>
   </ItemGroup>
 </Project>
