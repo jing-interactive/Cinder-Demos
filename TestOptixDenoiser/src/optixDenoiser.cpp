@@ -82,6 +82,10 @@ void OptiXDenoiser::init(Data& data)
     CI_ASSERT(data.height);
     CI_ASSERT_MSG(!data.normal || data.albedo, "Currently albedo is required if normal input is given");
 
+    int result = cuewInit(CUEW_INIT_CUDA | CUEW_INIT_NVRTC);
+
+    CUDA_CHECK(cuInit(0));
+
     m_host_output = data.output;
 
     //
@@ -89,7 +93,14 @@ void OptiXDenoiser::init(Data& data)
     //
     {
         // Initialize CUDA
-        CUDA_CHECK(cuMemFree(0));
+        int cuDevId = 0;
+        CUdevice cuDevice;
+        CUcontext cuContext;
+        cuDeviceGet(&cuDevice, cuDevId);
+        cuCtxCreate(&cuContext, 0, cuDevice);
+        cuCtxSetCurrent(cuContext);
+
+        //CUDA_CHECK(cuMemFree(0));
 
         CUcontext cu_ctx = 0;  // zero means take the current context
         OPTIX_CHECK(optixInit());
@@ -146,7 +157,7 @@ void OptiXDenoiser::init(Data& data)
         ));
         m_state_size = static_cast<uint32_t>(denoiser_sizes.stateSizeInBytes);
 
-        const uint64_t frame_byte_size = data.width * data.height * sizeof(float) * 4;
+        const uint64_t frame_byte_size = data.width * data.height * sizeof(uint8_t) * 4;
         CUDA_CHECK(cuMemAlloc((&m_inputs[0].data), frame_byte_size));
         CUDA_CHECK(cuMemcpyHtoD(
             (m_inputs[0].data),
@@ -155,9 +166,9 @@ void OptiXDenoiser::init(Data& data)
         ));
         m_inputs[0].width = data.width;
         m_inputs[0].height = data.height;
-        m_inputs[0].rowStrideInBytes = data.width * sizeof(float) * 4;
-        m_inputs[0].pixelStrideInBytes = sizeof(float) * 4;
-        m_inputs[0].format = OPTIX_PIXEL_FORMAT_FLOAT4;
+        m_inputs[0].rowStrideInBytes = data.width * sizeof(uint8_t) * 4;
+        m_inputs[0].pixelStrideInBytes = sizeof(uint8_t) * 4;
+        m_inputs[0].format = OPTIX_PIXEL_FORMAT_UCHAR4;
 
         m_inputs[1].data = 0;
         if (data.albedo)
@@ -170,9 +181,9 @@ void OptiXDenoiser::init(Data& data)
             ));
             m_inputs[1].width = data.width;
             m_inputs[1].height = data.height;
-            m_inputs[1].rowStrideInBytes = data.width * sizeof(float) * 4;
-            m_inputs[1].pixelStrideInBytes = sizeof(float) * 4;
-            m_inputs[1].format = OPTIX_PIXEL_FORMAT_FLOAT4;
+            m_inputs[1].rowStrideInBytes = data.width * sizeof(uint8_t) * 4;
+            m_inputs[1].pixelStrideInBytes = sizeof(uint8_t) * 4;
+            m_inputs[1].format = OPTIX_PIXEL_FORMAT_UCHAR4;
         }
 
         m_inputs[2].data = 0;
@@ -186,17 +197,17 @@ void OptiXDenoiser::init(Data& data)
             ));
             m_inputs[2].width = data.width;
             m_inputs[2].height = data.height;
-            m_inputs[2].rowStrideInBytes = data.width * sizeof(float) * 4;
-            m_inputs[2].pixelStrideInBytes = sizeof(float) * 4;
-            m_inputs[2].format = OPTIX_PIXEL_FORMAT_FLOAT4;
+            m_inputs[2].rowStrideInBytes = data.width * sizeof(uint8_t) * 4;
+            m_inputs[2].pixelStrideInBytes = sizeof(uint8_t) * 4;
+            m_inputs[2].format = OPTIX_PIXEL_FORMAT_UCHAR4;
         }
 
         CUDA_CHECK(cuMemAlloc((&m_output.data), frame_byte_size));
         m_output.width = data.width;
         m_output.height = data.height;
-        m_output.rowStrideInBytes = data.width * sizeof(float) * 4;
-        m_output.pixelStrideInBytes = sizeof(float) * 4;
-        m_output.format = OPTIX_PIXEL_FORMAT_FLOAT4;
+        m_output.rowStrideInBytes = data.width * sizeof(uint8_t) * 4;
+        m_output.pixelStrideInBytes = sizeof(uint8_t) * 4;
+        m_output.format = OPTIX_PIXEL_FORMAT_UCHAR4;
     }
 
     //
@@ -254,7 +265,7 @@ void OptiXDenoiser::exec()
 
 void OptiXDenoiser::finish()
 {
-    const uint64_t frame_byte_size = m_output.width * m_output.height * sizeof(float) * 4;
+    const uint64_t frame_byte_size = m_output.width * m_output.height * sizeof(uint8_t) * 4;
     CUDA_CHECK(cuMemcpyDtoH(
         m_host_output,
         (m_output.data),
@@ -343,15 +354,15 @@ int32_t main_( int32_t argc, char** argv )
         //CI_ASSERT( !albedo.data || albedo.pixel_format == sutil::FLOAT4 );
         //CI_ASSERT( !normal.data || normal.pixel_format == sutil::FLOAT4 );
 
-        std::vector<float> output;
+        std::vector<uint8_t> output;
         output.resize( color->getWidth()*color->getHeight()*4 );
 
         OptiXDenoiser::Data data;
         data.width    = color->getWidth();
         data.height   = color->getHeight();
-        data.color    = reinterpret_cast<float*>(  color->getData() );
-        data.albedo   = reinterpret_cast<float*>( albedo->getData() );
-        data.normal   = reinterpret_cast<float*>( normal->getData());
+        data.color    = color->getData();
+        data.albedo   = albedo->getData();
+        data.normal   = normal->getData();
         data.output   = output.data();
 
         std::cout << "Denoising ..." << std::endl;

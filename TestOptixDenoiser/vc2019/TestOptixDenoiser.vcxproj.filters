@@ -24,7 +24,7 @@
     <Filter Include="Blocks\vnm\include">
       <UniqueIdentifier>{9599FB83-5C85-4F89-932E-D9CEF6540192}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Blocks\_cuda">
+    <Filter Include="Blocks\cuew">
       <UniqueIdentifier>{1ea4d9e0-76bf-4748-be5a-941851c91517}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -114,7 +114,7 @@
       <Filter>Blocks\vnm\include</Filter>
     </ClInclude>
     <ClCompile Include="..\..\blocks\cuew\cuew.c">
-      <Filter>Blocks\_cuda</Filter>
+      <Filter>Blocks\cuew</Filter>
     </ClCompile>
     <ClCompile Include="..\src\OptixDenoiser.cpp">
       <Filter>Source Files</Filter>
@@ -125,7 +125,7 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\blocks\cuew\cuew.h">
-      <Filter>Blocks\_cuda</Filter>
+      <Filter>Blocks\cuew</Filter>
     </ClInclude>
     <ClInclude Include="..\src\OptixDenoiser.h">
       <Filter>Source Files</Filter>

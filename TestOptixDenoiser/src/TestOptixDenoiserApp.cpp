@@ -4,10 +4,10 @@
 #include "cinder/CameraUi.h"
 #include "cinder/Log.h"
 
-#include "../../blocks/cuew/cuew.h"
-
 #include "AssetManager.h"
 #include "MiniConfigImgui.h"
+#include "TextureHelper.h"
+
 #include "OptiXDenoiser.h"
 
 using namespace ci;
@@ -16,23 +16,36 @@ using namespace std;
 
 struct TestOptixDenoiserApp : public App
 {
+    OptiXDenoiser mDenoiser;
+    SurfaceRef mSrc, mDst;
+    gl::TextureRef mTex;
+
     void setup() override
     {
-        int result = cuewInit(CUEW_INIT_CUDA | CUEW_INIT_NVRTC);
-
         log::makeLogger<log::LoggerFileRotating>(fs::path(), "app.%Y.%m.%d.log");
-        
-        auto aabb = am::triMesh(MESH_NAME)->calcBoundingBox();
-        mCam.lookAt(aabb.getMax() * 2.0f, aabb.getCenter());
-        mCamUi = CameraUi( &mCam, getWindow(), -1 );
 
+        {
+            mSrc = am::surface(SRC_IMAGE, true);
+
+            mDst = Surface::create(mSrc->getWidth(), mSrc->getHeight(), true);
+
+            OptiXDenoiser::Data data;
+            data.width = mSrc->getWidth();
+            data.height = mSrc->getHeight();
+            data.color = mSrc->getData();
+            data.output = mDst->getData();
+
+            mDenoiser.init(data);
+            mDenoiser.exec();
+            mDenoiser.finish();
+        }
+        
         createConfigImgui();
         gl::enableDepth();
 
         getWindow()->getSignalResize().connect([&] {
             APP_WIDTH = getWindowWidth();
             APP_HEIGHT = getWindowHeight();
-            mCam.setAspectRatio( getWindowAspectRatio() );
         });
 
         getSignalCleanup().connect([&] { writeConfig(); });
@@ -44,29 +57,19 @@ struct TestOptixDenoiserApp : public App
         getSignalUpdate().connect([&] {
         });
 
-        mGlslProg = am::glslProg(VS_NAME, FS_NAME);
-        mGlslProg->uniform("uTex0", 0);
-        mGlslProg->uniform("uTex1", 1);
-        mGlslProg->uniform("uTex2", 2);
-        mGlslProg->uniform("uTex3", 3);
 
         getWindow()->getSignalDraw().connect([&] {
-            gl::setMatrices( mCam );
+            gl::setMatricesWindow( getWindowSize() );
             gl::clear();
         
-            gl::ScopedTextureBind tex0(am::texture2d(TEX0_NAME), 0);
-            gl::ScopedTextureBind tex1(am::texture2d(TEX1_NAME), 1);
-            gl::ScopedTextureBind tex2(am::texture2d(TEX2_NAME), 2);
-            gl::ScopedTextureBind tex3(am::texture2d(TEX3_NAME), 3);
-            gl::ScopedGlslProg glsl(mGlslProg);
+            if (SHOW_SRC)
+                updateTexture(mTex, *mSrc);
+            else
+                updateTexture(mTex, *mDst);
 
-            gl::draw(am::vboMesh(MESH_NAME));
+            gl::draw(mTex, getWindowBounds());
         });
     }
-    
-    CameraPersp         mCam;
-    CameraUi            mCamUi;
-    gl::GlslProgRef     mGlslProg;
 };
 
 CINDER_APP( TestOptixDenoiserApp, RendererGl, [](App::Settings* settings) {

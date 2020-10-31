@@ -30,6 +30,7 @@
 #pragma once
 
 #include <cinder/CinderAssert.h>
+#include <cinder/Surface.h>
 
 #include "../../blocks/cuew/cuew.h"
 #define OPTIX_DONT_INCLUDE_CUDA
@@ -44,10 +45,10 @@ public:
     {
         uint32_t  width    = 0;
         uint32_t  height   = 0;
-        float*    color    = nullptr;
-        float*    albedo   = nullptr;
-        float*    normal   = nullptr;
-        float*    output   = nullptr;
+        uint8_t*    color    = nullptr;
+        uint8_t*    albedo   = nullptr;
+        uint8_t*    normal   = nullptr;
+        uint8_t*    output   = nullptr;
     };
 
     // Initialize the API and push all data to the GPU -- normaly done only once per session
@@ -74,6 +75,6 @@ private:
     OptixImage2D          m_inputs[3]    = {};
     OptixImage2D          m_output;
 
-    float*                m_host_output = nullptr;
+    uint8_t*             m_host_output = nullptr;
 };
 
