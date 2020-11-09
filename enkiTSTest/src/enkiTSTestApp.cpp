@@ -18,13 +18,9 @@ using namespace std;
 
 struct enkiTSTestApp : public App
 {
-    enki::TaskScheduler g_TS;
-
-    void setup() override
+    void testEnki()
     {
-        log::makeLogger<log::LoggerFileRotating>(fs::path(), "IG.%Y.%m.%d.log");
-     
-        TracyGpuContext;
+        enki::TaskScheduler g_TS;
 
         g_TS.Initialize();
 
@@ -32,6 +28,16 @@ struct enkiTSTestApp : public App
 
         g_TS.AddTaskSetToPipe(&task);
         g_TS.WaitforTask(&task);
+    }
+
+    void setup() override
+    {
+        log::makeLogger<log::LoggerFileRotating>(fs::path(), "IG.%Y.%m.%d.log");
+     
+        TracyGpuContext;
+
+        if (ENKI_ENABLED)
+            testEnki();
 
         auto aabb = am::triMesh(MESH_NAME)->calcBoundingBox();
         mCam.lookAt(aabb.getMax() * 2.0f, aabb.getCenter());
