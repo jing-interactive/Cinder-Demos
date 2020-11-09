@@ -11,6 +11,9 @@
 #define ZoneNamedC(x,y,z)
 #define ZoneNamedNC(x,y,z,w)
 
+#define ZoneTransient(x,y)
+#define ZoneTransientN(x,y,z)
+
 #define ZoneScoped
 #define ZoneScopedN(x)
 #define ZoneScopedC(x)
@@ -53,10 +56,18 @@
 #define TracySecureAlloc(x,y)
 #define TracySecureFree(x)
 
+#define TracyAllocN(x,y,z)
+#define TracyFreeN(x,y)
+#define TracySecureAllocN(x,y,z)
+#define TracySecureFreeN(x,y)
+
 #define ZoneNamedS(x,y,z)
 #define ZoneNamedNS(x,y,z,w)
 #define ZoneNamedCS(x,y,z,w)
 #define ZoneNamedNCS(x,y,z,w,a)
+
+#define ZoneTransientS(x,y,z)
+#define ZoneTransientNS(x,y,z,w)
 
 #define ZoneScopedS(x)
 #define ZoneScopedNS(x,y)
@@ -68,6 +79,11 @@
 #define TracySecureAllocS(x,y,z)
 #define TracySecureFreeS(x,y)
 
+#define TracyAllocNS(x,y,z,w)
+#define TracyFreeNS(x,y,z)
+#define TracySecureAllocNS(x,y,z,w)
+#define TracySecureFreeNS(x,y,z)
+
 #define TracyMessageS(x,y,z)
 #define TracyMessageLS(x,y)
 #define TracyMessageCS(x,y,z,w)
@@ -75,23 +91,32 @@
 
 #define TracyParameterRegister(x)
 #define TracyParameterSetup(x,y,z,w)
+#define TracyIsConnected false
 
 #else
+
+#include <string.h>
 
 #include "client/TracyLock.hpp"
 #include "client/TracyProfiler.hpp"
 #include "client/TracyScoped.hpp"
 
 #if defined TRACY_HAS_CALLSTACK && defined TRACY_CALLSTACK
-#  define ZoneNamed( varname, active ) static const tracy::SourceLocationData TracyConcat(__tracy_source_location,__LINE__) { nullptr, __FUNCTION__,  __FILE__, (uint32_t)__LINE__, 0 }; tracy::ScopedZone varname( &TracyConcat(__tracy_source_location,__LINE__), TRACY_CALLSTACK, active );
-#  define ZoneNamedN( varname, name, active ) static const tracy::SourceLocationData TracyConcat(__tracy_source_location,__LINE__) { name, __FUNCTION__,  __FILE__, (uint32_t)__LINE__, 0 }; tracy::ScopedZone varname( &TracyConcat(__tracy_source_location,__LINE__), TRACY_CALLSTACK, active );
-#  define ZoneNamedC( varname, color, active ) static const tracy::SourceLocationData TracyConcat(__tracy_source_location,__LINE__) { nullptr, __FUNCTION__,  __FILE__, (uint32_t)__LINE__, color }; tracy::ScopedZone varname( &TracyConcat(__tracy_source_location,__LINE__), TRACY_CALLSTACK, active );
-#  define ZoneNamedNC( varname, name, color, active ) static const tracy::SourceLocationData TracyConcat(__tracy_source_location,__LINE__) { name, __FUNCTION__,  __FILE__, (uint32_t)__LINE__, color }; tracy::ScopedZone varname( &TracyConcat(__tracy_source_location,__LINE__), TRACY_CALLSTACK, active );
+#  define ZoneNamed( varname, active ) static constexpr tracy::SourceLocationData TracyConcat(__tracy_source_location,__LINE__) { nullptr, __FUNCTION__,  __FILE__, (uint32_t)__LINE__, 0 }; tracy::ScopedZone varname( &TracyConcat(__tracy_source_location,__LINE__), TRACY_CALLSTACK, active );
+#  define ZoneNamedN( varname, name, active ) static constexpr tracy::SourceLocationData TracyConcat(__tracy_source_location,__LINE__) { name, __FUNCTION__,  __FILE__, (uint32_t)__LINE__, 0 }; tracy::ScopedZone varname( &TracyConcat(__tracy_source_location,__LINE__), TRACY_CALLSTACK, active );
+#  define ZoneNamedC( varname, color, active ) static constexpr tracy::SourceLocationData TracyConcat(__tracy_source_location,__LINE__) { nullptr, __FUNCTION__,  __FILE__, (uint32_t)__LINE__, color }; tracy::ScopedZone varname( &TracyConcat(__tracy_source_location,__LINE__), TRACY_CALLSTACK, active );
+#  define ZoneNamedNC( varname, name, color, active ) static constexpr tracy::SourceLocationData TracyConcat(__tracy_source_location,__LINE__) { name, __FUNCTION__,  __FILE__, (uint32_t)__LINE__, color }; tracy::ScopedZone varname( &TracyConcat(__tracy_source_location,__LINE__), TRACY_CALLSTACK, active );
+
+#  define ZoneTransient( varname, active ) tracy::ScopedZone varname( __LINE__, __FILE__, strlen( __FILE__ ), __FUNCTION__, strlen( __FUNCTION__ ), nullptr, 0, TRACY_CALLSTACK, active );
+#  define ZoneTransientN( varname, name, active ) tracy::ScopedZone varname( __LINE__, __FILE__, strlen( __FILE__ ), __FUNCTION__, strlen( __FUNCTION__ ), name, strlen( name ), TRACY_CALLSTACK, active );
 #else
-#  define ZoneNamed( varname, active ) static const tracy::SourceLocationData TracyConcat(__tracy_source_location,__LINE__) { nullptr, __FUNCTION__,  __FILE__, (uint32_t)__LINE__, 0 }; tracy::ScopedZone varname( &TracyConcat(__tracy_source_location,__LINE__), active );
-#  define ZoneNamedN( varname, name, active ) static const tracy::SourceLocationData TracyConcat(__tracy_source_location,__LINE__) { name, __FUNCTION__,  __FILE__, (uint32_t)__LINE__, 0 }; tracy::ScopedZone varname( &TracyConcat(__tracy_source_location,__LINE__), active );
-#  define ZoneNamedC( varname, color, active ) static const tracy::SourceLocationData TracyConcat(__tracy_source_location,__LINE__) { nullptr, __FUNCTION__,  __FILE__, (uint32_t)__LINE__, color }; tracy::ScopedZone varname( &TracyConcat(__tracy_source_location,__LINE__), active );
-#  define ZoneNamedNC( varname, name, color, active ) static const tracy::SourceLocationData TracyConcat(__tracy_source_location,__LINE__) { name, __FUNCTION__,  __FILE__, (uint32_t)__LINE__, color }; tracy::ScopedZone varname( &TracyConcat(__tracy_source_location,__LINE__), active );
+#  define ZoneNamed( varname, active ) static constexpr tracy::SourceLocationData TracyConcat(__tracy_source_location,__LINE__) { nullptr, __FUNCTION__,  __FILE__, (uint32_t)__LINE__, 0 }; tracy::ScopedZone varname( &TracyConcat(__tracy_source_location,__LINE__), active );
+#  define ZoneNamedN( varname, name, active ) static constexpr tracy::SourceLocationData TracyConcat(__tracy_source_location,__LINE__) { name, __FUNCTION__,  __FILE__, (uint32_t)__LINE__, 0 }; tracy::ScopedZone varname( &TracyConcat(__tracy_source_location,__LINE__), active );
+#  define ZoneNamedC( varname, color, active ) static constexpr tracy::SourceLocationData TracyConcat(__tracy_source_location,__LINE__) { nullptr, __FUNCTION__,  __FILE__, (uint32_t)__LINE__, color }; tracy::ScopedZone varname( &TracyConcat(__tracy_source_location,__LINE__), active );
+#  define ZoneNamedNC( varname, name, color, active ) static constexpr tracy::SourceLocationData TracyConcat(__tracy_source_location,__LINE__) { name, __FUNCTION__,  __FILE__, (uint32_t)__LINE__, color }; tracy::ScopedZone varname( &TracyConcat(__tracy_source_location,__LINE__), active );
+
+#  define ZoneTransient( varname, active ) tracy::ScopedZone varname( __LINE__, __FILE__, strlen( __FILE__ ), __FUNCTION__, strlen( __FUNCTION__ ), nullptr, 0, active );
+#  define ZoneTransientN( varname, name, active ) tracy::ScopedZone varname( __LINE__, __FILE__, strlen( __FILE__ ), __FUNCTION__, strlen( __FUNCTION__ ), name, strlen( name ), active );
 #endif
 
 #define ZoneScoped ZoneNamed( ___tracy_scoped_zone, true )
@@ -113,13 +138,13 @@
 
 #define FrameImage( image, width, height, offset, flip ) tracy::Profiler::SendFrameImage( image, width, height, offset, flip );
 
-#define TracyLockable( type, varname ) tracy::Lockable<type> varname { [] () -> const tracy::SourceLocationData* { static const tracy::SourceLocationData srcloc { nullptr, #type " " #varname, __FILE__, __LINE__, 0 }; return &srcloc; }() };
-#define TracyLockableN( type, varname, desc ) tracy::Lockable<type> varname { [] () -> const tracy::SourceLocationData* { static const tracy::SourceLocationData srcloc { nullptr, desc, __FILE__, __LINE__, 0 }; return &srcloc; }() };
-#define TracySharedLockable( type, varname ) tracy::SharedLockable<type> varname { [] () -> const tracy::SourceLocationData* { static const tracy::SourceLocationData srcloc { nullptr, #type " " #varname, __FILE__, __LINE__, 0 }; return &srcloc; }() };
-#define TracySharedLockableN( type, varname, desc ) tracy::SharedLockable<type> varname { [] () -> const tracy::SourceLocationData* { static const tracy::SourceLocationData srcloc { nullptr, desc, __FILE__, __LINE__, 0 }; return &srcloc; }() };
+#define TracyLockable( type, varname ) tracy::Lockable<type> varname { [] () -> const tracy::SourceLocationData* { static constexpr tracy::SourceLocationData srcloc { nullptr, #type " " #varname, __FILE__, __LINE__, 0 }; return &srcloc; }() };
+#define TracyLockableN( type, varname, desc ) tracy::Lockable<type> varname { [] () -> const tracy::SourceLocationData* { static constexpr tracy::SourceLocationData srcloc { nullptr, desc, __FILE__, __LINE__, 0 }; return &srcloc; }() };
+#define TracySharedLockable( type, varname ) tracy::SharedLockable<type> varname { [] () -> const tracy::SourceLocationData* { static constexpr tracy::SourceLocationData srcloc { nullptr, #type " " #varname, __FILE__, __LINE__, 0 }; return &srcloc; }() };
+#define TracySharedLockableN( type, varname, desc ) tracy::SharedLockable<type> varname { [] () -> const tracy::SourceLocationData* { static constexpr tracy::SourceLocationData srcloc { nullptr, desc, __FILE__, __LINE__, 0 }; return &srcloc; }() };
 #define LockableBase( type ) tracy::Lockable<type>
 #define SharedLockableBase( type ) tracy::SharedLockable<type>
-#define LockMark( varname ) static const tracy::SourceLocationData __tracy_lock_location_##varname { nullptr, __FUNCTION__,  __FILE__, (uint32_t)__LINE__, 0 }; varname.Mark( &__tracy_lock_location_##varname );
+#define LockMark( varname ) static constexpr tracy::SourceLocationData __tracy_lock_location_##varname { nullptr, __FUNCTION__,  __FILE__, (uint32_t)__LINE__, 0 }; varname.Mark( &__tracy_lock_location_##varname );
 #define LockableName( varname, txt, size ) varname.CustomName( txt, size );
 
 #define TracyPlot( name, val ) tracy::Profiler::PlotData( name, val );
@@ -137,6 +162,11 @@
 #  define TracyFree( ptr ) tracy::Profiler::MemFreeCallstack( ptr, TRACY_CALLSTACK, false );
 #  define TracySecureAlloc( ptr, size ) tracy::Profiler::MemAllocCallstack( ptr, size, TRACY_CALLSTACK, true );
 #  define TracySecureFree( ptr ) tracy::Profiler::MemFreeCallstack( ptr, TRACY_CALLSTACK, true );
+
+#  define TracyAllocN( ptr, size, name ) tracy::Profiler::MemAllocCallstackNamed( ptr, size, TRACY_CALLSTACK, false, name );
+#  define TracyFreeN( ptr, name ) tracy::Profiler::MemFreeCallstackNamed( ptr, TRACY_CALLSTACK, false, name );
+#  define TracySecureAllocN( ptr, size, name ) tracy::Profiler::MemAllocCallstackNamed( ptr, size, TRACY_CALLSTACK, true, name );
+#  define TracySecureFreeN( ptr, name ) tracy::Profiler::MemFreeCallstackNamed( ptr, TRACY_CALLSTACK, true, name );
 #else
 #  define TracyMessage( txt, size ) tracy::Profiler::Message( txt, size, 0 );
 #  define TracyMessageL( txt ) tracy::Profiler::Message( txt, 0 );
@@ -147,13 +177,21 @@
 #  define TracyFree( ptr ) tracy::Profiler::MemFree( ptr, false );
 #  define TracySecureAlloc( ptr, size ) tracy::Profiler::MemAlloc( ptr, size, true );
 #  define TracySecureFree( ptr ) tracy::Profiler::MemFree( ptr, true );
+
+#  define TracyAllocN( ptr, size, name ) tracy::Profiler::MemAllocNamed( ptr, size, false, name );
+#  define TracyFreeN( ptr, name ) tracy::Profiler::MemFreeNamed( ptr, false, name );
+#  define TracySecureAllocN( ptr, size, name ) tracy::Profiler::MemAllocNamed( ptr, size, true, name );
+#  define TracySecureFreeN( ptr, name ) tracy::Profiler::MemFreeNamed( ptr, true, name );
 #endif
 
 #ifdef TRACY_HAS_CALLSTACK
-#  define ZoneNamedS( varname, depth, active ) static const tracy::SourceLocationData TracyConcat(__tracy_source_location,__LINE__) { nullptr, __FUNCTION__,  __FILE__, (uint32_t)__LINE__, 0 }; tracy::ScopedZone varname( &TracyConcat(__tracy_source_location,__LINE__), depth, active );
-#  define ZoneNamedNS( varname, name, depth, active ) static const tracy::SourceLocationData TracyConcat(__tracy_source_location,__LINE__) { name, __FUNCTION__,  __FILE__, (uint32_t)__LINE__, 0 }; tracy::ScopedZone varname( &TracyConcat(__tracy_source_location,__LINE__), depth, active );
-#  define ZoneNamedCS( varname, color, depth, active ) static const tracy::SourceLocationData TracyConcat(__tracy_source_location,__LINE__) { nullptr, __FUNCTION__,  __FILE__, (uint32_t)__LINE__, color }; tracy::ScopedZone varname( &TracyConcat(__tracy_source_location,__LINE__), depth, active );
-#  define ZoneNamedNCS( varname, name, color, depth, active ) static const tracy::SourceLocationData TracyConcat(__tracy_source_location,__LINE__) { name, __FUNCTION__,  __FILE__, (uint32_t)__LINE__, color }; tracy::ScopedZone varname( &TracyConcat(__tracy_source_location,__LINE__), depth, active );
+#  define ZoneNamedS( varname, depth, active ) static constexpr tracy::SourceLocationData TracyConcat(__tracy_source_location,__LINE__) { nullptr, __FUNCTION__,  __FILE__, (uint32_t)__LINE__, 0 }; tracy::ScopedZone varname( &TracyConcat(__tracy_source_location,__LINE__), depth, active );
+#  define ZoneNamedNS( varname, name, depth, active ) static constexpr tracy::SourceLocationData TracyConcat(__tracy_source_location,__LINE__) { name, __FUNCTION__,  __FILE__, (uint32_t)__LINE__, 0 }; tracy::ScopedZone varname( &TracyConcat(__tracy_source_location,__LINE__), depth, active );
+#  define ZoneNamedCS( varname, color, depth, active ) static constexpr tracy::SourceLocationData TracyConcat(__tracy_source_location,__LINE__) { nullptr, __FUNCTION__,  __FILE__, (uint32_t)__LINE__, color }; tracy::ScopedZone varname( &TracyConcat(__tracy_source_location,__LINE__), depth, active );
+#  define ZoneNamedNCS( varname, name, color, depth, active ) static constexpr tracy::SourceLocationData TracyConcat(__tracy_source_location,__LINE__) { name, __FUNCTION__,  __FILE__, (uint32_t)__LINE__, color }; tracy::ScopedZone varname( &TracyConcat(__tracy_source_location,__LINE__), depth, active );
+
+#  define ZoneTransientS( varname, depth, active ) tracy::ScopedZone varname( __LINE__, __FILE__, strlen( __FILE__ ), __FUNCTION__, strlen( __FUNCTION__ ), nullptr, 0, depth, active );
+#  define ZoneTransientNS( varname, name, depth, active ) tracy::ScopedZone varname( __LINE__, __FILE__, strlen( __FILE__ ), __FUNCTION__, strlen( __FUNCTION__ ), name, strlen( name ), depth, active );
 
 #  define ZoneScopedS( depth ) ZoneNamedS( ___tracy_scoped_zone, depth, true )
 #  define ZoneScopedNS( name, depth ) ZoneNamedNS( ___tracy_scoped_zone, name, depth, true )
@@ -165,6 +203,11 @@
 #  define TracySecureAllocS( ptr, size, depth ) tracy::Profiler::MemAllocCallstack( ptr, size, depth, true );
 #  define TracySecureFreeS( ptr, depth ) tracy::Profiler::MemFreeCallstack( ptr, depth, true );
 
+#  define TracyAllocNS( ptr, size, depth, name ) tracy::Profiler::MemAllocCallstackNamed( ptr, size, depth, false, name );
+#  define TracyFreeNS( ptr, depth, name ) tracy::Profiler::MemFreeCallstackNamed( ptr, depth, false, name );
+#  define TracySecureAllocNS( ptr, size, depth, name ) tracy::Profiler::MemAllocCallstackNamed( ptr, size, depth, true, name );
+#  define TracySecureFreeNS( ptr, depth, name ) tracy::Profiler::MemFreeCallstackNamed( ptr, depth, true, name );
+
 #  define TracyMessageS( txt, size, depth ) tracy::Profiler::Message( txt, size, depth );
 #  define TracyMessageLS( txt, depth ) tracy::Profiler::Message( txt, depth );
 #  define TracyMessageCS( txt, size, color, depth ) tracy::Profiler::MessageColor( txt, size, color, depth );
@@ -174,6 +217,9 @@
 #  define ZoneNamedNS( varname, name, depth, active ) ZoneNamedN( varname, name, active )
 #  define ZoneNamedCS( varname, color, depth, active ) ZoneNamedC( varname, color, active )
 #  define ZoneNamedNCS( varname, name, color, depth, active ) ZoneNamedNC( varname, name, color, active )
+
+#  define ZoneTransientS( varname, depth, active ) ZoneTransient( varname, active )
+#  define ZoneTransientNS( varname, name, depth, active ) ZoneTransientN( varname, name, active )
 
 #  define ZoneScopedS( depth ) ZoneScoped
 #  define ZoneScopedNS( name, depth ) ZoneScopedN( name )
@@ -185,6 +231,11 @@
 #  define TracySecureAllocS( ptr, size, depth ) TracySecureAlloc( ptr, size )
 #  define TracySecureFreeS( ptr, depth ) TracySecureFree( ptr )
 
+#  define TracyAllocNS( ptr, size, depth, name ) TracyAlloc( ptr, size, name )
+#  define TracyFreeNS( ptr, depth, name ) TracyFree( ptr, name )
+#  define TracySecureAllocNS( ptr, size, depth, name ) TracySecureAlloc( ptr, size, name )
+#  define TracySecureFreeNS( ptr, depth, name ) TracySecureFree( ptr, name )
+
 #  define TracyMessageS( txt, size, depth ) TracyMessage( txt, size )
 #  define TracyMessageLS( txt, depth ) TracyMessageL( txt )
 #  define TracyMessageCS( txt, size, color, depth ) TracyMessageC( txt, size, color )
@@ -193,6 +244,7 @@
 
 #define TracyParameterRegister( cb ) tracy::Profiler::ParameterRegister( cb );
 #define TracyParameterSetup( idx, name, isBool, val ) tracy::Profiler::ParameterSetup( idx, name, isBool, val );
+#define TracyIsConnected tracy::GetProfiler().IsConnected()
 
 #endif
 
