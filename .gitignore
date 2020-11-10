@@ -268,3 +268,5 @@ Release/
 *.db-wal
 
 v16/
+ARM64/
+.vs/
