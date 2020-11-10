@@ -12,6 +12,8 @@
 #include "../../blocks/tracy/Tracy.hpp"
 #include "../../blocks/tracy/TracyOpenGL.hpp"
 
+#define TRACY_EVENT_ENABLED 0
+
 using namespace ci;
 using namespace ci::app;
 using namespace std;
@@ -34,8 +36,9 @@ struct enkiTSTestApp : public App
     {
         log::makeLogger<log::LoggerFileRotating>(fs::path(), "IG.%Y.%m.%d.log");
      
+#if TRACY_EVENT_ENABLED
         TracyGpuContext;
-
+#endif
         if (ENKI_ENABLED)
             testEnki();
 
@@ -67,17 +70,19 @@ struct enkiTSTestApp : public App
         mGlslProg->uniform("uTex3", 3);
 
         getSignalUpdate().connect([&] {
+#if TRACY_EVENT_ENABLED
             TracyGpuCollect;
-
+#endif
             updateRemoteImgui(ENABLE_REMOTE_GUI);
             ImGui_ImplCinder_NewFrameGuard(getWindow());
             vnm::drawMinicofigImgui(true);
         });
 
         getWindow()->getSignalDraw().connect([&] {
+#if TRACY_EVENT_ENABLED
             ZoneScopedN("frame");
             TracyGpuZone("frame");
-
+#endif
             gl::setMatrices( mCam );
             gl::clear();
         
@@ -88,14 +93,18 @@ struct enkiTSTestApp : public App
             gl::ScopedGlslProg glsl(mGlslProg);
 
             {
+#if TRACY_EVENT_ENABLED
                 ZoneScopedN("draw");
                 TracyGpuZone("draw");
+#endif
                 gl::draw(am::vboMesh(MESH_NAME));
             }
 
             ImGui_ImplCinder_PostDraw(ENABLE_REMOTE_GUI, ENABLE_LOCAL_GUI);
 
+#if TRACY_EVENT_ENABLED
             FrameMark;
+#endif
         });
     }
     
