@@ -31,6 +31,8 @@
 #include <android/log.h>
 #include "android_native_app_glue.h"
 
+#include "../../blocks/tracy/Tracy.hpp"
+
 #define LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO, "AndroidProject1.NativeActivity", __VA_ARGS__))
 #define LOGW(...) ((void)__android_log_print(ANDROID_LOG_WARN, "AndroidProject1.NativeActivity", __VA_ARGS__))
 
@@ -134,6 +136,8 @@ static int engine_init_display(struct engine* engine) {
 * Just the current frame in the display.
 */
 static void engine_draw_frame(struct engine* engine) {
+	ZoneScopedN("frame");
+
 	if (engine->display == NULL) {
 		// No display.
 		return;
@@ -145,6 +149,8 @@ static void engine_draw_frame(struct engine* engine) {
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	eglSwapBuffers(engine->display, engine->surface);
+
+	FrameMark;
 }
 
 /**
@@ -280,9 +286,7 @@ void android_main(struct android_app* state) {
 					ASensorEvent event;
 					while (ASensorEventQueue_getEvents(engine.sensorEventQueue,
 						&event, 1) > 0) {
-						LOGI("accelerometer: x=%f y=%f z=%f",
-							event.acceleration.x, event.acceleration.y,
-							event.acceleration.z);
+						//LOGI("accelerometer: x=%f y=%f z=%f", event.acceleration.x, event.acceleration.y, event.acceleration.z);
 					}
 				}
 			}

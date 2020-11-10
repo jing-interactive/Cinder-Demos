@@ -2,9 +2,20 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClInclude Include="android_native_app_glue.h" />
+    <ClInclude Include="..\..\blocks\tracy\Tracy.hpp">
+      <Filter>Tracy</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="android_native_app_glue.c" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="..\..\blocks\tracy\TracyClient.cpp">
+      <Filter>Tracy</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Tracy">
+      <UniqueIdentifier>{2d0ed327-51b2-496b-b7a6-b277ffacb041}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>
