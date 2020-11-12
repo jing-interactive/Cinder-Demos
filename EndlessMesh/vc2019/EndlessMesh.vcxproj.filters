@@ -1,0 +1,205 @@
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
+    </Filter>
+    <Filter Include="Blocks">
+      <UniqueIdentifier>{921E199E-2067-4C1A-A239-576AD8FB4D09}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Blocks\vnm">
+      <UniqueIdentifier>{73818BD4-5BD3-489F-85A0-671C72075A38}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Blocks\vnm\src">
+      <UniqueIdentifier>{F8F378C6-679B-4773-9FF0-EDBD0F11F0C6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Blocks\vnm\include">
+      <UniqueIdentifier>{A2681335-F895-4BBB-8038-E89913413066}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Blocks\melo">
+      <UniqueIdentifier>{E1222EB2-6556-4F26-8489-47E03337532F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Blocks\melo\src">
+      <UniqueIdentifier>{3F8DBF95-DEA2-4C56-87A5-D634E000298E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Blocks\melo\3rdparty">
+      <UniqueIdentifier>{E3701C2E-99CB-46C8-BD6B-C63927E60612}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Blocks\melo\3rdparty\tinygltf">
+      <UniqueIdentifier>{7B7A63A5-AA87-4CF8-A9FC-AD5A594C344F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Blocks\melo\3rdparty\tinyobjloader">
+      <UniqueIdentifier>{559C9669-791C-4453-B37C-490CD663B038}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Blocks\melo\include">
+      <UniqueIdentifier>{3C238343-5D3F-44DA-AFD4-9F57CEE2E9D4}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\EndlessMeshApp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClInclude Include="..\include\Resources.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\item.def">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClCompile Include="..\src\EndlessMeshApp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Cinder\blocks\Cinder-VNM\src\AssetManager.cpp">
+      <Filter>Blocks\vnm\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Cinder\blocks\Cinder-VNM\src\MiniConfig.cpp">
+      <Filter>Blocks\vnm\src</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\AnsiToUtf.h">
+      <Filter>Blocks\vnm\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\AssetManager.h">
+      <Filter>Blocks\vnm\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\CaptureHelper.h">
+      <Filter>Blocks\vnm\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\CinderGuizmo.h">
+      <Filter>Blocks\vnm\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\CinderRemoteImgui.h">
+      <Filter>Blocks\vnm\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\CubemapRenderer.h">
+      <Filter>Blocks\vnm\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\DearLogger.h">
+      <Filter>Blocks\vnm\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\FontHelper.h">
+      <Filter>Blocks\vnm\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\GLHelper.h">
+      <Filter>Blocks\vnm\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\GlslParamsBuilder.h">
+      <Filter>Blocks\vnm\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\GlslParamsBuilderImgui.h">
+      <Filter>Blocks\vnm\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\LimitSingleInstance.h">
+      <Filter>Blocks\vnm\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\MiniConfig.h">
+      <Filter>Blocks\vnm\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\MiniConfigImgui.h">
+      <Filter>Blocks\vnm\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\MotionHelper.h">
+      <Filter>Blocks\vnm\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\NvOptimusEnablement.h">
+      <Filter>Blocks\vnm\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\OscHelper.h">
+      <Filter>Blocks\vnm\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\renderdoc_app.h">
+      <Filter>Blocks\vnm\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\SharedMemory.h">
+      <Filter>Blocks\vnm\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\StateMachine.h">
+      <Filter>Blocks\vnm\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\TextureHelper.h">
+      <Filter>Blocks\vnm\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\TuioHelper.h">
+      <Filter>Blocks\vnm\include</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\..\Cinder\blocks\melo\src\cigltf.cpp">
+      <Filter>Blocks\melo\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Cinder\blocks\melo\src\ciobj.cpp">
+      <Filter>Blocks\melo\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Cinder\blocks\melo\src\melo.cpp">
+      <Filter>Blocks\melo\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Cinder\blocks\melo\src\Node.cpp">
+      <Filter>Blocks\melo\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Cinder\blocks\melo\src\NodeExt.cpp">
+      <Filter>Blocks\melo\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Cinder\blocks\melo\src\SceneIO.cpp">
+      <Filter>Blocks\melo\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Cinder\blocks\melo\src\SkyNode.cpp">
+      <Filter>Blocks\melo\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Cinder\blocks\melo\3rdparty\tinygltf\tiny_gltf.cc">
+      <Filter>Blocks\melo\3rdparty\tinygltf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Cinder\blocks\melo\3rdparty\tinyobjloader\tiny_obj_loader.cc">
+      <Filter>Blocks\melo\3rdparty\tinyobjloader</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\..\Cinder\blocks\melo\include\cigltf.h">
+      <Filter>Blocks\melo\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\melo\include\ciobj.h">
+      <Filter>Blocks\melo\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\melo\include\civox.h">
+      <Filter>Blocks\melo\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\melo\include\FirstPersonCamera.h">
+      <Filter>Blocks\melo\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\melo\include\melo.h">
+      <Filter>Blocks\melo\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\melo\include\Node.h">
+      <Filter>Blocks\melo\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\melo\include\NodeExt.h">
+      <Filter>Blocks\melo\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\melo\include\SkyNode.h">
+      <Filter>Blocks\melo\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\melo\3rdparty\tinygltf\stb_image.h">
+      <Filter>Blocks\melo\3rdparty\tinygltf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\melo\3rdparty\tinygltf\stb_image_write.h">
+      <Filter>Blocks\melo\3rdparty\tinygltf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\melo\3rdparty\tinygltf\tiny_gltf.h">
+      <Filter>Blocks\melo\3rdparty\tinygltf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\melo\3rdparty\tinyobjloader\tiny_obj_loader.h">
+      <Filter>Blocks\melo\3rdparty\tinyobjloader</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\include\Resources.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resources.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>
