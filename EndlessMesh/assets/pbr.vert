@@ -12,7 +12,7 @@ in vec4 ciPosition;
     in vec4 ciColor;
 #endif
 
-uniform mat4 ciModelViewProjection;
+uniform mat4 ciViewProjection;
 uniform mat4 ciModelMatrix;
 
 // shadow mapping
@@ -42,8 +42,8 @@ const mat4 biasMatrix = mat4( 0.5, 0.0, 0.0, 0.0,
 
 void main()
 {
-    vec4 pos = ciModelMatrix * ciPosition;
-    v_Position = vec3(pos.xyz) / pos.w;
+    vec4 worldPos = ciModelMatrix * ciPosition;
+    v_Position = vec3(worldPos.xyz) / worldPos.w;
 	vShadowCoord	= ( biasMatrix * uShadowMatrix * ciModelMatrix ) * ciPosition;
 
     #ifdef HAS_NORMALS
@@ -68,5 +68,16 @@ void main()
     #ifdef HAS_COLOR
         v_Color = ciColor;
     #endif
-    gl_Position = ciModelViewProjection * ciPosition; // needs w for proper perspective correction
+
+#if 1
+    float camZ = ciModelMatrix[3][2];
+    float dist2Player = pow(worldPos.z - camZ, 2);
+    worldPos.y += dist2Player * 0.0001;
+    gl_Position = ciViewProjection * worldPos; // needs w for proper perspective correction
+#else
+    vec4 persPos = ciViewProjection * worldPos; // needs w for proper perspective correction
+    worldPos.y -= persPos.w * 0.1;
+    persPos = ciViewProjection * worldPos;
+    gl_Position = persPos;
+#endif
 }

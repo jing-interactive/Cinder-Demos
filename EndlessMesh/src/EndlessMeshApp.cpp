@@ -20,7 +20,7 @@ struct EndlessMeshApp : public App
         log::makeLogger<log::LoggerFileRotating>(fs::path(), "app.%Y.%m.%d.log");
 
         mCam.setNearClip(1);
-        mCam.setFarClip(10000);
+        mCam.setFarClip(100000);
         mCamUi = CameraUi(&mCam, getWindow(), -1);
 
         createConfigImgui();
@@ -49,7 +49,14 @@ struct EndlessMeshApp : public App
         }
 
         getSignalUpdate().connect([&] {
+            mCam.setEyePoint({ CAM_POS_X, CAM_POS_Y, CAM_POS_Z });
             mRoot->treeUpdate();
+
+            for (auto& child : mRoot->getChildren())
+            {
+                //mModel->flipV = FLIP_V;
+                child->cameraPosition = mCam.getEyePoint();
+            }
         });
 
         getWindow()->getSignalDraw().connect([&] {
@@ -62,12 +69,12 @@ struct EndlessMeshApp : public App
 
     CameraPersp mCam;
     CameraUi mCamUi;
-    gl::GlslProgRef mGlslProg;
     melo::NodeRef mRoot;
 };
 
 CINDER_APP(EndlessMeshApp, RendererGl, [](App::Settings *settings) {
     readConfig();
+    //settings->setConsoleWindowEnabled();
     settings->setWindowSize(APP_WIDTH, APP_HEIGHT);
     settings->setMultiTouchEnabled(false);
 })
