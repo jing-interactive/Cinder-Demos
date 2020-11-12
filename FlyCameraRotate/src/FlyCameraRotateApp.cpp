@@ -54,6 +54,11 @@ struct FlyCameraRotateApp : public App
             gl::ScopedModelMatrix scp;
             auto mat = glm::translate(vec3{X,Y,Z}) * glm::toMat4(pitchYawRoll);
 
+            ImGui::DragFloat4("mat[0]", &mat[0]);
+            ImGui::DragFloat4("mat[1]", &mat[1]);
+            ImGui::DragFloat4("mat[2]", &mat[2]);
+            ImGui::DragFloat4("mat[3]", &mat[3]);
+
             gl::setModelMatrix(mat);
             gl::drawCoordinateFrame(2);
             gl::draw(am::vboMesh(MESH_NAME));
