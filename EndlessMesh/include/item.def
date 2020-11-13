@@ -7,3 +7,6 @@ ITEM_DEF_MINMAX(float, CAM_POS_X, 0, -4000, 4000)
 ITEM_DEF_MINMAX(float, CAM_POS_Y, 0, -4000, 4000)
 ITEM_DEF_MINMAX(float, CAM_POS_Z, 0, -4000, 4000)
 ITEM_DEF_MINMAX(float, ROLL_STRENGTH, 1, 0, 100)
+ITEM_DEF(string, VS_NAME, "endless.vert")
+ITEM_DEF(string, FS_NAME, "passthrough.frag")
+

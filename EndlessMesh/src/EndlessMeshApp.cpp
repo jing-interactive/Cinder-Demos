@@ -16,6 +16,15 @@ using namespace std;
 
 struct EndlessMeshApp : public App
 {
+    void replaceGlslInGltf(ModelGLTFRef gltf, gl::GlslProgRef newGlsl)
+    {
+        auto& mtrls = gltf->materials;
+        for (auto& mtrl : mtrls)
+        {
+            mtrl->ciShader = newGlsl;
+        }
+    }
+
     void setup() override
     {
         log::makeLogger<log::LoggerFileRotating>(fs::path(), "app.%Y.%m.%d.log");
@@ -46,9 +55,13 @@ struct EndlessMeshApp : public App
             //mRoot->addChild(grid);
 
             ModelGLTF::Option option = {};
-            option.loadTextures = false;
+            //option.loadTextures = false;
             auto gltf = ModelGLTF::create(getAssetPath(MESH_NAME), option);
             mRoot->addChild(gltf);
+
+            mGlsl = am::glslProg(VS_NAME, FS_NAME);
+            mGlsl->uniform("u_BaseColorSampler", 0);
+            replaceGlslInGltf(gltf, mGlsl);
         }
 
         getSignalUpdate().connect([&] {
@@ -56,8 +69,6 @@ struct EndlessMeshApp : public App
             mRoot->setScale({ SCALE, SCALE, SCALE });
             mRoot->treeUpdate();
         });
-        mGlsl = am::glslProg("endless.vert", "passthrough.frag");
-        //gl::enableWireframe();
 
         getWindow()->getSignalDraw().connect([&] {
             gl::setMatrices(mCam);
@@ -66,7 +77,7 @@ struct EndlessMeshApp : public App
 
             mGlsl->uniform("uPlayerPos", vec3{ CAM_POS_X, CAM_POS_Y, CAM_POS_Z });
             mGlsl->uniform("uRollStrength", ROLL_STRENGTH);
-            gl::ScopedGlslProg scpGlsl(mGlsl);
+            //gl::ScopedGlslProg scpGlsl(mGlsl);
 
             mRoot->treeDraw();
         });

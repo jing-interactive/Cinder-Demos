@@ -1,12 +1,13 @@
-#version 150 core
-
 in vec4		ciPosition;
 in vec3		ciNormal;
+in vec2     ciTexCoord0;
+
 uniform vec3 uPlayerPos;
 uniform float uRollStrength;
 uniform mat4 ciModelMatrix;
 uniform mat4 ciViewProjection;
 out vec3    vNormal;
+out vec2    vTexCoord0;
 
 void main()
 {
@@ -21,4 +22,6 @@ void main()
     gl_Position = ciViewProjection * worldPos; // needs w for proper perspective correction
 #endif
     vNormal = ciNormal;
+    vTexCoord0.x = ciTexCoord0.x;
+    vTexCoord0.y = 1 - ciTexCoord0.y;
 }
