@@ -53,6 +53,7 @@ struct EndlessMeshApp : public App
 
         getSignalUpdate().connect([&] {
             mCam.setEyePoint({ CAM_POS_X, CAM_POS_Y, CAM_POS_Z });
+            mRoot->setScale({ SCALE, SCALE, SCALE });
             mRoot->treeUpdate();
         });
         mGlsl = am::glslProg("endless.vert", "passthrough.frag");
@@ -61,6 +62,7 @@ struct EndlessMeshApp : public App
         getWindow()->getSignalDraw().connect([&] {
             gl::setMatrices(mCam);
             gl::clear();
+            gl::setWireframeEnabled(WIREFRAME);
 
             mGlsl->uniform("uPlayerPos", vec3{ CAM_POS_X, CAM_POS_Y, CAM_POS_Z });
             mGlsl->uniform("uRollStrength", ROLL_STRENGTH);
