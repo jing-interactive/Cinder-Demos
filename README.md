@@ -15,9 +15,11 @@ Stand-alone Cinder projects:
 * [Live4D](https://github.com/jing-interactive/Live4D) - Point cloud streaming system for devices supported by Cinder-DepthSensor.
 * [AirTouch](https://github.com/jing-interactive/AirTouch) - multi touch system for Kinect V1 & V2, Intel RealSense devices and OpenNI-compatible sensors.
 * [FaceVFX](https://github.com/jing-interactive/FaceVFX) - cross-platform face swap application.
-* [MonetVR](https://github.com/jing-interactive/MonetVR) - Claude Monet in Virtual Reality.
-* [SanctumVR](https://github.com/jing-interactive/SanctumVR)
 
 Other useful Cinder blocks:
-* [Cinder-Assimp](https://github.com/jing-interactive/Cinder-Assimp)
 * [Cinder-Stream](https://github.com/jing-interactive/Cinder-Stream)
+
+# Workflows
+
+* Find icons: https://www.iconfinder.com/
+* Convert png to ico: https://icoconvert.com/

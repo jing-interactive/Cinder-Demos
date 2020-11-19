@@ -4,19 +4,21 @@
 #include "cinder/Log.h"
 
 #include "AssetManager.h"
-#include "MiniConfig.h"
+#include "MiniConfigImgui.h"
 
 using namespace ci;
 using namespace ci::app;
 using namespace std;
 
-class ShuffleMusicPlayerApp : public App
+struct RPlayer : public App
 {
-  public:
+    int mProgress = -1;
+    audio::VoiceSamplePlayerNodeRef mCurrentVoice;
+
     void setup() override
     {
         log::makeLogger<log::LoggerFile>();
-        createConfigUI({200, 200});
+        createConfigImgui();
 
         mCurrentVoice = am::voice(MUSIC_FILE);
         mCurrentVoice->start();
@@ -24,20 +26,36 @@ class ShuffleMusicPlayerApp : public App
         getWindow()->getSignalKeyUp().connect([&](KeyEvent& event) {
             if (event.getCode() == KeyEvent::KEY_ESCAPE) quit();
         });
+
+        getWindow()->getSignalResize().connect([&] {
+            APP_WIDTH = getWindowWidth();
+            APP_HEIGHT = getWindowHeight();
+        });
+
+        getSignalCleanup().connect([&] { writeConfig(); });
         
         getWindow()->getSignalDraw().connect([&] {
+            auto node = mCurrentVoice->getSamplePlayerNode();
+            {
+                if (mProgress != PROGRESS)
+                {
+                    node->seek(PROGRESS);
+                    mProgress = PROGRESS;
+                }
+                else
+                {
+                    mProgress = PROGRESS = node->getReadPosition();
+                }
+            }
             gl::clear();
 
             mCurrentVoice->setPan(PAN);
             mCurrentVoice->setVolume(VOLUME);
         });
     }
-    
-private:
-    audio::VoiceRef mCurrentVoice;
 };
 
-CINDER_APP( ShuffleMusicPlayerApp, RendererGl, [](App::Settings* settings) {
+CINDER_APP( RPlayer, RendererGl, [](App::Settings* settings) {
     readConfig();
     settings->setWindowSize(APP_WIDTH, APP_HEIGHT);
     settings->setMultiTouchEnabled(false);
