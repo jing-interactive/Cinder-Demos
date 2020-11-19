@@ -12,16 +12,21 @@ using namespace std;
 
 struct RPlayer : public App
 {
-    int mProgress = -1;
+    float mProgress = -1;
     audio::VoiceSamplePlayerNodeRef mCurrentVoice;
+
+    void playNextMusic()
+    {
+        mCurrentVoice = am::voice(MUSIC_FILE);
+        mCurrentVoice->start();
+    }
 
     void setup() override
     {
         log::makeLogger<log::LoggerFile>();
         createConfigImgui();
 
-        mCurrentVoice = am::voice(MUSIC_FILE);
-        mCurrentVoice->start();
+        playNextMusic();
     
         getWindow()->getSignalKeyUp().connect([&](KeyEvent& event) {
             if (event.getCode() == KeyEvent::KEY_ESCAPE) quit();
@@ -37,20 +42,27 @@ struct RPlayer : public App
         getWindow()->getSignalDraw().connect([&] {
             auto node = mCurrentVoice->getSamplePlayerNode();
             {
-                if (mProgress != PROGRESS)
+                auto numSeconds = node->getNumSeconds();
+                if (abs(mProgress - PROGRESS) * numSeconds > 1)
                 {
-                    node->seek(PROGRESS);
+                    node->seekToTime(PROGRESS * numSeconds);
                     mProgress = PROGRESS;
                 }
                 else
                 {
-                    mProgress = PROGRESS = node->getReadPosition();
+                    mProgress = PROGRESS = node->getReadPositionTime() / numSeconds;
                 }
             }
-            gl::clear();
 
             mCurrentVoice->setPan(PAN);
             mCurrentVoice->setVolume(VOLUME);
+
+            gl::clear();
+
+            if (node->isEof())
+            {
+                playNextMusic();
+            }
         });
     }
 };

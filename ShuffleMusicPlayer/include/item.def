@@ -1,6 +1,6 @@
 ITEM_DEF(int, APP_WIDTH, 300)
 ITEM_DEF(int, APP_HEIGHT, 300)
 ITEM_DEF(string, MUSIC_FILE, "376737_Skullbeatz___Bad_Cat_Maste.mp3")
-ITEM_DEF(int, PROGRESS, 0)
+ITEM_DEF_MINMAX(float, PROGRESS, 0, 0, 1)
 ITEM_DEF_MINMAX(float, VOLUME, 0.5, 0, 1)
 ITEM_DEF_MINMAX(float, PAN, 0.5, 0, 1)
