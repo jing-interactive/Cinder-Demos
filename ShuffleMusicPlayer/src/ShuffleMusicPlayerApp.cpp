@@ -16,7 +16,13 @@ struct RPlayer : public App
     vector<fs::path> mMusicPaths;
     vector<audio::VoiceSamplePlayerNodeRef> mVoices;
 
-    bool addMusic(const fs::path& filePath, int depth = 0)
+    bool addMusic(const fs::path& filePath)
+    {
+        mMusicPaths.clear();
+        return addMusic(filePath, 0);
+    }
+
+    bool addMusic(const fs::path& filePath, int depth)
     {
         static auto& audioExts = audio::SourceFile::getSupportedExtensions();
         if (fs::is_regular_file(filePath))
@@ -33,7 +39,7 @@ struct RPlayer : public App
             fs::directory_iterator kEnd;
             for (fs::directory_iterator it(filePath); it != kEnd; ++it)
             {
-                addMusic(*it);
+                addMusic(*it, depth + 1);
             }
         }
 
