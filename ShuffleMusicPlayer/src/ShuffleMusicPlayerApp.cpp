@@ -60,7 +60,7 @@ struct RPlayer : public App
         log::makeLogger<log::LoggerFile>();
         createConfigImgui();
 
-        addMusic(MUSIC_PATH);
+        addMusic(getAssetPath(MUSIC_PATH));
         shuffleMusic();
     
         getWindow()->getSignalKeyUp().connect([&](KeyEvent& event) {
