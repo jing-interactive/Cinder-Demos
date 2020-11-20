@@ -13,12 +13,46 @@ using namespace std;
 struct RPlayer : public App
 {
     float mProgress = -1;
-    audio::VoiceSamplePlayerNodeRef mCurrentVoice;
+    vector<fs::path> mMusicPaths;
+    vector<audio::VoiceSamplePlayerNodeRef> mVoices;
 
-    void playNextMusic()
+    bool addMusic(const fs::path& filePath, int depth = 0)
     {
-        mCurrentVoice = am::voice(MUSIC_FILE);
-        mCurrentVoice->start();
+        static auto& audioExts = audio::SourceFile::getSupportedExtensions();
+        if (fs::is_regular_file(filePath))
+        {
+            auto ext = filePath.extension().string().substr(1);
+            bool isSupported = std::find(audioExts.begin(), audioExts.end(), ext) != audioExts.end();
+            if (isSupported)
+            {
+                mMusicPaths.push_back(filePath);
+            }
+        }
+        else if (depth == 0 && fs::is_directory(filePath))
+        {
+            fs::directory_iterator kEnd;
+            for (fs::directory_iterator it(filePath); it != kEnd; ++it)
+            {
+                addMusic(*it);
+            }
+        }
+
+        return true;
+    }
+
+    void shuffleMusic()
+    {
+        for (auto& voice : mVoices)
+        {
+            voice->stop();
+        }
+        mVoices.clear();
+        for (auto& path : mMusicPaths)
+        {
+            auto voice = am::voice(path.string());
+            voice->start();
+            mVoices.emplace_back(voice);
+        }
     }
 
     void setup() override
@@ -26,7 +60,8 @@ struct RPlayer : public App
         log::makeLogger<log::LoggerFile>();
         createConfigImgui();
 
-        playNextMusic();
+        addMusic(MUSIC_PATH);
+        shuffleMusic();
     
         getWindow()->getSignalKeyUp().connect([&](KeyEvent& event) {
             if (event.getCode() == KeyEvent::KEY_ESCAPE) quit();
@@ -37,11 +72,26 @@ struct RPlayer : public App
             APP_HEIGHT = getWindowHeight();
         });
 
+        getWindow()->getSignalFileDrop().connect([&](FileDropEvent& event) {
+            for (auto& filePath : event.getFiles())
+            {
+                if (addMusic(filePath))
+                {
+                    MUSIC_PATH = filePath.string();
+                    break;
+                }
+            }
+            shuffleMusic();
+        });
+
         getSignalCleanup().connect([&] { writeConfig(); });
         
-        getWindow()->getSignalDraw().connect([&] {
-            auto node = mCurrentVoice->getSamplePlayerNode();
+        getSignalUpdate().connect([&] {
+            if (mVoices.size() > 1)
             {
+                // TODO: inspect every voices, like a DJ software (XD)
+                auto& voice = mVoices[0];
+                auto& node = voice->getSamplePlayerNode();
                 auto numSeconds = node->getNumSeconds();
                 if (abs(mProgress - PROGRESS) * numSeconds > 1)
                 {
@@ -54,15 +104,21 @@ struct RPlayer : public App
                 }
             }
 
-            mCurrentVoice->setPan(PAN);
-            mCurrentVoice->setVolume(VOLUME);
-
-            gl::clear();
-
-            if (node->isEof())
+            for (auto& voice : mVoices)
             {
-                playNextMusic();
+                voice->setPan(PAN);
+                voice->setVolume(VOLUME);
+
+                auto& node = voice->getSamplePlayerNode();
+                if (node->isEof())
+                {
+                    node->seekToTime(0);
+                }
             }
+        });
+        
+        getWindow()->getSignalDraw().connect([&] {
+            gl::clear();
         });
     }
 };
