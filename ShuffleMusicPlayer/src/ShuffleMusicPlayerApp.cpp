@@ -50,6 +50,7 @@ struct RPlayer : public App
         for (auto& path : mMusicPaths)
         {
             auto voice = am::voice(path.string());
+            voice->getSamplePlayerNode()->setLoopEnabled(LOOP_MODE);
             voice->start();
             mVoices.emplace_back(voice);
         }
@@ -108,12 +109,17 @@ struct RPlayer : public App
             {
                 voice->setPan(PAN);
                 voice->setVolume(VOLUME);
+                auto& node = voice->getSamplePlayerNode();
+                node->setLoopEnabled(LOOP_MODE);
 
+#if 0
                 auto& node = voice->getSamplePlayerNode();
                 if (node->isEof())
                 {
-                    node->seekToTime(0);
+                    voice->stop();
+                    voice->start();
                 }
+#endif
             }
         });
         
