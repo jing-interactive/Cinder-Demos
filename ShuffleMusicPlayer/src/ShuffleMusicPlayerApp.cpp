@@ -94,7 +94,7 @@ struct RPlayer : public App
         getSignalCleanup().connect([&] { writeConfig(); });
         
         getSignalUpdate().connect([&] {
-            if (mVoices.size() > 1)
+            if (!mVoices.empty())
             {
                 // TODO: inspect every voices, like a DJ software (XD)
                 auto& voice = mVoices[0];
