@@ -28,9 +28,6 @@ struct NonLinearApp : public App
     void setup() override
     {
         log::makeLogger<log::LoggerFileRotating>(fs::path(), "app.%Y.%m.%d.log");
-
-        mCam.setNearClip(1);
-        mCam.setFarClip(100000);
         mCamUi = CameraUi(&mCam, getWindow(), -1);
 
         createConfigImgui();
@@ -52,7 +49,7 @@ struct NonLinearApp : public App
         {
             mRoot = melo::createRootNode();
             auto grid = melo::createGridNode();
-            //mRoot->addChild(grid);
+            mRoot->addChild(grid);
 
             ModelGLTF::Option option = {};
             //option.loadTextures = false;
@@ -60,12 +57,16 @@ struct NonLinearApp : public App
             mRoot->addChild(gltf);
 
             mGlsl = am::glslProg(VS_NAME, FS_NAME);
-            mGlsl->uniform("u_BaseColorSampler", 0);
+
             replaceGlslInGltf(gltf, mGlsl);
         }
 
         getSignalUpdate().connect([&] {
             mCam.setEyePoint({ CAM_POS_X, CAM_POS_Y, CAM_POS_Z });
+            mCam.setNearClip(NEAR_CLIP);
+            mCam.setFarClip(FAR_CLIP);
+            mCam.setFovHorizontal(FOV_H);
+
             mRoot->setScale({ SCALE, SCALE, SCALE });
             mRoot->treeUpdate();
         });
@@ -75,9 +76,21 @@ struct NonLinearApp : public App
             gl::clear();
             gl::setWireframeEnabled(WIREFRAME);
 
-            mGlsl->uniform("uPlayerPos", vec3{ CAM_POS_X, CAM_POS_Y, CAM_POS_Z });
-            mGlsl->uniform("uRollStrength", ROLL_STRENGTH);
-            //gl::ScopedGlslProg scpGlsl(mGlsl);
+            vec4 cylindricalProj(0.0f);
+            {
+                cylindricalProj.x = toRadians(mCam.getFov());
+                cylindricalProj.y = mCam.getAspectRatio();
+                cylindricalProj.z = mCam.getNearClip();
+                cylindricalProj.w = mCam.getFarClip();
+            }
+            gl::setViewMatrix(mCam.getViewMatrix());
+#if 1
+            gl::setProjectionMatrix(glm::perspective(cylindricalProj.x, cylindricalProj.y, cylindricalProj.z, cylindricalProj.w));
+#else
+            gl::setProjectionMatrix(mCam.getProjectionMatrix());
+#endif
+            mGlsl->uniform("U_CylindricalProj", cylindricalProj);
+            mGlsl->uniform("U_CamProj", vec2(CAMERA_FORM, FOV_PORTRAIT));
 
             mRoot->treeDraw();
         });
@@ -90,7 +103,8 @@ struct NonLinearApp : public App
     ModelGLTFRef mGltf;
 };
 
-auto gfxOption = RendererGl::Options().msaa(4);
+auto gfxOption = RendererGl::Options().msaa(4);// .debug().debugLog(GL_DEBUG_SEVERITY_HIGH);
+
 CINDER_APP(NonLinearApp, RendererGl(gfxOption), [](App::Settings *settings) {
     readConfig();
     //settings->setConsoleWindowEnabled();
