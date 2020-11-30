@@ -5,6 +5,9 @@
     <ClInclude Include="..\..\blocks\tracy\Tracy.hpp">
       <Filter>Tracy</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\blocks\tracy\TracyOpenGL.hpp">
+      <Filter>Tracy</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="android_native_app_glue.c" />

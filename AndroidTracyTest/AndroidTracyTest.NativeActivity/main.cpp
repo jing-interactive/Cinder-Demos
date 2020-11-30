@@ -15,6 +15,8 @@
 *
 */
 
+#define GLES2
+
 #include <malloc.h>
 #include <jni.h>
 #include <errno.h>
@@ -24,7 +26,27 @@
 #include <sys/resource.h>
 
 #include <EGL/egl.h>
-#include <GLES3/gl32.h>
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
+
+#ifdef GLES2
+
+#define ENTRY_VOID(func) static decltype(func)  *_##func = (decltype(func)*)eglGetProcAddress(#func);
+#define ENTRY(func) static decltype(func)  *_##func = (decltype(func)*)eglGetProcAddress(#func); return _##func;
+
+GL_APICALL void GL_APIENTRY glGenQueriesEXT(GLsizei n, GLuint* ids){ ENTRY_VOID(glGenQueriesEXT);}
+GL_APICALL void GL_APIENTRY glDeleteQueriesEXT(GLsizei n, const GLuint* ids);
+GL_APICALL GLboolean GL_APIENTRY glIsQueryEXT(GLuint id);
+GL_APICALL void GL_APIENTRY glBeginQueryEXT(GLenum target, GLuint id) { ENTRY_VOID(glBeginQueryEXT); }
+GL_APICALL void GL_APIENTRY glEndQueryEXT(GLenum target) { ENTRY_VOID(glEndQueryEXT); }
+GL_APICALL void GL_APIENTRY glQueryCounterEXT(GLuint id, GLenum target) { ENTRY_VOID(glQueryCounterEXT); }
+GL_APICALL void GL_APIENTRY glGetQueryivEXT(GLenum target, GLenum pname, GLint* params) { ENTRY_VOID(glGetQueryivEXT); }
+GL_APICALL void GL_APIENTRY glGetQueryObjectivEXT(GLuint id, GLenum pname, GLint* params) { ENTRY_VOID(glGetQueryObjectivEXT); }
+GL_APICALL void GL_APIENTRY glGetQueryObjectuivEXT(GLuint id, GLenum pname, GLuint* params) { ENTRY_VOID(glGetQueryObjectuivEXT); }
+GL_APICALL void GL_APIENTRY glGetQueryObjecti64vEXT(GLuint id, GLenum pname, GLint64* params) { ENTRY_VOID(glGetQueryObjecti64vEXT); }
+GL_APICALL void GL_APIENTRY glGetQueryObjectui64vEXT(GLuint id, GLenum pname, GLuint64* params) { ENTRY_VOID(glGetQueryObjectui64vEXT); }
+GL_APICALL void GL_APIENTRY glGetInteger64vAPPLE(GLenum pname, GLint64* params) { ENTRY_VOID(glGetInteger64vAPPLE); }
+#endif
 
 #include <android/sensor.h>
 
@@ -32,9 +54,7 @@
 #include "android_native_app_glue.h"
 
 #include "../../blocks/tracy/Tracy.hpp"
-#define GL_TIMESTAMP_EXT
 #include "../../blocks/tracy/TracyOpenGL.hpp"
-#undef GL_TIMESTAMP_EXT
 
 #define LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO, "AndroidProject1.NativeActivity", __VA_ARGS__))
 #define LOGW(...) ((void)__android_log_print(ANDROID_LOG_WARN, "AndroidProject1.NativeActivity", __VA_ARGS__))
@@ -139,21 +159,24 @@ static int engine_init_display(struct engine* engine) {
 * Just the current frame in the display.
 */
 static void engine_draw_frame(struct engine* engine) {
-	ZoneScopedN("frame");
-
 	if (engine->display == NULL) {
 		// No display.
 		return;
 	}
 
+	ZoneScopedN("frame");
+	TracyGpuZone("frame");
+
 	// Just fill the screen with a color.
-	glClearColor(((float)engine->state.x) / engine->width, engine->state.angle,
-		((float)engine->state.y) / engine->height, 1);
-	glClear(GL_COLOR_BUFFER_BIT);
+	{
+		glClearColor(((float)engine->state.x) / engine->width, engine->state.angle,
+			((float)engine->state.y) / engine->height, 1);
+		glClear(GL_COLOR_BUFFER_BIT);
+	}
 
 	eglSwapBuffers(engine->display, engine->surface);
-
 	FrameMark;
+	TracyGpuCollect;
 }
 
 /**

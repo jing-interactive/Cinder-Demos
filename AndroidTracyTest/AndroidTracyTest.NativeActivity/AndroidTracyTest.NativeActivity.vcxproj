@@ -214,6 +214,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\..\blocks\tracy\Tracy.hpp" />
+    <ClInclude Include="..\..\blocks\tracy\TracyOpenGL.hpp" />
     <ClInclude Include="android_native_app_glue.h" />
   </ItemGroup>
   <ItemGroup>
