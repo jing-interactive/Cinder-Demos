@@ -24,7 +24,7 @@
 #include <sys/resource.h>
 
 #include <EGL/egl.h>
-#include <GLES/gl.h>
+#include <GLES3/gl32.h>
 
 #include <android/sensor.h>
 
@@ -32,6 +32,9 @@
 #include "android_native_app_glue.h"
 
 #include "../../blocks/tracy/Tracy.hpp"
+#define GL_TIMESTAMP_EXT
+#include "../../blocks/tracy/TracyOpenGL.hpp"
+#undef GL_TIMESTAMP_EXT
 
 #define LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO, "AndroidProject1.NativeActivity", __VA_ARGS__))
 #define LOGW(...) ((void)__android_log_print(ANDROID_LOG_WARN, "AndroidProject1.NativeActivity", __VA_ARGS__))
@@ -113,6 +116,8 @@ static int engine_init_display(struct engine* engine) {
 		return -1;
 	}
 
+	TracyGpuContext;
+
 	eglQuerySurface(display, surface, EGL_WIDTH, &w);
 	eglQuerySurface(display, surface, EGL_HEIGHT, &h);
 
@@ -124,9 +129,7 @@ static int engine_init_display(struct engine* engine) {
 	engine->state.angle = 0;
 
 	// Initialize GL state.
-	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
 	glEnable(GL_CULL_FACE);
-	glShadeModel(GL_SMOOTH);
 	glDisable(GL_DEPTH_TEST);
 
 	return 0;

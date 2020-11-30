@@ -887,6 +887,10 @@ bool SysTraceStart( int64_t& samplingPeriod )
     return false;
 #endif
 
+    traceActive.store(true, std::memory_order_relaxed);
+
+    SetupSampling(samplingPeriod);
+
     if( !TraceWrite( TracingOn, sizeof( TracingOn ), "0", 2 ) ) return false;
     if( !TraceWrite( CurrentTracer, sizeof( CurrentTracer ), "nop", 4 ) ) return false;
     TraceWrite( TraceOptions, sizeof( TraceOptions ), "norecord-cmd", 13 );
@@ -907,9 +911,7 @@ bool SysTraceStart( int64_t& samplingPeriod )
 #endif
 
     if( !TraceWrite( TracingOn, sizeof( TracingOn ), "1", 2 ) ) return false;
-    traceActive.store( true, std::memory_order_relaxed );
 
-    SetupSampling( samplingPeriod );
 
     return true;
 }

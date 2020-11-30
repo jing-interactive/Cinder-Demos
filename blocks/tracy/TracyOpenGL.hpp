@@ -44,7 +44,12 @@ public:
 
 #if !defined GL_TIMESTAMP && defined GL_TIMESTAMP_EXT
 #  define GL_TIMESTAMP GL_TIMESTAMP_EXT
+#  define GL_QUERY_RESULT GL_QUERY_RESULT_EXT
 #  define GL_QUERY_COUNTER_BITS GL_QUERY_COUNTER_BITS_EXT
+#  define GL_QUERY_RESULT_AVAILABLE GL_QUERY_RESULT_AVAILABLE_EXT
+#  define glGetInteger64v glGetInteger64vAPPLE
+#  define glGenQueries glGenQueriesEXT
+#  define glGetQueryiv glGetQueryivEXT
 #  define glGetQueryObjectiv glGetQueryObjectivEXT
 #  define glGetQueryObjectui64v glGetQueryObjectui64vEXT
 #  define glQueryCounter glQueryCounterEXT
