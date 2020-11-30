@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../Cinder/include/Cinder"
+		},		
+		{
+			"path": "../Cinder/blocks/melo/include"
+		},
+		{
+			"path": "../Cinder/blocks/melo/src"
+		}
+	],
+	"settings": {}
+}
