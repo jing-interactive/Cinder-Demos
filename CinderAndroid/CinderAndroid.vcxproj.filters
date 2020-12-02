@@ -1,0 +1,777 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="..\..\Cinder\src\cinder\app\RendererGl.cpp">
+      <Filter>app</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\app\Window.cpp">
+      <Filter>app</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\app\KeyEvent.cpp">
+      <Filter>app</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\app\Platform.cpp">
+      <Filter>app</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\app\Renderer.cpp">
+      <Filter>app</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\app\AppBase.cpp">
+      <Filter>app</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\app\AppScreenSaver.cpp">
+      <Filter>app</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\CinderImGui.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\Utilities.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\Xml.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\Unicode.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\Url.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\Triangulate.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\TriMesh.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\Tween.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\System.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\Text.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\Timeline.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\TimelineItem.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\Timer.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\Sphere.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\Stream.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\Surface.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\Rect.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\Shape2d.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\Signals.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\Path2d.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\Perlin.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\Plane.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\PolyLine.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\Rand.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\Ray.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\Matrix.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\MediaTime.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\ObjLoader.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\ImageTargetFileStbImage.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\Log.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\ImageSourceFileStbImage.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\ImageIo.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\ImageSourceFileRadiance.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\Frustum.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\GeomIo.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\Display.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\Exception.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\Filesystem.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\CinderMath.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\Clipboard.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\Color.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\DataSource.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\DataTarget.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\Channel.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\CinderAssert.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\CameraUi.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\Capture.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\BandedMatrix.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\Base64.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\Buffer.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\Camera.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\Area.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\BSpline.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\BSplineFit.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\UrlImplJni.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\app\android\android_native_app_glue.c">
+      <Filter>android</Filter>
+    </ClCompile>
+    <ClCompile Include="src\android\hardware\AndroidCamera.cpp">
+      <Filter>android</Filter>
+    </ClCompile>
+    <ClCompile Include="src\android\AndroidDevLog.cpp">
+      <Filter>android</Filter>
+    </ClCompile>
+    <ClCompile Include="src\app\android\AppAndroid.cpp">
+      <Filter>android</Filter>
+    </ClCompile>
+    <ClCompile Include="src\app\android\AppImplAndroid.cpp">
+      <Filter>android</Filter>
+    </ClCompile>
+    <ClCompile Include="src\app\android\AssetFileSystem.cpp">
+      <Filter>android</Filter>
+    </ClCompile>
+    <ClCompile Include="src\android\CinderAndroid.cpp">
+      <Filter>android</Filter>
+    </ClCompile>
+    <ClCompile Include="src\android\app\CinderNativeActivity.cpp">
+      <Filter>android</Filter>
+    </ClCompile>
+    <ClCompile Include="src\android\app\ComponentManager.cpp">
+      <Filter>android</Filter>
+    </ClCompile>
+    <ClCompile Include="src\app\android\EventManagerAndroid.cpp">
+      <Filter>android</Filter>
+    </ClCompile>
+    <ClCompile Include="src\android\JniHelper.cpp">
+      <Filter>android</Filter>
+    </ClCompile>
+    <ClCompile Include="src\android\libc_helper.cpp">
+      <Filter>android</Filter>
+    </ClCompile>
+    <ClCompile Include="libCinderAndroid.cpp">
+      <Filter>android</Filter>
+    </ClCompile>
+    <ClCompile Include="src\android\LogCatStream.cpp">
+      <Filter>android</Filter>
+    </ClCompile>
+    <ClCompile Include="src\android\video\MovieGl.cpp">
+      <Filter>android</Filter>
+    </ClCompile>
+    <ClCompile Include="src\android\app\Permissions.cpp">
+      <Filter>android</Filter>
+    </ClCompile>
+    <ClCompile Include="src\app\android\PlatformAndroid.cpp">
+      <Filter>android</Filter>
+    </ClCompile>
+    <ClCompile Include="src\app\android\Renderer2dAndroid.cpp">
+      <Filter>android</Filter>
+    </ClCompile>
+    <ClCompile Include="src\app\android\RendererGlAndroid.cpp">
+      <Filter>android</Filter>
+    </ClCompile>
+    <ClCompile Include="src\android\net\UrlLoader.cpp">
+      <Filter>android</Filter>
+    </ClCompile>
+    <ClCompile Include="src\android\video\VideoPlayer.cpp">
+      <Filter>android</Filter>
+    </ClCompile>
+    <ClCompile Include="src\app\android\WindowImplAndroid.cpp">
+      <Filter>android</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CaptureImplJni.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\EnvironmentEs.cpp">
+      <Filter>gl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\wrapper.cpp">
+      <Filter>gl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\draw.cpp">
+      <Filter>gl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\scoped.cpp">
+      <Filter>gl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\VaoImplEs.cpp">
+      <Filter>gl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\VaoImplSoftware.cpp">
+      <Filter>gl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\Vbo.cpp">
+      <Filter>gl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\VboMesh.cpp">
+      <Filter>gl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\TextureFormatParsers.cpp">
+      <Filter>gl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\TransformFeedbackObj.cpp">
+      <Filter>gl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\Ubo.cpp">
+      <Filter>gl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\Vao.cpp">
+      <Filter>gl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\VaoImplCore.cpp">
+      <Filter>gl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\Sync.cpp">
+      <Filter>gl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\Texture.cpp">
+      <Filter>gl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\TextureFont.cpp">
+      <Filter>gl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\Pbo.cpp">
+      <Filter>gl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\Query.cpp">
+      <Filter>gl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\Sampler.cpp">
+      <Filter>gl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\Shader.cpp">
+      <Filter>gl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\ShaderPreprocessor.cpp">
+      <Filter>gl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\Fbo.cpp">
+      <Filter>gl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\GlslProg.cpp">
+      <Filter>gl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\Context.cpp">
+      <Filter>gl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\Environment.cpp">
+      <Filter>gl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\EnvironmentCore.cpp">
+      <Filter>gl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\Batch.cpp">
+      <Filter>gl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\BufferObj.cpp">
+      <Filter>gl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\BufferTexture.cpp">
+      <Filter>gl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\ConstantConversions.cpp">
+      <Filter>gl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\glad\glad_es.c">
+      <Filter>glad</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\libtess2\bucketalloc.c">
+      <Filter>libtess2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\libtess2\dict.c">
+      <Filter>libtess2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\libtess2\geom.c">
+      <Filter>libtess2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\libtess2\mesh.c">
+      <Filter>libtess2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\libtess2\priorityq.c">
+      <Filter>libtess2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\libtess2\sweep.c">
+      <Filter>libtess2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\libtess2\tess.c">
+      <Filter>libtess2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\ip\Premultiply.cpp">
+      <Filter>ip</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\ip\Resize.cpp">
+      <Filter>ip</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\ip\Threshold.cpp">
+      <Filter>ip</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\ip\Trim.cpp">
+      <Filter>ip</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\ip\Fill.cpp">
+      <Filter>ip</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\ip\Flip.cpp">
+      <Filter>ip</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\ip\Grayscale.cpp">
+      <Filter>ip</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\ip\Hdr.cpp">
+      <Filter>ip</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\ip\Blend.cpp">
+      <Filter>ip</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\ip\Blur.cpp">
+      <Filter>ip</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\ip\Checkerboard.cpp">
+      <Filter>ip</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Cinder\src\cinder\ip\EdgeDetect.cpp">
+      <Filter>ip</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\Cinder\include\cinder\Xml.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\UrlImplNull.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\Utilities.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\Vector.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\Tween.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\Unicode.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\Url.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\UrlImplCurl.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\Timeline.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\TimelineItem.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\Timer.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\Triangulate.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\TriMesh.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\Surface.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\System.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\Text.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\Thread.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\Shape2d.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\Signals.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\Sphere.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\Stream.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\Quaternion.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\Rand.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\Ray.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\Rect.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\Noncopyable.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\ObjLoader.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\Path2d.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\Perlin.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\Plane.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\PolyLine.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\Matrix.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\Matrix22.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\Matrix33.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\Matrix44.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\MediaTime.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\KdTree.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\Log.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\ImageSourceFileRadiance.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\ImageSourceFileStbImage.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\ImageTargetFileStbImage.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\GeomIo.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\ImageIo.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\Filesystem.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\Filter.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\Font.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\Frustum.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\Function.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\Display.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\Easing.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\Exception.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\Export.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\FileWatcher.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\Color.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\ConcurrentCircularBuffer.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\CurrentFunction.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\DataSource.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\DataTarget.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\CinderImGui.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\CinderImGuiConfig.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\CinderMath.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\CinderResources.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\Clipboard.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\Channel.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\Cinder.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\CinderAssert.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\CinderFwd.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\CinderGlm.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\Capture.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\ChanTraits.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\Base64.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\Breakpoint.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\Buffer.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\Camera.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\CameraUi.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\AxisAlignedBox.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\BandedMatrix.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\BSpline.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\BSplineFit.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\Arcball.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\cinder\Area.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\UrlImplJni.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\app\android\android_native_app_glue.h">
+      <Filter>android</Filter>
+    </ClInclude>
+    <ClInclude Include="src\android\hardware\AndroidCamera.h">
+      <Filter>android</Filter>
+    </ClInclude>
+    <ClInclude Include="src\android\AndroidDevLog.h">
+      <Filter>android</Filter>
+    </ClInclude>
+    <ClInclude Include="src\app\android\AppAndroid.h">
+      <Filter>android</Filter>
+    </ClInclude>
+    <ClInclude Include="src\app\android\AppImplAndroid.h">
+      <Filter>android</Filter>
+    </ClInclude>
+    <ClInclude Include="src\app\android\AssetFileSystem.h">
+      <Filter>android</Filter>
+    </ClInclude>
+    <ClInclude Include="src\android\CinderAndroid.h">
+      <Filter>android</Filter>
+    </ClInclude>
+    <ClInclude Include="src\android\app\CinderNativeActivity.h">
+      <Filter>android</Filter>
+    </ClInclude>
+    <ClInclude Include="src\android\app\ComponentManager.h">
+      <Filter>android</Filter>
+    </ClInclude>
+    <ClInclude Include="src\app\android\EventManagerAndroid.h">
+      <Filter>android</Filter>
+    </ClInclude>
+    <ClInclude Include="src\android\JniHelper.h">
+      <Filter>android</Filter>
+    </ClInclude>
+    <ClInclude Include="src\android\libc_helper.h">
+      <Filter>android</Filter>
+    </ClInclude>
+    <ClInclude Include="libCinderAndroid.h">
+      <Filter>android</Filter>
+    </ClInclude>
+    <ClInclude Include="src\android\LogCatStream.h">
+      <Filter>android</Filter>
+    </ClInclude>
+    <ClInclude Include="src\android\video\MovieGl.h">
+      <Filter>android</Filter>
+    </ClInclude>
+    <ClInclude Include="src\android\app\Permissions.h">
+      <Filter>android</Filter>
+    </ClInclude>
+    <ClInclude Include="src\app\android\PlatformAndroid.h">
+      <Filter>android</Filter>
+    </ClInclude>
+    <ClInclude Include="src\app\android\Renderer2dAndroid.h">
+      <Filter>android</Filter>
+    </ClInclude>
+    <ClInclude Include="src\app\android\RendererGlAndroid.h">
+      <Filter>android</Filter>
+    </ClInclude>
+    <ClInclude Include="src\android\net\UrlLoader.h">
+      <Filter>android</Filter>
+    </ClInclude>
+    <ClInclude Include="src\android\video\VideoPlayer.h">
+      <Filter>android</Filter>
+    </ClInclude>
+    <ClInclude Include="src\app\android\WindowImplAndroid.h">
+      <Filter>android</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CaptureImplJni.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\include\glad\glad_es.h">
+      <Filter>glad</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\src\libtess2\bucketalloc.h">
+      <Filter>libtess2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\src\libtess2\dict.h">
+      <Filter>libtess2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\src\libtess2\geom.h">
+      <Filter>libtess2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\src\libtess2\mesh.h">
+      <Filter>libtess2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\src\libtess2\priorityq.h">
+      <Filter>libtess2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\src\libtess2\sweep.h">
+      <Filter>libtess2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\src\libtess2\tess.h">
+      <Filter>libtess2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Cinder\src\libtess2\tesselator.h">
+      <Filter>libtess2</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="app">
+      <UniqueIdentifier>{8c5b967f-2be9-4e21-a2c9-df1d88a72b54}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="android">
+      <UniqueIdentifier>{6cf22fec-62bb-4728-8477-5291c96f32a2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core">
+      <UniqueIdentifier>{055c5921-ed00-4ebb-a60d-76da5e440ad2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="gl">
+      <UniqueIdentifier>{9a32abf0-3eef-4581-ac2a-4f4ffe005d3c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="glad">
+      <UniqueIdentifier>{d815d7e2-ba6b-411f-8e33-9372a9ecf0d6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libtess2">
+      <UniqueIdentifier>{ca9c4ccc-b6d8-40c3-90c5-56f02d039df5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ip">
+      <UniqueIdentifier>{aa64cbc6-5bd4-44c8-b58f-1fc505d622fe}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,45 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30711.63
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CinderAndroid", "CinderAndroid.vcxproj", "{BF18447C-8FD4-42B8-862E-E215A30B81A3}"
+EndProject
+Project("{39E2626F-3545-4960-A6E8-258AD8476CE5}") = "AndroidFun2", "..\AndroidFun2\AndroidFun2.androidproj", "{142C678A-2228-4FC5-A9AC-C71175E997A1}"
+	ProjectSection(ProjectDependencies) = postProject
+		{46610AA7-ABD4-4176-9B8C-C66B482150B4} = {46610AA7-ABD4-4176-9B8C-C66B482150B4}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AndroidFun2_JNI", "..\AndroidFun2_JNI\AndroidFun2_JNI.vcxproj", "{46610AA7-ABD4-4176-9B8C-C66B482150B4}"
+	ProjectSection(ProjectDependencies) = postProject
+		{BF18447C-8FD4-42B8-862E-E215A30B81A3} = {BF18447C-8FD4-42B8-862E-E215A30B81A3}
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|ARM64 = Debug|ARM64
+		Release|ARM64 = Release|ARM64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BF18447C-8FD4-42B8-862E-E215A30B81A3}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{BF18447C-8FD4-42B8-862E-E215A30B81A3}.Debug|ARM64.Build.0 = Debug|ARM64
+		{BF18447C-8FD4-42B8-862E-E215A30B81A3}.Release|ARM64.ActiveCfg = Release|ARM64
+		{BF18447C-8FD4-42B8-862E-E215A30B81A3}.Release|ARM64.Build.0 = Release|ARM64
+		{142C678A-2228-4FC5-A9AC-C71175E997A1}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{142C678A-2228-4FC5-A9AC-C71175E997A1}.Debug|ARM64.Build.0 = Debug|ARM64
+		{142C678A-2228-4FC5-A9AC-C71175E997A1}.Debug|ARM64.Deploy.0 = Debug|ARM64
+		{142C678A-2228-4FC5-A9AC-C71175E997A1}.Release|ARM64.ActiveCfg = Release|ARM64
+		{142C678A-2228-4FC5-A9AC-C71175E997A1}.Release|ARM64.Build.0 = Release|ARM64
+		{142C678A-2228-4FC5-A9AC-C71175E997A1}.Release|ARM64.Deploy.0 = Release|ARM64
+		{46610AA7-ABD4-4176-9B8C-C66B482150B4}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{46610AA7-ABD4-4176-9B8C-C66B482150B4}.Debug|ARM64.Build.0 = Debug|ARM64
+		{46610AA7-ABD4-4176-9B8C-C66B482150B4}.Release|ARM64.ActiveCfg = Release|ARM64
+		{46610AA7-ABD4-4176-9B8C-C66B482150B4}.Release|ARM64.Build.0 = Release|ARM64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {4F028482-525D-41B1-85E3-B4807E9EC14D}
+	EndGlobalSection
+EndGlobal

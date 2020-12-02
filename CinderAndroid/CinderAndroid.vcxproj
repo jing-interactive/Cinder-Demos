@@ -1,0 +1,320 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|ARM64">
+      <Configuration>Debug</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM64">
+      <Configuration>Release</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{bf18447c-8fd4-42b8-862e-e215a30b81a3}</ProjectGuid>
+    <Keyword>Android</Keyword>
+    <RootNamespace>CinderAndroid</RootNamespace>
+    <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
+    <ApplicationType>Android</ApplicationType>
+    <ApplicationTypeRevision>3.0</ApplicationTypeRevision>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>Clang_5_0</PlatformToolset>
+    <UseOfStl>c++_static</UseOfStl>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>Clang_5_0</PlatformToolset>
+    <UseOfStl>c++_static</UseOfStl>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Label="Shared" />
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>src;../../Cinder/include;../../Cinder/include/freetype;../../Cinder/src/libtess2;../../Cinder/src/linebreak;../../Cinder/src/r8brain;$(StlIncludeDirectories);$(Sysroot)\usr\include;$(Sysroot)\usr\include\$(AndroidHeaderTriple);$(VS_NdkRoot)\sources\android\support\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <ExceptionHandling>Enabled</ExceptionHandling>
+      <CppLanguageStandard>c++1z</CppLanguageStandard>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>src;../../Cinder/include;../../Cinder/include/freetype;../../Cinder/src/libtess2;../../Cinder/src/linebreak;../../Cinder/src/r8brain;$(StlIncludeDirectories);$(Sysroot)\usr\include;$(Sysroot)\usr\include\$(AndroidHeaderTriple);$(VS_NdkRoot)\sources\android\support\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <ExceptionHandling>Enabled</ExceptionHandling>
+      <CppLanguageStandard>c++1z</CppLanguageStandard>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\Batch.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\BufferObj.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\BufferTexture.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\ConstantConversions.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\Context.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\draw.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\Environment.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\EnvironmentCore.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\EnvironmentEs.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\Fbo.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\GlslProg.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\Pbo.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\Query.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\Sampler.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\scoped.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\Shader.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\ShaderPreprocessor.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\Sync.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\Texture.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\TextureFont.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\TextureFormatParsers.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\TransformFeedbackObj.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\Ubo.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\Vao.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\VaoImplCore.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\VaoImplEs.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\VaoImplSoftware.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\Vbo.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\VboMesh.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\gl\wrapper.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\ip\Blend.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\ip\Blur.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\ip\Checkerboard.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\ip\EdgeDetect.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\ip\Fill.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\ip\Flip.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\ip\Grayscale.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\ip\Hdr.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\ip\Premultiply.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\ip\Resize.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\ip\Threshold.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\ip\Trim.cpp" />
+    <ClCompile Include="..\..\Cinder\src\glad\glad_es.c" />
+    <ClCompile Include="..\..\Cinder\src\libtess2\bucketalloc.c" />
+    <ClCompile Include="..\..\Cinder\src\libtess2\dict.c" />
+    <ClCompile Include="..\..\Cinder\src\libtess2\geom.c" />
+    <ClCompile Include="..\..\Cinder\src\libtess2\mesh.c" />
+    <ClCompile Include="..\..\Cinder\src\libtess2\priorityq.c" />
+    <ClCompile Include="..\..\Cinder\src\libtess2\sweep.c" />
+    <ClCompile Include="..\..\Cinder\src\libtess2\tess.c" />
+    <ClCompile Include="src\android\AndroidDevLog.cpp" />
+    <ClCompile Include="src\android\app\CinderNativeActivity.cpp" />
+    <ClCompile Include="src\android\app\ComponentManager.cpp" />
+    <ClCompile Include="src\android\app\Permissions.cpp" />
+    <ClCompile Include="src\android\CinderAndroid.cpp" />
+    <ClCompile Include="src\android\hardware\AndroidCamera.cpp" />
+    <ClCompile Include="src\android\JniHelper.cpp" />
+    <ClCompile Include="src\android\libc_helper.cpp" />
+    <ClCompile Include="src\android\LogCatStream.cpp" />
+    <ClCompile Include="src\android\net\UrlLoader.cpp" />
+    <ClCompile Include="src\android\video\MovieGl.cpp" />
+    <ClCompile Include="src\android\video\VideoPlayer.cpp" />
+    <ClCompile Include="src\app\android\android_native_app_glue.c" />
+    <ClCompile Include="src\app\android\AppAndroid.cpp" />
+    <ClCompile Include="src\app\android\AppImplAndroid.cpp" />
+    <ClCompile Include="src\app\android\AssetFileSystem.cpp" />
+    <ClCompile Include="src\app\android\EventManagerAndroid.cpp" />
+    <ClCompile Include="src\app\android\PlatformAndroid.cpp" />
+    <ClCompile Include="src\app\android\Renderer2dAndroid.cpp" />
+    <ClCompile Include="src\app\android\RendererGlAndroid.cpp" />
+    <ClCompile Include="src\app\android\WindowImplAndroid.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\app\AppBase.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\app\AppScreenSaver.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\app\KeyEvent.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\app\Platform.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\app\Renderer.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\app\RendererGl.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\app\Window.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\Area.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\BandedMatrix.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\Base64.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\BSpline.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\BSplineFit.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\Buffer.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\Camera.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\CameraUi.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\Capture.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\Channel.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\CinderAssert.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\CinderImGui.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\CinderMath.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\Clipboard.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\Color.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\DataSource.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\DataTarget.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\Display.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\Exception.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\Filesystem.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\Frustum.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\GeomIo.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\ImageIo.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\ImageSourceFileRadiance.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\ImageSourceFileStbImage.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\ImageTargetFileStbImage.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\Log.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\Matrix.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\MediaTime.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\ObjLoader.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\Path2d.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\Perlin.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\Plane.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\PolyLine.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\Rand.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\Ray.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\Rect.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\Shape2d.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\Signals.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\Sphere.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\Stream.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\Surface.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\System.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\Text.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\Timeline.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\TimelineItem.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\Timer.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\Triangulate.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\TriMesh.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\Tween.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\Unicode.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\Url.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\Utilities.cpp" />
+    <ClCompile Include="..\..\Cinder\src\cinder\Xml.cpp" />
+    <ClCompile Include="libCinderAndroid.cpp" />
+    <ClCompile Include="src\CaptureImplJni.cpp" />
+    <ClCompile Include="src\UrlImplJni.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\Cinder\include\glad\glad_es.h" />
+    <ClInclude Include="..\..\Cinder\src\libtess2\bucketalloc.h" />
+    <ClInclude Include="..\..\Cinder\src\libtess2\dict.h" />
+    <ClInclude Include="..\..\Cinder\src\libtess2\geom.h" />
+    <ClInclude Include="..\..\Cinder\src\libtess2\mesh.h" />
+    <ClInclude Include="..\..\Cinder\src\libtess2\priorityq.h" />
+    <ClInclude Include="..\..\Cinder\src\libtess2\sweep.h" />
+    <ClInclude Include="..\..\Cinder\src\libtess2\tess.h" />
+    <ClInclude Include="..\..\Cinder\src\libtess2\tesselator.h" />
+    <ClInclude Include="src\android\AndroidDevLog.h" />
+    <ClInclude Include="src\android\app\CinderNativeActivity.h" />
+    <ClInclude Include="src\android\app\ComponentManager.h" />
+    <ClInclude Include="src\android\app\Permissions.h" />
+    <ClInclude Include="src\android\CinderAndroid.h" />
+    <ClInclude Include="src\android\hardware\AndroidCamera.h" />
+    <ClInclude Include="src\android\JniHelper.h" />
+    <ClInclude Include="src\android\libc_helper.h" />
+    <ClInclude Include="src\android\LogCatStream.h" />
+    <ClInclude Include="src\android\net\UrlLoader.h" />
+    <ClInclude Include="src\android\video\MovieGl.h" />
+    <ClInclude Include="src\android\video\VideoPlayer.h" />
+    <ClInclude Include="src\app\android\android_native_app_glue.h" />
+    <ClInclude Include="src\app\android\AppAndroid.h" />
+    <ClInclude Include="src\app\android\AppImplAndroid.h" />
+    <ClInclude Include="src\app\android\AssetFileSystem.h" />
+    <ClInclude Include="src\app\android\EventManagerAndroid.h" />
+    <ClInclude Include="src\app\android\PlatformAndroid.h" />
+    <ClInclude Include="src\app\android\Renderer2dAndroid.h" />
+    <ClInclude Include="src\app\android\RendererGlAndroid.h" />
+    <ClInclude Include="src\app\android\WindowImplAndroid.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\Arcball.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\Area.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\AxisAlignedBox.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\BandedMatrix.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\Base64.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\Breakpoint.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\BSpline.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\BSplineFit.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\Buffer.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\Camera.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\CameraUi.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\Capture.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\Channel.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\ChanTraits.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\Cinder.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\CinderAssert.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\CinderFwd.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\CinderGlm.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\CinderImGui.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\CinderImGuiConfig.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\CinderMath.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\CinderResources.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\Clipboard.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\Color.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\ConcurrentCircularBuffer.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\CurrentFunction.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\DataSource.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\DataTarget.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\Display.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\Easing.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\Exception.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\Export.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\Filesystem.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\FileWatcher.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\Filter.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\Font.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\Frustum.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\Function.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\GeomIo.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\ImageIo.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\ImageSourceFileRadiance.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\ImageSourceFileStbImage.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\ImageTargetFileStbImage.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\KdTree.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\Log.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\Matrix.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\Matrix22.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\Matrix33.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\Matrix44.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\MediaTime.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\Noncopyable.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\ObjLoader.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\Path2d.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\Perlin.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\Plane.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\PolyLine.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\Quaternion.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\Rand.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\Ray.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\Rect.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\Shape2d.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\Signals.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\Sphere.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\Stream.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\Surface.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\System.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\Text.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\Thread.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\Timeline.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\TimelineItem.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\Timer.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\Triangulate.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\TriMesh.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\Tween.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\Unicode.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\Url.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\UrlImplCurl.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\UrlImplNull.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\Utilities.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\Vector.h" />
+    <ClInclude Include="..\..\Cinder\include\cinder\Xml.h" />
+    <ClInclude Include="libCinderAndroid.h" />
+    <ClInclude Include="src\CaptureImplJni.h" />
+    <ClInclude Include="src\UrlImplJni.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets" />
+</Project>
