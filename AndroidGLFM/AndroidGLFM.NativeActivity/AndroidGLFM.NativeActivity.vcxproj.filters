@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="glfm_platform_android.c" />
+    <ClCompile Include="test_pattern_renderer_gles2.c" />
+    <ClCompile Include="main.c" />
+    <ClCompile Include="android_native_app_glue.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="file_compat.h" />
+  </ItemGroup>
+</Project>

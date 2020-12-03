@@ -8,5 +8,8 @@ import org.libcinder.app.CinderNativeActivity;
 
 public class AndroidFun2 extends CinderNativeActivity
 {
-
+    static final String TAG = "AndroidFun2";
+    static {
+        System.loadLibrary("hello-jni");
+    }
 }
