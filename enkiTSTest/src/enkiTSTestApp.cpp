@@ -12,7 +12,7 @@
 #include "../../blocks/tracy/Tracy.hpp"
 #include "../../blocks/tracy/TracyOpenGL.hpp"
 
-#define TRACY_EVENT_ENABLED 0
+#define TRACY_EVENT_ENABLED 1
 
 using namespace ci;
 using namespace ci::app;
