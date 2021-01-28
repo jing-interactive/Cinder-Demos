@@ -15,7 +15,8 @@ solution "UEViewer"
         defines { 
             "_CRT_SECURE_NO_WARNINGS",
             "WIN32",
-            "FBXSDK_SHARED"
+            "FBXSDK_SHARED",
+            "HAS_UI=1"
         }
 
     configuration "Debug"
@@ -47,6 +48,7 @@ solution "UEViewer"
             "../blocks/SDL2/include",
             "../../UEViewer",
             "../../UEViewer/Core",
+            "../../UEViewer/UI",
             "../../UEViewer/Unreal",
             "../../UEViewer/UmodelTool",
             "../../UEViewer/libs",
