@@ -2,7 +2,7 @@
 
 local action = _ACTION or ""
 
-solution "fbx2gltf"
+solution "perfetto"
     location (action)
     configurations { "Debug", "Release" }
     platforms {"x64"}
@@ -15,7 +15,6 @@ solution "fbx2gltf"
         defines { 
             "_CRT_SECURE_NO_WARNINGS",
             "WIN32",
-            "FBXSDK_SHARED"
         }
 
     configuration "Debug"
@@ -25,7 +24,6 @@ solution "fbx2gltf"
         symbols "On"
         targetsuffix "-d"
         libdirs {
-            "third_party/FBX/lib/debug"
         }
 
     configuration "Release"
@@ -38,26 +36,28 @@ solution "fbx2gltf"
         optimize "On"
         editandcontinue "Off"
         libdirs {
-         "third_party/FBX/lib/release"
         }
 
-    project "fbx2gltf"
+    project "trace_processor"
         kind "ConsoleApp"
         includedirs {
-            "third_party",
-            "third_party/FBX/include",
-            "third_party/CLI11",
-            "third_party/json",
-            "third_party/stb",
-            "third_party/fifo_map",
-            "third_party/fmt/include",
-            "third_party/cppcodec",
-            "src",
+            "../../perfetto",
+            "../../perfetto/include",
+            "../../perfetto/include/perfetto/base/build_configs/bazel",
+            "../../perfetto/bazel-perfetto/external/perfetto_dep_jsoncpp/include",
+            "../../perfetto/bazel-perfetto/external/perfetto_dep_sqlite",
+            "../../perfetto/bazel-perfetto/external/perfetto_dep_zlib",         
         }
         files { 
-            "src/**",
-            "third_party/fmt/**",
+            "../../perfetto/src/base/*",
+            "../../perfetto/src/ipc/*",
+            "../../perfetto/src/trace_processor/*",
         }
-         links {
-               "libfbxsdk",
-         }
+        removefiles {
+            "../../perfetto/**test.cc",
+            "../../perfetto/**unix*",
+            "../../perfetto/**posix*",
+        }
+
+        links {
+        }
