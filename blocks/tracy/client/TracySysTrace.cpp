@@ -26,11 +26,8 @@
 namespace tracy
 {
 
-struct __declspec(uuid("{ce1dbfb4-137e-4da6-87b0-3f59aa102cbc}")) PERFINFOGUID;
-static const auto PerfInfoGuid = __uuidof(PERFINFOGUID);
-
-struct __declspec(uuid("{802EC45A-1E99-4B83-9920-87C98277BA9D}")) DXGKRNLGUID;
-static const auto DxgKrnlGuid = __uuidof(DXGKRNLGUID);
+static const GUID PerfInfoGuid = { 0xce1dbfb4, 0x137e, 0x4da6, { 0x87, 0xb0, 0x3f, 0x59, 0xaa, 0x10, 0x2c, 0xbc } };
+static const GUID DxgKrnlGuid  = { 0x802ec45a, 0x1e99, 0x4b83, { 0x99, 0x20, 0x87, 0xc9, 0x82, 0x77, 0xba, 0x9d } };
 
 
 static TRACEHANDLE s_traceHandle;
@@ -301,7 +298,11 @@ static void SetupVsync()
     params.FilterDescCount = 1;
 
     uint64_t mask = 0x4000000000000001;   // Microsoft_Windows_DxgKrnl_Performance | Base
-    EnableTraceEx2( s_traceHandleVsync, &DxgKrnlGuid, EVENT_CONTROL_CODE_ENABLE_PROVIDER, TRACE_LEVEL_INFORMATION, mask, mask, 0, &params );
+    if( EnableTraceEx2( s_traceHandleVsync, &DxgKrnlGuid, EVENT_CONTROL_CODE_ENABLE_PROVIDER, TRACE_LEVEL_INFORMATION, mask, mask, 0, &params ) != ERROR_SUCCESS )
+    {
+        tracy_free( s_propVsync );
+        return;
+    }
 
     char loggerName[MAX_PATH];
     strcpy( loggerName, "TracyVsync" );
@@ -604,6 +605,7 @@ void SysTraceSendExternalName( uint64_t thread )
 #    include <linux/version.h>
 #    include <sys/mman.h>
 #    include <sys/ioctl.h>
+#    include <sys/syscall.h>
 
 #    include "TracyProfiler.hpp"
 #    include "TracyRingBuffer.hpp"
@@ -887,10 +889,6 @@ bool SysTraceStart( int64_t& samplingPeriod )
     return false;
 #endif
 
-    traceActive.store(true, std::memory_order_relaxed);
-
-    SetupSampling(samplingPeriod);
-
     if( !TraceWrite( TracingOn, sizeof( TracingOn ), "0", 2 ) ) return false;
     if( !TraceWrite( CurrentTracer, sizeof( CurrentTracer ), "nop", 4 ) ) return false;
     TraceWrite( TraceOptions, sizeof( TraceOptions ), "norecord-cmd", 13 );
@@ -911,7 +909,9 @@ bool SysTraceStart( int64_t& samplingPeriod )
 #endif
 
     if( !TraceWrite( TracingOn, sizeof( TracingOn ), "1", 2 ) ) return false;
+    traceActive.store( true, std::memory_order_relaxed );
 
+    SetupSampling( samplingPeriod );
 
     return true;
 }
