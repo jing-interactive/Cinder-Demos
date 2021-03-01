@@ -111,6 +111,8 @@
   <ItemGroup />
   <ItemGroup>
     <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\CinderRemoteImgui.h" />
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\ui\enkiTS\LockLessMultiReadPipe.h" />
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\ui\enkiTS\TaskScheduler.h" />
     <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\ui\imgui_remote\imgui_remote.h" />
     <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\ui\imgui_remote\imgui_remote_webby.h" />
     <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\ui\imgui_remote\lz4\lz4.h" />
@@ -121,8 +123,6 @@
     <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\ui\imgui_remote\webby\webby.h" />
     <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\ui\imgui_remote\webby\webby_unix.h" />
     <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\ui\imgui_remote\webby\webby_win32.h" />
-    <ClInclude Include="..\..\blocks\enkiTS\enkiTS\src\LockLessMultiReadPipe.h" />
-    <ClInclude Include="..\..\blocks\enkiTS\enkiTS\src\TaskScheduler.h" />
     <ClInclude Include="..\..\blocks\tracy\Tracy.hpp" />
     <ClInclude Include="..\..\blocks\tracy\TracyC.h" />
     <ClInclude Include="..\..\blocks\tracy\TracyD3D12.hpp" />
@@ -155,12 +155,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Cinder\blocks\Cinder-VNM\ui\CinderRemoteImgui.cpp" />
+    <ClCompile Include="..\..\..\Cinder\blocks\Cinder-VNM\ui\enkiTS\TaskScheduler.cpp" />
     <ClCompile Include="..\..\..\Cinder\blocks\Cinder-VNM\ui\imgui_remote\lz4\lz4.c" />
     <ClCompile Include="..\..\..\Cinder\blocks\Cinder-VNM\ui\imgui_remote\lz4\lz4frame.c" />
     <ClCompile Include="..\..\..\Cinder\blocks\Cinder-VNM\ui\imgui_remote\lz4\lz4hc.c" />
     <ClCompile Include="..\..\..\Cinder\blocks\Cinder-VNM\ui\imgui_remote\lz4\xxhash.c" />
     <ClCompile Include="..\..\..\Cinder\blocks\Cinder-VNM\ui\imgui_remote\webby\webby.c" />
-    <ClCompile Include="..\..\blocks\enkiTS\enkiTS\src\TaskScheduler.cpp" />
     <ClCompile Include="..\..\blocks\tracy\TracyClient.cpp" />
     <ClCompile Include="..\src\enkiTSTestApp.cpp" />
     <ClCompile Include="..\..\..\Cinder\blocks\Cinder-VNM\src\AssetManager.cpp" />

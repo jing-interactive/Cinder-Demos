@@ -7,8 +7,8 @@
 #include "AssetManager.h"
 #include "MiniConfigImgui.h"
 #include "CinderRemoteImgui.h"
+#include "CinderEnkiTS.h"
 
-#include "../../blocks/enkiTS/enkiTS/src/TaskScheduler.h"
 #include "../../blocks/tracy/Tracy.hpp"
 #include "../../blocks/tracy/TracyOpenGL.hpp"
 

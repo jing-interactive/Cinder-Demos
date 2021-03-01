@@ -113,9 +113,6 @@
     <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\TuioHelper.h">
       <Filter>Blocks\vnm\include</Filter>
     </ClInclude>
-    <ClCompile Include="..\..\blocks\enkiTS\enkiTS\src\TaskScheduler.cpp">
-      <Filter>Blocks\enkiTS</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\blocks\tracy\TracyClient.cpp">
       <Filter>Blocks\tracy</Filter>
     </ClCompile>
@@ -137,16 +134,13 @@
     <ClCompile Include="..\..\..\Cinder\blocks\Cinder-VNM\ui\CinderRemoteImgui.cpp">
       <Filter>Blocks\remote</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\Cinder\blocks\Cinder-VNM\ui\enkiTS\TaskScheduler.cpp">
+      <Filter>Blocks\enkiTS</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\Resources.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\blocks\enkiTS\enkiTS\src\LockLessMultiReadPipe.h">
-      <Filter>Blocks\enkiTS</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\blocks\enkiTS\enkiTS\src\TaskScheduler.h">
-      <Filter>Blocks\enkiTS</Filter>
     </ClInclude>
     <ClInclude Include="..\..\blocks\tracy\Tracy.hpp">
       <Filter>Blocks\tracy</Filter>
@@ -201,6 +195,12 @@
     </ClInclude>
     <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\include\CinderRemoteImgui.h">
       <Filter>Blocks\remote</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\ui\enkiTS\TaskScheduler.h">
+      <Filter>Blocks\enkiTS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\ui\enkiTS\LockLessMultiReadPipe.h">
+      <Filter>Blocks\enkiTS</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
