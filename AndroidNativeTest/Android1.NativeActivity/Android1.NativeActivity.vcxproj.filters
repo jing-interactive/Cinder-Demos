@@ -23,6 +23,9 @@
     <ClInclude Include="..\..\blocks\tracy\TracyVulkan.hpp">
       <Filter>Tracy</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\ui\remotery\Remotery.h">
+      <Filter>Remotery</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="android_native_app_glue.c" />
@@ -30,10 +33,16 @@
     <ClCompile Include="..\..\blocks\tracy\TracyClient.cpp">
       <Filter>Tracy</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\Cinder\blocks\Cinder-VNM\ui\remotery\Remotery.c">
+      <Filter>Remotery</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Tracy">
       <UniqueIdentifier>{74cfcf06-2fce-4d56-a331-ac0d5eeeef41}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Remotery">
+      <UniqueIdentifier>{3a7596d7-29c8-4ebc-af19-d645835b0cfb}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

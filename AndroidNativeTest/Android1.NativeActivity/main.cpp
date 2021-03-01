@@ -32,9 +32,12 @@
 #include "android_native_app_glue.h"
 
 #include "../../blocks/tracy/Tracy.hpp"
+#include "../../../Cinder/blocks/Cinder-VNM/ui/remotery/Remotery.h"
 
 #define LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO, "AndroidProject1.NativeActivity", __VA_ARGS__))
 #define LOGW(...) ((void)__android_log_print(ANDROID_LOG_WARN, "AndroidProject1.NativeActivity", __VA_ARGS__))
+
+Remotery* rmt;
 
 /**
 * Our saved state data.
@@ -70,6 +73,10 @@ struct engine {
 static int engine_init_display(struct engine* engine) {
 	// initialize OpenGL ES and EGL
 
+	rmtError error = rmt_CreateGlobalInstance(&rmt);
+	if (RMT_ERROR_NONE != error) {
+		printf("Error launching Remotery %d\n", error);
+	}
 	/*
 	* Here specify the attributes of the desired configuration.
 	* Below, we select an EGLConfig with at least 8 bits per color
@@ -113,6 +120,8 @@ static int engine_init_display(struct engine* engine) {
 		return -1;
 	}
 
+	//rmt_BindOpenGL();
+
 	eglQuerySurface(display, surface, EGL_WIDTH, &w);
 	eglQuerySurface(display, surface, EGL_HEIGHT, &h);
 
@@ -138,6 +147,9 @@ static void engine_draw_frame(struct engine* engine) {
 		// No display.
 		return;
 	}
+
+	//rmt_ScopedCPUSample(frame, 0);
+	//rmt_ScopedOpenGLSample(frame);
 
 	// Just fill the screen with a color.
 	glClearColor(((float)engine->state.x) / engine->width, engine->state.angle,
@@ -165,6 +177,8 @@ static void engine_term_display(struct engine* engine) {
 	engine->display = EGL_NO_DISPLAY;
 	engine->context = EGL_NO_CONTEXT;
 	engine->surface = EGL_NO_SURFACE;
+
+	rmt_DestroyGlobalInstance(rmt);
 }
 
 /**
