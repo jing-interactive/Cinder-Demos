@@ -35,7 +35,7 @@
 #define ENTRY(func) static decltype(func)  *_##func = (decltype(func)*)eglGetProcAddress(#func); return _##func;
 
 GL_APICALL void GL_APIENTRY glGenQueriesEXT(GLsizei n, GLuint* ids){ ENTRY_VOID(glGenQueriesEXT);}
-GL_APICALL void GL_APIENTRY glDeleteQueriesEXT(GLsizei n, const GLuint* ids);
+GL_APICALL void GL_APIENTRY glDeleteQueriesEXT(GLsizei n, const GLuint* ids) { ENTRY_VOID(glDeleteQueriesEXT); }
 GL_APICALL GLboolean GL_APIENTRY glIsQueryEXT(GLuint id);
 GL_APICALL void GL_APIENTRY glBeginQueryEXT(GLenum target, GLuint id) { ENTRY_VOID(glBeginQueryEXT); }
 GL_APICALL void GL_APIENTRY glEndQueryEXT(GLenum target) { ENTRY_VOID(glEndQueryEXT); }
@@ -46,6 +46,18 @@ GL_APICALL void GL_APIENTRY glGetQueryObjectuivEXT(GLuint id, GLenum pname, GLui
 GL_APICALL void GL_APIENTRY glGetQueryObjecti64vEXT(GLuint id, GLenum pname, GLint64* params) { ENTRY_VOID(glGetQueryObjecti64vEXT); }
 GL_APICALL void GL_APIENTRY glGetQueryObjectui64vEXT(GLuint id, GLenum pname, GLuint64* params) { ENTRY_VOID(glGetQueryObjectui64vEXT); }
 GL_APICALL void GL_APIENTRY glGetInteger64vAPPLE(GLenum pname, GLint64* params) { ENTRY_VOID(glGetInteger64vAPPLE); }
+#define GL_TIMESTAMP GL_TIMESTAMP_EXT
+#define GL_TIME_ELAPSED GL_TIME_ELAPSED_EXT
+#define glGetInteger64v glGetInteger64vAPPLE
+#define glGetQueryObjectui64v glGetQueryObjectui64vEXT
+#define glBeginQuery glBeginQueryEXT
+#define glQueryCounter glQueryCounterEXT
+#define glEndQuery glEndQueryEXT
+#define glGenQueries glGenQueriesEXT
+#define glGetQueryiv glGetQueryivEXT
+#define glDeleteQueries glDeleteQueriesEXT
+#define GL_QUERY_COUNTER_BITS GL_QUERY_COUNTER_BITS_EXT
+#define GL_QUERY_RESULT GL_QUERY_RESULT_EXT
 #endif
 
 #include <android/sensor.h>
@@ -53,8 +65,13 @@ GL_APICALL void GL_APIENTRY glGetInteger64vAPPLE(GLenum pname, GLint64* params) 
 #include <android/log.h>
 #include "android_native_app_glue.h"
 
-#include "../../blocks/tracy/Tracy.hpp"
-#include "../../blocks/tracy/TracyOpenGL.hpp"
+#define MICROPROFILE_IMPL
+#define MICROPROFILEUI_IMPL
+#define MICROPROFILEDRAW_IMPL
+
+#define MICROPROFILE_GPU_TIMERS_GL 1
+
+#include "../../../Cinder/blocks/Cinder-VNM/ui/microprofile/microprofile.h" 
 
 #define LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO, "AndroidProject1.NativeActivity", __VA_ARGS__))
 #define LOGW(...) ((void)__android_log_print(ANDROID_LOG_WARN, "AndroidProject1.NativeActivity", __VA_ARGS__))
@@ -136,8 +153,6 @@ static int engine_init_display(struct engine* engine) {
 		return -1;
 	}
 
-	TracyGpuContext;
-
 	eglQuerySurface(display, surface, EGL_WIDTH, &w);
 	eglQuerySurface(display, surface, EGL_HEIGHT, &h);
 
@@ -164,8 +179,8 @@ static void engine_draw_frame(struct engine* engine) {
 		return;
 	}
 
-	ZoneScopedN("frame");
-	TracyGpuZone("frame");
+	MICROPROFILE_SCOPEI("Group", "Name", -1);
+	MICROPROFILE_SCOPEGPUI("NameGpu", -1);
 
 	// Just fill the screen with a color.
 	{
@@ -175,8 +190,6 @@ static void engine_draw_frame(struct engine* engine) {
 	}
 
 	eglSwapBuffers(engine->display, engine->surface);
-	FrameMark;
-	TracyGpuCollect;
 }
 
 /**
@@ -289,6 +302,9 @@ void android_main(struct android_app* state) {
 
 	// loop waiting for stuff to do.
 
+	MicroProfileSetForceEnable(true);
+	MicroProfileOnThreadCreate("Main");
+
 	while (1) {
 		// Read all pending events.
 		int ident;
@@ -336,4 +352,6 @@ void android_main(struct android_app* state) {
 			engine_draw_frame(&engine);
 		}
 	}
+
+	MicroProfileOnThreadExit();
 }

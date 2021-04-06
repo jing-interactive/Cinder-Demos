@@ -2,22 +2,16 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClInclude Include="android_native_app_glue.h" />
-    <ClInclude Include="..\..\blocks\tracy\Tracy.hpp">
-      <Filter>Tracy</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\blocks\tracy\TracyOpenGL.hpp">
-      <Filter>Tracy</Filter>
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\ui\microprofile\microprofile.h">
+      <Filter>microprofile</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="android_native_app_glue.c" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="..\..\blocks\tracy\TracyClient.cpp">
-      <Filter>Tracy</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="Tracy">
+    <Filter Include="microprofile">
       <UniqueIdentifier>{2d0ed327-51b2-496b-b7a6-b277ffacb041}</UniqueIdentifier>
     </Filter>
   </ItemGroup>

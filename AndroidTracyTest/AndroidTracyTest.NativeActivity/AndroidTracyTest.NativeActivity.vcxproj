@@ -213,12 +213,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\blocks\tracy\Tracy.hpp" />
-    <ClInclude Include="..\..\blocks\tracy\TracyOpenGL.hpp" />
+    <ClInclude Include="..\..\..\Cinder\blocks\Cinder-VNM\ui\microprofile\microprofile.h" />
     <ClInclude Include="android_native_app_glue.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\blocks\tracy\TracyClient.cpp" />
     <ClCompile Include="android_native_app_glue.c" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
