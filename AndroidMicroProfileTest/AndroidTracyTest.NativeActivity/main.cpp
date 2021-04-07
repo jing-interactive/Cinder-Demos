@@ -65,16 +65,21 @@ GL_APICALL void GL_APIENTRY glGetInteger64vAPPLE(GLenum pname, GLint64* params) 
 #include <android/log.h>
 #include "android_native_app_glue.h"
 
+#define LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO, "AndroidProject1.NativeActivity", __VA_ARGS__))
+#define LOGW(...) ((void)__android_log_print(ANDROID_LOG_WARN, "AndroidProject1.NativeActivity", __VA_ARGS__))
+
 #define MICROPROFILE_IMPL
 #define MICROPROFILEUI_IMPL
 #define MICROPROFILEDRAW_IMPL
 
 #define MICROPROFILE_GPU_TIMERS_GL 1
 
-#include "../../../Cinder/blocks/Cinder-VNM/ui/microprofile/microprofile.h" 
+#define MICROPROFILE_PRINTF LOGW
 
-#define LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO, "AndroidProject1.NativeActivity", __VA_ARGS__))
-#define LOGW(...) ((void)__android_log_print(ANDROID_LOG_WARN, "AndroidProject1.NativeActivity", __VA_ARGS__))
+#include "../../../Cinder/blocks/Cinder-VNM/ui/microprofile/microprofile.h"
+//#include "../../../Cinder/blocks/Cinder-VNM/ui/microprofile/microprofileui.h"
+//#include "../../../Cinder/blocks/Cinder-VNM/ui/microprofile/microprofiledraw.h"
+
 
 /**
 * Our saved state data.
@@ -167,6 +172,13 @@ static int engine_init_display(struct engine* engine) {
 	glEnable(GL_CULL_FACE);
 	glDisable(GL_DEPTH_TEST);
 
+	MicroProfileOnThreadCreate("Main");
+	MicroProfileSetForceEnable(true);
+	MicroProfileSetEnableAllGroups(true);
+	MicroProfileSetForceMetaCounters(true);
+	MicroProfileGpuInitGL();
+	MicroProfileWebServerStart();
+
 	return 0;
 }
 
@@ -179,17 +191,28 @@ static void engine_draw_frame(struct engine* engine) {
 		return;
 	}
 
-	MICROPROFILE_SCOPEI("Group", "Name", -1);
-	MICROPROFILE_SCOPEGPUI("NameGpu", -1);
+	MICROPROFILE_SCOPEI("Main", "frame", -1);
+	MICROPROFILE_SCOPEGPUI("frame", -1);
 
 	// Just fill the screen with a color.
 	{
 		glClearColor(((float)engine->state.x) / engine->width, engine->state.angle,
 			((float)engine->state.y) / engine->height, 1);
 		glClear(GL_COLOR_BUFFER_BIT);
+		{
+			MICROPROFILE_SCOPEGPUI("draw", -1);
+			glDrawArrays(0, 0, 0);
+		}
 	}
 
-	eglSwapBuffers(engine->display, engine->surface);
+	//MicroProfileDraw(128, 64);
+
+	{
+		MICROPROFILE_SCOPEI("Main", "eglSwapBuffers", 0);
+		eglSwapBuffers(engine->display, engine->surface);
+	}
+
+	MicroProfileFlip();
 }
 
 /**
@@ -301,9 +324,6 @@ void android_main(struct android_app* state) {
 	engine.animating = 1;
 
 	// loop waiting for stuff to do.
-
-	MicroProfileSetForceEnable(true);
-	MicroProfileOnThreadCreate("Main");
 
 	while (1) {
 		// Read all pending events.
