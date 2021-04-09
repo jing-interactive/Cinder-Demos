@@ -9,6 +9,45 @@ a mistake.
 v0.x.x (xxxx-xx-xx)
 -------------------
 
+- Updated Zen 3 and added Tiger Lake microarchitectural data.
+- Manually disconnecting from the server will no longer display erroneous
+  warning message.
+
+
+v0.7.7 (2021-04-01)
+-------------------
+
+- Linux crash handler will now also catch SIGABRT.
+- Fixed invalid name assignment to source files discovered client-side.
+- Added ability to check if a zone is active (which may be used to avoid
+  preparing zone text, etc., as it wouldn't be used anyway).
+- Improved sorting behavior of internal vectors.
+  - Some data will now be always properly displayed during live capture.
+    This was not particularly visible before, as it mainly concerns edge
+    cases.
+  - Sorting is performed only as needed.
+    - In case of plots the performance during live capture may be decreased,
+      as these were sorted with at least 0.25 second intervals before. Now
+      the sorting is performed every frame.
+    - Some other data, which previously was not sorted, is sorted now.
+    - In headless capture mode sorting will be only performed when the trace
+      is saved to disk.
+- Fixed some typos in macros.
+- Fixed handling of non-ANSI file names on Windows. You can now name your
+  traces 'ęśąćż.tracy' and it should work as intended. This is supported on
+  Windows 10 release 1903 and newer.
+- Fixed sending GPU context name in on-demand mode.
+- Fixed color channel order in ZoneColor() macro.
+- Handle failure state when a memory pointer allocation is reported twice,
+  without an intermediate free.
+- Renamed "call stack parents" to "entry call stacks".
+- Display number of entry call stacks in assembly line sample count tooltip.
+- Added tooltips with preview of source code in various places in the UI.
+
+
+v0.7.6 (2021-02-06)
+-------------------
+
 - Various fixes in build scripts.
 - Fixed a faulty rpmalloc initialization path when the first thing the
   thread did was sending a message with call stack.
