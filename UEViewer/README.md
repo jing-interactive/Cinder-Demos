@@ -1,2 +1,3 @@
+- common.project
 - UmodelTool/Build.h, `#define VSTUDIO_INTEGRATION		0`
 - Core/Core.h, `#if !WIN32_USE_SEH` -> `#if 1 || !WIN32_USE_SEH`

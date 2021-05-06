@@ -10,18 +10,19 @@ solution "UEViewer"
     cppdialect "C++17"
     characterset "ASCII"
     warnings "off"
+    targetdir "bin"
+    debugdir "bin"
 
     filter "system:windows"
         defines { 
             "_CRT_SECURE_NO_WARNINGS",
             "WIN32",
             "FBXSDK_SHARED",
-            "HAS_UI=1"
+            "HAS_UI=1",
+            "HAS_OODLE=1"
         }
 
     configuration "Debug"
-        targetdir "Debug"
-        debugdir "Debug"
         defines { "DEBUG" }
         symbols "On"
         targetsuffix "-d"
@@ -30,8 +31,6 @@ solution "UEViewer"
         }
 
     configuration "Release"
-        targetdir "Release"
-        debugdir "Release"
         defines { "NDEBUG" }
         flags { "No64BitChecks" }
         editandcontinue "Off"
@@ -80,6 +79,7 @@ solution "UEViewer"
             "../../UEViewer/libs/zlib/**",
             "../../UEViewer/libs/mspack/**",
             "../../UEViewer/libs/rijndael/**",
+            "oodle/**",
         }
          links {
             "../blocks/SDL2/lib/x64/SDL2.lib",
