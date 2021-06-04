@@ -166,6 +166,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\..\blocks\tracy\Tracy.hpp" />
+    <ClInclude Include="D3D_VMT_Indices.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\blocks\tracy\TracyClient.cpp" />
