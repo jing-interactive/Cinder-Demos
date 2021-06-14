@@ -1,1 +1,1 @@
-premake5 vs2019
+..\blocks\premake5\premake5.exe vs2019
