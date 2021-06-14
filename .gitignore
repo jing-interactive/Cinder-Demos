@@ -40,6 +40,7 @@ DerivedData
 
 # Executables
 *.exe
+!blocks/premake5/premake5.exe
 *.out
 *.app
 
